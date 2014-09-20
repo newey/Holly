@@ -25,6 +25,7 @@
         "Worker":            [["localhost", 26000], ["localhost", 26001]],
         "ContestWebServer":  [["localhost", 21000]],
         "AdminWebServer":    [["localhost", 21100]],
+        "TrainingWebServer": [["localhost", 21200]],
         "ProxyService":      [["localhost", 28600]],
         "PrintingService":   [["localhost", 25123]]
         },
