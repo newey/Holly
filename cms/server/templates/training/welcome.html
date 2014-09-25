@@ -1,6 +1,5 @@
-{% extends base.html %}
-{% block core %}
-
-<p>hello world</p>
-
-{% end %}
+<ul>
+  {% for problem in q %}
+    <li>{{ problem.title }}</li>
+  {% end %}
+</ul>

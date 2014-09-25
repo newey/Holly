@@ -48,7 +48,7 @@ import tornado.locale
 
 from cms import config, ServiceCoord, get_service_shards, get_service_address
 from cms.io import WebService
-from cms.db import problem
+from cms.db import Session, Problem
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -132,8 +132,7 @@ class MainHandler(BaseHandler):
 
     def get(self, contest_id=None):
         self.r_params = self.render_params()
-        q = self.sql_session.query(Problem).all()
-        print q
+        self.r_params["q"] = self.sql_session.query(Problem).all()
         self.render("welcome.html", **self.r_params)
 
 class AddProblemHandler(BaseHandler):
@@ -147,23 +146,26 @@ class AddProblemHandler(BaseHandler):
     def post(self):
         try:
             attrs = dict()
-
+            
             attrs["name"] = self.get_argument("name")
+            attrs["title"] = self.get_argument("title")
 
             assert attrs.get("name") is not None, "No problem name specified."
 
             # Create the problem.
             problem = Problem(**attrs)
             self.sql_session.add(problem)
-
+            self.sql_session.commit()
         except Exception as error:
-            self.redirect("/contest/add")
+            self.redirect("/problem/add")
+            print(error)
             return
 
-        if try_commit(self.sql_session, self):
-            self.redirect("/")
-        else:
-            self.redirect("/problem/add")
+        self.redirect("/")
+        # if try_commit(self.sql_session, self):
+        #     self.redirect("/")
+        # else:
+       #     self.redirect("/problem/add")
 
 _tws_handlers = [
     (r"/", MainHandler),
