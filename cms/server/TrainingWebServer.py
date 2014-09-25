@@ -48,9 +48,7 @@ import tornado.locale
 
 from cms import config, ServiceCoord, get_service_shards, get_service_address
 from cms.io import WebService
-from cms.db import Session, Contest, User, Announcement, Question, Message, \
-    Submission, SubmissionResult, File, Task, Dataset, Attachment, Manager, \
-    Testcase, SubmissionFormatElement, Statement
+from cms.db import problem
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -69,6 +67,27 @@ class BaseHandler(CommonRequestHandler):
     child of this class.
 
     """
+
+    def prepare(self):
+        """This method is executed at the beginning of each request.
+
+        """
+        # Attempt to update the contest and all its references
+        # If this fails, the request terminates.
+        self.set_header("Cache-Control", "no-cache, must-revalidate")
+
+        self.sql_session = Session()
+        self.sql_session.expire_all()
+        self.contest = None
+
+        if config.installed:
+            localization_dir = os.path.join("/", "usr", "local", "share",
+                                            "locale")
+        else:
+            localization_dir = os.path.join(os.path.dirname(__file__), "mo")
+        if os.path.exists(localization_dir):
+            tornado.locale.load_gettext_translations(localization_dir, "cms")
+
     def render_params(self):
         """Return the default render params used by almost all handlers.
 
@@ -113,10 +132,40 @@ class MainHandler(BaseHandler):
 
     def get(self, contest_id=None):
         self.r_params = self.render_params()
+        q = self.sql_session.query(Problem).all()
+        print q
         self.render("welcome.html", **self.r_params)
 
+class AddProblemHandler(BaseHandler):
+    """Adds a new problem.
 
+    """
+    def get(self):
+        self.r_params = self.render_params()
+        self.render("add_problem.html", **self.r_params)
+
+    def post(self):
+        try:
+            attrs = dict()
+
+            attrs["name"] = self.get_argument("name")
+
+            assert attrs.get("name") is not None, "No problem name specified."
+
+            # Create the problem.
+            problem = Problem(**attrs)
+            self.sql_session.add(problem)
+
+        except Exception as error:
+            self.redirect("/contest/add")
+            return
+
+        if try_commit(self.sql_session, self):
+            self.redirect("/")
+        else:
+            self.redirect("/problem/add")
 
 _tws_handlers = [
     (r"/", MainHandler),
+    (r"/problem/add", AddProblemHandler),
 ]
