@@ -133,7 +133,7 @@ class MainHandler(BaseHandler):
     def get(self, contest_id=None):
         self.r_params = self.render_params()
         self.r_params["q"] = self.sql_session.query(Problem).all()
-        self.render("welcome.html", **self.r_params)
+        self.render("home.html", **self.r_params)
 
 class AddProblemHandler(BaseHandler):
     """Adds a new problem.
