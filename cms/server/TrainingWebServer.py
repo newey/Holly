@@ -65,31 +65,30 @@ def create_training_contest():
     attrs["name"] = "TrainingWebServer"
     attrs["description"] = "A specialized 'contest' for the training web server"
     attrs["allowed_localizations"] = []
-    attrs["languages"] = []
-    
+    attrs["languages"] = [LANG_C, LANG_CPP, LANG_PASCAL, LANG_PYTHON]
 
-    attrs["token_mode"] = 
-    attrs["token_max_number"] = 
-    attrs["token_min_interval"] = 
-    attrs["token_gen_initial"] = 
-    attrs["token_gen_number"] = 
-    attrs["token_gen_interval"] = 
-    attrs["token_gen_max"] = 
+    attrs["token_mode"] = "disabled"
+    attrs["token_max_number"] = None
+    attrs["token_min_interval"] = None
+    attrs["token_gen_initial"] = None
+    attrs["token_gen_number"] = None
+    attrs["token_gen_interval"] = None
+    attrs["token_gen_max"] = None
 
-    attrs["max_submission_number"] = 
-    attrs["max_user_test_number"] = 
-    attrs["min_submission_interval"] = 
-    attrs["min_user_test_interval"] = 
+    attrs["max_submission_number"] = None
+    attrs["max_user_test_number"] = None
+    attrs["min_submission_interval"] = None
+    attrs["min_user_test_interval"] = None
 
-    attrs["start"] = 
-    attrs["stop"] = 
+    attrs["start"] = datetime(2000, 01, 01)
+    attrs["stop"] = datetime(2100, 01, 01)
 
-    attrs["timezone"] = 
-    attrs["per_user_time"] = 
-    attrs["score_precision"] = 
+    attrs["timezone"] = None
+    attrs["per_user_time"] = None
+    attrs["score_precision"] = 0
 
     return Contest(**attrs)
-    
+
 
 class BaseHandler(CommonRequestHandler):
     """Base RequestHandler for this application.
@@ -109,9 +108,9 @@ class BaseHandler(CommonRequestHandler):
 
         self.sql_session = Session()
         self.sql_session.expire_all()
-        
+
         contests = self.sql_session.query(Contest).\
-                        filter(Contest.name == "TrainingWebServer") 
+                        filter(Contest.name == "TrainingWebServer")
 
         assert len(contests) <= 1, "Many contests named training web server."
 
@@ -171,7 +170,7 @@ class TrainingWebServer(WebService):
             shard=shard,
             listen_address=config.training_listen_address)
 
-        self.contest = 
+        self.contest =
 
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
@@ -198,7 +197,7 @@ class AddProblemHandler(BaseHandler):
     def post(self):
         try:
             attrs = dict()
-            
+
             attrs["name"] = self.get_argument("name")
             attrs["title"] = self.get_argument("title")
 
