@@ -69,23 +69,23 @@ def create_training_contest():
     attrs["languages"] = DEFAULT_LANGUAGES
 
     attrs["token_mode"] = "disabled"
-    attrs["token_max_number"] = None
-    attrs["token_min_interval"] = None
-    attrs["token_gen_initial"] = None
-    attrs["token_gen_number"] = None
-    attrs["token_gen_interval"] = None
-    attrs["token_gen_max"] = None
+    #attrs["token_max_number"] = None
+    #attrs["token_min_interval"]
+    #attrs["token_gen_initial"]
+    #attrs["token_gen_number"]
+    #attrs["token_gen_interval"] = None
+    #attrs["token_gen_max"] = None
 
-    attrs["max_submission_number"] = None
-    attrs["max_user_test_number"] = None
-    attrs["min_submission_interval"] = None
-    attrs["min_user_test_interval"] = None
+    #attrs["max_submission_number"] = None
+    #attrs["max_user_test_number"] = None
+    #attrs["min_submission_interval"] = None
+    #attrs["min_user_test_interval"] = None
 
     attrs["start"] = datetime(2000, 01, 01)
     attrs["stop"] = datetime(2100, 01, 01)
 
-    attrs["timezone"] = None
-    attrs["per_user_time"] = None
+    #attrs["timezone"] = None
+    #attrs["per_user_time"] = None
     attrs["score_precision"] = 0
 
     return Contest(**attrs)
