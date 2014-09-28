@@ -170,8 +170,6 @@ class TrainingWebServer(WebService):
             shard=shard,
             listen_address=config.training_listen_address)
 
-        self.contest =
-
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
 
