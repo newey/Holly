@@ -313,7 +313,7 @@ class AddTaskHandler(BaseHandler):
         self.r_params = self.render_params()
         self.render("add_task.html", **self.r_params)
 
-    def post(self, contest_id):
+    def post(self):
         self.contest = self.safe_get_item(Contest, contest_id)
 
         try:
