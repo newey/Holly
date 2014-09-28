@@ -46,9 +46,10 @@ from sqlalchemy.exc import IntegrityError
 import tornado.web
 import tornado.locale
 
-from cms import config, ServiceCoord, get_service_shards, get_service_address
+from cms import config, ServiceCoord, get_service_shards, get_service_address,\
+    DEFAULT_LANGUAGES
 from cms.io import WebService
-from cms.db import Session, Problem
+from cms.db import Session, Problem, Contest
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -65,7 +66,7 @@ def create_training_contest():
     attrs["name"] = "TrainingWebServer"
     attrs["description"] = "A specialized 'contest' for the training web server"
     attrs["allowed_localizations"] = []
-    attrs["languages"] = [LANG_C, LANG_CPP, LANG_PASCAL, LANG_PYTHON]
+    attrs["languages"] = DEFAULT_LANGUAGES
 
     attrs["token_mode"] = "disabled"
     attrs["token_max_number"] = None
@@ -112,15 +113,16 @@ class BaseHandler(CommonRequestHandler):
         contests = self.sql_session.query(Contest).\
                         filter(Contest.name == "TrainingWebServer")
 
-        assert len(contests) <= 1, "Many contests named training web server."
+        assert contests.count() <= 1, "Many contests named training web server."
 
-        if len(contests) == 0:
+        if contests.count() == 0:
             try:
                 self.contest = create_training_contest()
                 self.sql_session.add(self.contest)
                 self.sql_session.commit()
             except Exception as error:
-                self.redirect("/")
+                print(error)
+                self.set_status(500)
                 return
         else:
             self.contest = contests[0]
@@ -215,62 +217,7 @@ class SubmitHandler(BaseHandler):
     """Handles the received submissions.
 
     """
-    @tornado.web.authenticated
-    @actual_phase_required(0)
     def post(self, problem_name):
-    """
-        try:
-            task = self.problem.get_task(task_name)
-        except KeyError:
-            raise tornado.web.HTTPError(404)
-
-        # Add submitted files. After this, files is a dictionary indexed
-        # by *our* filenames (something like "output01.txt" or
-        # "taskname.%l", and whose value is a couple
-        # (user_assigned_filename, content).
-        files = {}
-        for uploaded, data in self.request.files.iteritems():
-            files[uploaded] = (data[0]["filename"], data[0]["body"])
-
-        # If we allow partial submissions, implicitly we recover the
-        # non-submitted files from the previous submission. And put them
-        # in file_digests (i.e. like they have already been sent to FS).
-        submission_lang = None
-        file_digests = {}
-        retrieved = 0
-
-        # All checks done, submission accepted.
-
-        # We now have to send all the files to the destination...
-        try:
-            for filename in files:
-                digest = self.application.service.file_cacher.put_file_content(
-                    files[filename][1],
-                    "Submission file %s sent by %s at %d." % (
-                        filename, self.current_user.username,
-                        make_timestamp(self.timestamp)))
-                file_digests[filename] = digest
-
-        # In case of error, the server aborts the submission
-        except Exception as error:
-            self.redirect("/")
-            return
-
-        # All the files are stored, ready to submit!
-        submission = Submission(self.timestamp,
-                                submission_lang,
-                                user=self.current_user,
-                                task=task)
-
-        for filename, digest in file_digests.items():
-            self.sql_session.add(File(filename, digest, submission=submission))
-        self.sql_session.add(submission)
-        self.sql_session.commit()
-        self.application.service.evaluation_service.new_submission(
-            submission_id=submission.id)
-
-        self.redirect("/")
-    """
         pass
 
 _tws_handlers = [
