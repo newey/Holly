@@ -333,6 +333,7 @@ class MainHandler(BaseHandler):
         self.r_params["tasks"] = self.contest.tasks
         self.render("welcome.html", **self.r_params)
 
+
 class AddTaskHandler(BaseHandler):
     """Adds a new problem.
 

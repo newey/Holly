@@ -1,0 +1,121 @@
+<!-- home.html
+	All users who log in will see this page by default
+	It includes pinned problems and some other stuff
+-->
+
+{% extends base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block head %}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--<link href="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+	<script src="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.js"></script>-->
+{% end %}
+
+{% block core %}
+  <h1 class="page-header">Home</h1>
+  <h3>Pinned Problems</h3>
+  <table class="table table-hover">
+    <col width="100">
+    <col>
+    <col>
+    <col width="60">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Problem Sets</th>
+        <th>Count</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="status">
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="40" style="width: 30%;">
+              <span class="sr-only">30% Complete</span>
+            </div>
+          </div>
+        </td>
+        <td><a href="#">Starter Problems 1</a></td>
+        <td>3 Problems </td>
+        <td><span class="glyphicon glyphicon-chevron-down"><span> <span class="glyphicon glyphicon-pushpin text-danger"><span></td>
+      </tr>
+      <tr>
+        <td class="status"><span class="glyphicon glyphicon-ok text-success"><span></td>
+        <td><a href="#">Starter Problems 2</a></td>
+        <td>3 Problems</td>
+        <td><span class="glyphicon glyphicon-chevron-down"><span> <span class="glyphicon glyphicon-pushpin text-danger"><span></td>
+      </tr>
+      <tr>
+        <td class="status"><span class="glyphicon glyphicon-minus text-primary"><span></td>
+        <td><a href="#">Starter Problems 3</a></td>
+        <td>3 Problems</td>
+        <td><span class="glyphicon glyphicon-chevron-down"><span> <span class="glyphicon glyphicon-pushpin text-danger"><span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="row">
+    <div class="col-md-5">
+      <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                <span class="glyphicon glyphicon-list-alt"><span> Competitions
+              </a>
+            </h4>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse in">
+            <div class="panel-body">
+              You have no upcoming competitions...
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                <span class="glyphicon glyphicon-time"><span> History
+              </a>
+            </h4>
+          </div>
+          <div id="collapseTwo" class="panel-collapse collapse">
+            <div class="panel-body">
+              This feature will be implemented in another sprint.
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                <span class="glyphicon glyphicon-star"><span> Hall-of-Fame
+              </a>
+            </h4>
+          </div>
+          <div id="collapseThree" class="panel-collapse collapse">
+            <div class="panel-body">
+              You do not have a ranking yet because in this sprint there is only one user. 
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <h3 style="margin-top: 0px">News</h3>
+      <div class="bs-callout bs-callout-warning">
+        <h4>Site Changes</h4>
+        <p>The training site has had a few touchups. Head over to the irc channel and complain if you find any problems.</p>
+      </div>
+      <div class="bs-callout bs-callout-info">
+        <h4>Congratulations</h4>
+        <p>IOI 2014 was in Taipei, Taiwan from the 13th to the 20th of July. Congratulations to the Australian team for earning 2 gold medals and 2 silver medals! These results placed students (=)first, fifth, thirty-sixth and seventy-third in the world; an incredible achievement!</p>
+      </div>
+    </div>
+  </div>
+{% end %}

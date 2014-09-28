@@ -8,28 +8,58 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="shortcut icon" href="{{ url_root }}/static/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/reset.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/css/bootstrap-3.2.min.css">
     <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/tws_style.css">
+    <script type="text/javascript" src="{{ url_root }}/static/jq/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="{{ url_root }}/static/js/bootstrap-3.2.min.js"></script>
     <script type="text/javascript" src="{{ url_root }}/static/web_rpc.js"></script>
     <script type="text/javascript" src="{{ url_root }}/static/tws_utils.js"></script>
-    <script type="text/javascript" src="{{ url_root }}/static/jq/jquery-1.7.1.min.js"></script>
+    {% block head %}{% end %}
 
-    <title>CMS Training Server</title>
+    <title>{% block title %}{% end %}</title>
+
     <script type="text/javascript">
-function init() 
-{
-    utils = new CMS.TWSUtils("{{ url_root }}", {{ make_timestamp(timestamp) }}, 0, 0, -1);
-
-    {% block js_init %}{% end %}
-}
-
-{% block js %}{% end %}
-
-$(document).ready(init);
-
+      function init()  {
+          utils = new CMS.TWSUtils("{{ url_root }}", {{ make_timestamp(timestamp) }}, 0, 0, -1);
+          {% block js_init %}{% end %}
+      }
+      $(document).ready(init);
     </script>
+
   </head>
   <body>
-    <!-- TODO Add sidebar and other base things -->
-    {% block core %} {% end %}
+
+    <header class="navbar navbar-default navbar-static-top" role="banner">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="#" class="navbar-brand">Holly</a>
+        </div>
+        <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Sign-Up</a></li>
+            <li><a href="#">Login</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-2">
+          <div class="list-group">
+            <a class ="list-group-item" href="#">Home</a>
+            <a class ="list-group-item" href="#">Problems</a>
+            <a class ="list-group-item disabled" href="#">Competitions</a>
+            <a class ="list-group-item disabled" href="#">History</a>
+            <a class ="list-group-item disabled" href="#">Hall of Fame</a>
+            <a class ="list-group-item disabled" href="#">Help</a>
+            <a class ="list-group-item" href="#">Administration</a>
+          </div>
+        </div>
+        <div class="col-md-10">
+          {% block core %} {% end %}
+        </div>
+      </div>
+    </div>  
   </body>
 </html>
