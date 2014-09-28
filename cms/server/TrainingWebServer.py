@@ -49,7 +49,8 @@ import tornado.locale
 from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES
 from cms.io import WebService
-from cms.db import Session, Problem, Contest
+from cms.db import Session, Problem, Contest, SubmissionFormatElement, Task, \
+    Dataset
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -187,6 +188,31 @@ class BaseHandler(CommonRequestHandler):
             raise ValueError("Submission format not recognized.")
         dest["submission_format"] = format_
 
+    def get_task_type(self, dest, name, params):
+        """Parse the task type.
+
+        Parse the arguments to get the task type and its parameters,
+        and fill them in the "task_type" and "task_type_parameters"
+        items of the given dictionary.
+
+        dest (dict): a place to store the result.
+        name (string): the name of the argument that holds the task
+            type name.
+        params (string): the prefix of the names of the arguments that
+            hold the parameters.
+
+        """
+        name = self.get_argument(name, None)
+        if name is None:
+            raise ValueError("Task type not found.")
+        try:
+            class_ = get_task_type_class(name)
+        except KeyError:
+            raise ValueError("Task type not recognized: %s." % name)
+        params = json.dumps(class_.parse_handler(self, params + name + "_"))
+        dest["task_type"] = name
+        dest["task_type_parameters"] = params
+
 
     get_string = argument_reader(lambda a: a, empty="")
 
@@ -314,8 +340,6 @@ class AddTaskHandler(BaseHandler):
         self.render("add_task.html", **self.r_params)
 
     def post(self):
-        self.contest = self.safe_get_item(Contest, contest_id)
-
         try:
             attrs = dict()
 
@@ -338,6 +362,7 @@ class AddTaskHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/task/add")
+            print(error)
             return
 
         try:
@@ -360,6 +385,7 @@ class AddTaskHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
+            print(error)
             self.redirect("/task/add")
             return
 
