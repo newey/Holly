@@ -60,6 +60,37 @@ from cmscommon.datetime import make_datetime, make_timestamp
 
 logger = logging.getLogger(__name__)
 
+def create_training_contest():
+    attrs = dict()
+    attrs["name"] = "TrainingWebServer"
+    attrs["description"] = "A specialized 'contest' for the training web server"
+    attrs["allowed_localizations"] = []
+    attrs["languages"] = []
+    
+
+    attrs["token_mode"] = 
+    attrs["token_max_number"] = 
+    attrs["token_min_interval"] = 
+    attrs["token_gen_initial"] = 
+    attrs["token_gen_number"] = 
+    attrs["token_gen_interval"] = 
+    attrs["token_gen_max"] = 
+
+    attrs["max_submission_number"] = 
+    attrs["max_user_test_number"] = 
+    attrs["min_submission_interval"] = 
+    attrs["min_user_test_interval"] = 
+
+    attrs["start"] = 
+    attrs["stop"] = 
+
+    attrs["timezone"] = 
+    attrs["per_user_time"] = 
+    attrs["score_precision"] = 
+
+    return Contest(**attrs)
+    
+
 class BaseHandler(CommonRequestHandler):
     """Base RequestHandler for this application.
 
@@ -78,7 +109,22 @@ class BaseHandler(CommonRequestHandler):
 
         self.sql_session = Session()
         self.sql_session.expire_all()
-        self.contest = None
+        
+        contests = self.sql_session.query(Contest).\
+                        filter(Contest.name == "TrainingWebServer") 
+
+        assert len(contests) <= 1, "Many contests named training web server."
+
+        if len(contests) == 0:
+            try:
+                self.contest = create_training_contest()
+                self.sql_session.add(self.contest)
+                self.sql_session.commit()
+            except Exception as error:
+                self.redirect("/")
+                return
+        else:
+            self.contest = contests[0]
 
         if config.installed:
             localization_dir = os.path.join("/", "usr", "local", "share",
@@ -125,6 +171,12 @@ class TrainingWebServer(WebService):
             shard=shard,
             listen_address=config.training_listen_address)
 
+        self.contest = 
+
+        self.evaluation_service = self.connect_to(
+            ServiceCoord("EvaluationService", 0))
+
+
 class MainHandler(BaseHandler):
     """Home page handler, with queue and workers statuses.
 
@@ -158,16 +210,74 @@ class AddProblemHandler(BaseHandler):
             self.sql_session.commit()
         except Exception as error:
             self.redirect("/problem/add")
-            print(error)
             return
 
         self.redirect("/")
-        # if try_commit(self.sql_session, self):
-        #     self.redirect("/")
-        # else:
-       #     self.redirect("/problem/add")
+
+class SubmitHandler(BaseHandler):
+    """Handles the received submissions.
+
+    """
+    @tornado.web.authenticated
+    @actual_phase_required(0)
+    def post(self, problem_name):
+    """
+        try:
+            task = self.problem.get_task(task_name)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        # Add submitted files. After this, files is a dictionary indexed
+        # by *our* filenames (something like "output01.txt" or
+        # "taskname.%l", and whose value is a couple
+        # (user_assigned_filename, content).
+        files = {}
+        for uploaded, data in self.request.files.iteritems():
+            files[uploaded] = (data[0]["filename"], data[0]["body"])
+
+        # If we allow partial submissions, implicitly we recover the
+        # non-submitted files from the previous submission. And put them
+        # in file_digests (i.e. like they have already been sent to FS).
+        submission_lang = None
+        file_digests = {}
+        retrieved = 0
+
+        # All checks done, submission accepted.
+
+        # We now have to send all the files to the destination...
+        try:
+            for filename in files:
+                digest = self.application.service.file_cacher.put_file_content(
+                    files[filename][1],
+                    "Submission file %s sent by %s at %d." % (
+                        filename, self.current_user.username,
+                        make_timestamp(self.timestamp)))
+                file_digests[filename] = digest
+
+        # In case of error, the server aborts the submission
+        except Exception as error:
+            self.redirect("/")
+            return
+
+        # All the files are stored, ready to submit!
+        submission = Submission(self.timestamp,
+                                submission_lang,
+                                user=self.current_user,
+                                task=task)
+
+        for filename, digest in file_digests.items():
+            self.sql_session.add(File(filename, digest, submission=submission))
+        self.sql_session.add(submission)
+        self.sql_session.commit()
+        self.application.service.evaluation_service.new_submission(
+            submission_id=submission.id)
+
+        self.redirect("/")
+    """
+        pass
 
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problem/add", AddProblemHandler),
+    (r"/problem/submit", SubmitHandler),
 ]
