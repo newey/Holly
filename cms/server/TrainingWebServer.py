@@ -149,6 +149,8 @@ class BaseHandler(CommonRequestHandler):
         if os.path.exists(localization_dir):
             tornado.locale.load_gettext_translations(localization_dir, "cms")
 
+        self.r_params = self.render_params()
+
     def render_params(self):
         """Return the default render params used by almost all handlers.
 
@@ -328,7 +330,7 @@ class MainHandler(BaseHandler):
 
     def get(self, contest_id=None):
         self.r_params = self.render_params()
-        self.r_params["q"] = self.sql_session.query(Problem).all()
+        self.r_params["tasks"] = self.contest.tasks
         self.render("welcome.html", **self.r_params)
 
 class AddTaskHandler(BaseHandler):
@@ -336,7 +338,6 @@ class AddTaskHandler(BaseHandler):
 
     """
     def get(self):
-        self.r_params = self.render_params()
         self.render("add_task.html", **self.r_params)
 
     def post(self):
@@ -391,6 +392,24 @@ class AddTaskHandler(BaseHandler):
 
         self.redirect("/task/%s" % task.id)
 
+class TaskDescriptionHandler(BaseHandler):
+    """Shows the data of a task.
+
+    """
+
+    def get(self, task_id):
+        try:
+            task = self.contest.get_task(task_name)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        # TODO: We can support multiple languages here.
+        # see ContestWebServer
+
+        self.render("task_description.html",
+                    task=task, **self.r_params)
+
+
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
 
@@ -401,5 +420,6 @@ class SubmitHandler(BaseHandler):
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/task/add", AddTaskHandler),
-    (r"/task/submit", SubmitHandler),
+    (r"/task/(.*)/submit", SubmitHandler),
+    (r"/task/(.*)/description", TaskDescriptionHandler),
 ]
