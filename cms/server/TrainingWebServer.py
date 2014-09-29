@@ -465,10 +465,10 @@ class AddTestcaseHandler(BaseHandler):
                 self.application.service.file_cacher.put_file_content(
                     output["body"],
                     "Testcase output for task %s" % task.name)
-                testcase = Testcase(codename, public, input_digest,
+            testcase = Testcase(codename, public, input_digest,
                                     output_digest, dataset=dataset)
-                self.sql_session.add(testcase)
-                self.sql_session.commit()
+            self.sql_session.add(testcase)
+            self.sql_session.commit()
         except Exception as error:
             self.redirect("/add_testcase/%s" % task_id)
             return
