@@ -1,22 +1,26 @@
 <table>
   <tr>
     <td>Title</td>
-    <td>{% task.title %}</td>
+    <td>{{ task.title }}</td>
   </tr>
   <tr>
     <td>Name</td>
-    <td>{% task.name %}</td>
+    <td>{{ task.name }}</td>
   </tr>
   <tr>
     <td>Statement</td>
-    <td>{% task.primary_statements %}</td>
+    <td>{{ task.primary_statements }}</td>
   </tr>
   <tr>
     <td>Time limit</td>
-    <td>{% task.time_limit %}</td>
+    <td>{{ task.active_dataset.time_limit }}</td>
   </tr>
   <tr>
     <td>Memory limit</td>
-    <td>{% task.mem_limit %}</td>
+    <td>{{ task.active_dataset.memory_limit }}</td>
+  </tr>
+  <tr>
+    <td>task type</td>
+    <td>{{ task.active_dataset.task_type }}</td>
   </tr>
 </table>

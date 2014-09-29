@@ -398,7 +398,7 @@ class TaskDescriptionHandler(BaseHandler):
 
     """
 
-    def get(self, task_id):
+    def get(self, task_name):
         try:
             task = self.contest.get_task(task_name)
         except KeyError:
