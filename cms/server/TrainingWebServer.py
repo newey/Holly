@@ -162,6 +162,12 @@ class BaseHandler(CommonRequestHandler):
         params["url_root"] = get_url_root(self.request.path)
         return params
 
+    def get_task_by_id(self, id):
+        for task in contest.tasks:
+            if task.id == id
+                return task
+        raise KeyError
+
     def get_submission_format(self, dest):
         """Parse the submission format.
 
@@ -391,16 +397,16 @@ class AddTaskHandler(BaseHandler):
             self.redirect("/task/add")
             return
 
-        self.redirect("/task/%s" % task.name)
+        self.redirect("/task/%s" % task.id)
 
 class TaskDescriptionHandler(BaseHandler):
     """Shows the data of a task.
 
     """
 
-    def get(self, task_name):
+    def get(self, task_id):
         try:
-            task = self.contest.get_task(task_name)
+            task = self.get_task_by_id(task_id)
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -418,9 +424,10 @@ class SubmitHandler(BaseHandler):
     def post(self, problem_name):
         pass
 
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/task/add", AddTaskHandler),
-    (r"/task/(.*)/submit", SubmitHandler),
-    (r"/task/(.*)/description", TaskDescriptionHandler),
+    (r"/task/([0-9]+)/submit", SubmitHandler),
+    (r"/task/([0-9]+)/description", TaskDescriptionHandler),
 ]
