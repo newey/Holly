@@ -49,8 +49,8 @@ import tornado.locale
 from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES
 from cms.io import WebService
-from cms.db import Session, Problem, Contest, SubmissionFormatElement, Task, \
-    Dataset
+from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
+    FileCacher
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -330,6 +330,7 @@ class TrainingWebServer(WebService):
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
 
+        self.filecacher = Filecacher(self)
 
 
 class MainHandler(BaseHandler):
@@ -427,10 +428,57 @@ class SubmitHandler(BaseHandler):
     def post(self, problem_name):
         pass
 
+class AddTestcaseHandler(BaseHandler):
+    """Add a testcase to a dataset.
+
+    """
+    def get(self, task_id):
+        task = self.get_task_by_id(task_id)
+        dataset = task.active_dataset
+
+        self.r_params = self.render_params()
+        self.r_params["task"] = task
+        self.r_params["dataset"] = dataset
+        self.render("add_testcase.html", **self.r_params)
+
+    def post(self, task_id):
+        task = self.get_task_by_id(task_id)
+        dataset = task.active_dataset
+
+        codename = self.get_argument("codename")
+
+        try:
+            input_ = self.request.files["input"][0]
+            output = self.request.files["output"][0]
+        except KeyError:
+            self.redirect("/add_testcase/%s" % task_id)
+            return
+
+        public = self.get_argument("public", None)
+
+        try:
+            input_digest = \
+                self.application.service.file_cacher.put_file_content(
+                    input_["body"],
+                    "Testcase input for task %s" % task.name)
+            output_digest = \
+                self.application.service.file_cacher.put_file_content(
+                    output["body"],
+                    "Testcase output for task %s" % task.name)
+                testcase = Testcase(codename, public, input_digest,
+                                    output_digest, dataset=dataset)
+                self.sql_session.add(testcase)
+                self.sql_session.commit()
+        except Exception as error:
+            self.redirect("/add_testcase/%s" % task_id)
+            return
+
+        self.redirect("/task/%s" % task.id)
 
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/task/add", AddTaskHandler),
     (r"/task/([0-9]+)/submit", SubmitHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
+    (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
 ]
