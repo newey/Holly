@@ -1,8 +1,5 @@
-{% extends base.html %}
-{% block core %}
 <ul>
-  {% for problem in q %}
-    <li>{{ problem.title }}</li>
+  {% for task in tasks %}
+    <li><a href="/task/{{ task.name }}/description">{{ task.title }}</a></li>
   {% end %}
 </ul>
-{% end %}
