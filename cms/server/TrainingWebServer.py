@@ -162,9 +162,12 @@ class BaseHandler(CommonRequestHandler):
         params["url_root"] = get_url_root(self.request.path)
         return params
 
-    def get_task_by_id(self, id):
-        for task in contest.tasks:
-            if task.id == id
+    def get_task_by_id(self, task_id):
+        if not task_id.isdigit():
+            raise keyError
+
+        for task in self.contest.tasks:
+            if task.id == int(task_id):
                 return task
         raise KeyError
 
