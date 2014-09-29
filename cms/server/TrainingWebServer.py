@@ -50,7 +50,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    FileCacher
+    Testcase
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -330,7 +330,7 @@ class TrainingWebServer(WebService):
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
 
-        self.filecacher = Filecacher(self)
+        self.file_cacher = FileCacher(self)
 
 
 class MainHandler(BaseHandler):
@@ -454,7 +454,7 @@ class AddTestcaseHandler(BaseHandler):
             self.redirect("/add_testcase/%s" % task_id)
             return
 
-        public = self.get_argument("public", None)
+        public = self.get_argument("public", None) is not None
 
         try:
             input_digest = \
@@ -473,7 +473,7 @@ class AddTestcaseHandler(BaseHandler):
             self.redirect("/add_testcase/%s" % task_id)
             return
 
-        self.redirect("/task/%s" % task.id)
+        self.redirect("/task/%s/description" % task.id)
 
 _tws_handlers = [
     (r"/", MainHandler),
