@@ -400,7 +400,7 @@ class AddTaskHandler(BaseHandler):
             self.redirect("/task/add")
             return
 
-        self.redirect("/task/%s" % task.id)
+        self.redirect("/task/%s/description" % task.id)
 
 class TaskDescriptionHandler(BaseHandler):
     """Shows the data of a task.
