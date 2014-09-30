@@ -43,3 +43,13 @@
     </tr>
   </table>
 {% end %}
+
+<h2>Submit a solution</h2>
+<form class="form-horizontal" enctype="multipart/form-data" action="/tasks/{{ task.id }}/submit" method="POST">
+  {% for idx, filename in enumerate(x.filename for x in task.submission_format) %}
+    <label>{{ filename.replace(".%l", "") }}</label>
+    <input type="file" name="{{ filename }}"/><br>
+  {% end %}
+  <input type="submit" value="Upload">
+  <input type="Reset" >
+</form>
