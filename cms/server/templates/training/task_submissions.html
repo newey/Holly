@@ -1,0 +1,12 @@
+{% for submission in submissions %}
+{% for result in submission.results %}
+  <table>
+    <tr><td>compilation</td><td>{{ result.compilation_outcome }}</td></tr>
+    <tr><td>compilation text</td><td>{{ result.compilation_text }}</td></tr>
+    <tr><td>evaluation outcome</td><td>{{ result.evaluation_outcome }}</td></tr>
+    <tr><td>score</td><td>{{ result.score }}</td></tr>
+  </table>
+{% end %}
+{% end %}
+
+
