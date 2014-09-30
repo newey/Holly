@@ -1,0 +1,65 @@
+<table id="problemsets" class="table table-hover">
+  <col width="100">
+  <col>
+  <col>
+  <col width="60">
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Problem Sets</th>
+      <th>Count</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- Status Minus
+      <td class="status"><span class="glyphicon glyphicon-minus text-primary"><span></td>
+    -->
+
+    <!-- Status ok
+      <td class="status"><span class="glyphicon glyphicon-ok text-success"><span></td>
+    -->
+
+    <!-- Partial Completion
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="40" style="width: [[percent]]%;">
+          <span class="sr-only">[[percent]]% Complete</span>
+        </div>
+      </div>
+    -->
+
+    {% for set in q %}
+    <tr class="outerRow">
+      <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
+      <td><a href="#">{{ set.title }}</a></td>
+      <td>{{ size }} Problem</td>
+      <td>
+        <span class="glyphicon glyphicon-chevron-right"></span> <span class="glyphicon glyphicon-pushpin text-danger"></span>
+      </td>
+    </tr>
+    <tr class="innerRow">
+      <td class="inner" colspan="4">
+        <div class="row">
+          <div class="col-md-1"></div>
+          <div class="col-md-10">
+            <table class="table">
+              <col width="100">
+              <col>
+              <tbody>
+                {% for problem in q %}
+                <tr>
+                  <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
+                  <td><a href="#">{{ problem.title }}</a></td>
+                </tr>
+                {% end %}
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-1"></div>
+        </div> 
+      </td>
+    </tr>
+    {% end %}
+  </tbody>
+</table>
