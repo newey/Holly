@@ -49,8 +49,8 @@ import tornado.locale
 from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES
 from cms.io import WebService
-from cms.db import Session, Problem, Contest, SubmissionFormatElement, Task, \
-    Dataset
+from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
+    Testcase
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class
@@ -330,6 +330,7 @@ class TrainingWebServer(WebService):
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
 
+        self.file_cacher = FileCacher(self)
 
 
 class MainHandler(BaseHandler):
@@ -403,7 +404,7 @@ class AddTaskHandler(BaseHandler):
             self.redirect("/task/add")
             return
 
-        self.redirect("/task/%s" % task.id)
+        self.redirect("/task/%s/description" % task.id)
 
 class TaskDescriptionHandler(BaseHandler):
     """Shows the data of a task.
@@ -436,7 +437,7 @@ class TaskDeletionHandler(BaseHandler):
 
         self.sql_session.delete(task)
         self.sql_session.commit()
-        
+
         self.redirect("/")
 
 # class TaskEditingHandler(BaseHandler):
@@ -444,7 +445,7 @@ class TaskDeletionHandler(BaseHandler):
 #     """
 #     def get(self, task_id):
 
-#user = session.query(User).filter_by(name='ed').first() 
+#user = session.query(User).filter_by(name='ed').first()
 #user.field = value
 
 class SubmitHandler(BaseHandler):
@@ -454,6 +455,217 @@ class SubmitHandler(BaseHandler):
     def post(self, problem_name):
         pass
 
+class AddTestcaseHandler(BaseHandler):
+    """Add a testcase to a dataset.
+
+    """
+    def get(self, task_id):
+        task = self.get_task_by_id(task_id)
+        dataset = task.active_dataset
+
+        self.r_params = self.render_params()
+        self.r_params["task"] = task
+        self.r_params["dataset"] = dataset
+        self.render("add_testcase.html", **self.r_params)
+
+    def post(self, task_id):
+        task = self.get_task_by_id(task_id)
+        dataset = task.active_dataset
+
+        codename = self.get_argument("codename")
+
+        try:
+            input_ = self.request.files["input"][0]
+            output = self.request.files["output"][0]
+        except KeyError:
+            self.redirect("/add_testcase/%s" % task_id)
+            return
+
+        public = self.get_argument("public", None) is not None
+
+        try:
+            input_digest = \
+                self.application.service.file_cacher.put_file_content(
+                    input_["body"],
+                    "Testcase input for task %s" % task.name)
+            output_digest = \
+                self.application.service.file_cacher.put_file_content(
+                    output["body"],
+                    "Testcase output for task %s" % task.name)
+            testcase = Testcase(codename, public, input_digest,
+                                    output_digest, dataset=dataset)
+            self.sql_session.add(testcase)
+            self.sql_session.commit()
+        except Exception as error:
+            self.redirect("/add_testcase/%s" % task_id)
+            return
+
+        self.redirect("/task/%s/description" % task.id)
+
+
+class SubmitHandler(BaseHandler):
+    """Handles the received submissions.
+
+    """
+    def post(self, task_id):
+        try:
+            task = self.get_task_by_id(task_id)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        # Alias for easy access
+        contest = self.contest
+        last_submission_t = self.sql_session.query(Submission)\
+        .filter(Submission.task == task)\
+        .filter(Submission.user == self.current_user)\
+        .order_by(Submission.timestamp.desc()).first()
+
+
+        # Ensure that the user did not submit multiple files with the
+        # same name.
+        if any(len(filename) != 1 for filename in self.request.files.values()):
+            self.redirect("/tasks/%s/description" % task.id)
+            return
+
+        # This ensure that the user sent one file for every name in
+        # submission format and no more. Less is acceptable if task
+        # type says so.
+        task_type = get_task_type(dataset=task.active_dataset)
+        required = set([sfe.filename for sfe in task.submission_format])
+        provided = set(self.request.files.keys())
+        if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
+                                         and required.issuperset(provided))):
+            self.redirect("/tasks/%s/description" % task.id)
+            return
+
+        # Add submitted files. After this, files is a dictionary indexed
+        # by *our* filenames (something like "output01.txt" or
+        # "taskname.%l", and whose value is a couple
+        # (user_assigned_filename, content).
+        files = {}
+        for uploaded, data in self.request.files.iteritems():
+            files[uploaded] = (data[0]["filename"], data[0]["body"])
+
+        # If we allow partial submissions, implicitly we recover the
+        # non-submitted files from the previous submission. And put them
+        # in file_digests (i.e. like they have already been sent to FS).
+        submission_lang = None
+        file_digests = {}
+        retrieved = 0
+        if task_type.ALLOW_PARTIAL_SUBMISSION and \
+                last_submission_t is not None:
+            for filename in required.difference(provided):
+                if filename in last_submission_t.files:
+                    # If we retrieve a language-dependent file from
+                    # last submission, we take not that language must
+                    # be the same.
+                    if "%l" in filename:
+                        submission_lang = last_submission_t.language
+                    file_digests[filename] = \
+                        last_submission_t.files[filename].digest
+                    retrieved += 1
+
+        # We need to ensure that everytime we have a .%l in our
+        # filenames, the user has the extension of an allowed
+        # language, and that all these are the same (i.e., no
+        # mixed-language submissions).
+        def which_language(user_filename):
+            """Determine the language of user_filename from its
+            extension.
+
+            user_filename (string): the file to test.
+            return (string): the extension of user_filename, or None
+                             if it is not a recognized language.
+
+            """
+            for source_ext, language in SOURCE_EXT_TO_LANGUAGE_MAP.iteritems():
+                if user_filename.endswith(source_ext):
+                    return language
+            return None
+
+        error = None
+        for our_filename in files:
+            user_filename = files[our_filename][0]
+            if our_filename.find(".%l") != -1:
+                lang = which_language(user_filename)
+                if lang is None:
+                    error = self._("Cannot recognize submission's language.")
+                    break
+                elif submission_lang is not None and \
+                        submission_lang != lang:
+                    error = self._("All sources must be in the same language.")
+                    break
+                elif lang not in contest.languages:
+                    error = self._(
+                        "Language %s not allowed in this contest." % lang)
+                    break
+                else:
+                    submission_lang = lang
+        if error is not None:
+            self.redirect("/tasks/%s/description" % task.id)
+            return
+
+        # Check if submitted files are small enough.
+        if any([len(f[1]) > config.max_submission_length
+                for f in files.values()]):
+            self.redirect("/tasks/%s/description" % task.id)
+            return
+
+        # All checks done, submission accepted.
+
+        # Attempt to store the submission locally to be able to
+        # recover a failure.
+        if config.submit_local_copy:
+            try:
+                path = os.path.join(
+                    config.submit_local_copy_path.replace("%s",
+                                                          config.data_dir),
+                    self.current_user.username)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                # Pickle in ASCII format produces str, not unicode,
+                # therefore we open the file in binary mode.
+                with io.open(
+                        os.path.join(path,
+                                     "%d" % make_timestamp(self.timestamp)),
+                        "wb") as file_:
+                    pickle.dump((self.contest.id,
+                                 self.current_user.id,
+                                 task.id,
+                                 files), file_)
+            except Exception as error:
+                # TODO: add error message
+                pass
+
+        # We now have to send all the files to the destination...
+        try:
+            for filename in files:
+                digest = self.application.service.file_cacher.put_file_content(
+                    files[filename][1],
+                    "Submission file %s sent by %s at %d." % (
+                        filename, self.current_user.username,
+                        make_timestamp(self.timestamp)))
+                file_digests[filename] = digest
+
+        # In case of error, the server aborts the submission
+        except Exception as error:
+            self.redirect("/tasks/%s/description" % task.id)
+            return
+
+        submission = Submission(self.timestamp,
+                                submission_lang,
+                                user=self.current_user,
+                                task=task)
+
+        for filename, digest in file_digests.items():
+            self.sql_session.add(File(filename, digest, submission=submission))
+        self.sql_session.add(submission)
+        self.sql_session.commit()
+        self.application.service.evaluation_service.new_submission(
+            submission_id=submission.id)
+
+
+        self.redirect("/tasks/%s/submissions" % task.id)
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -461,4 +673,5 @@ _tws_handlers = [
     (r"/task/([0-9]+)/submit", SubmitHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
     (r"/task/([0-9]+)/delete", TaskDeletionHandler),
+    (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
 ]
