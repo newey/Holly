@@ -47,13 +47,13 @@ import tornado.web
 import tornado.locale
 
 from cms import config, ServiceCoord, get_service_shards, get_service_address,\
-    DEFAULT_LANGUAGES
+    DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase
+    Testcase, Submission, User, File
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
-from cms.grading.tasktypes import get_task_type_class
+from cms.grading.tasktypes import get_task_type_class, get_task_type
 from cms.grading.scoretypes import get_score_type_class
 from cms.server import file_handler_gen, get_url_root, \
     CommonRequestHandler
@@ -149,6 +149,9 @@ class BaseHandler(CommonRequestHandler):
         if os.path.exists(localization_dir):
             tornado.locale.load_gettext_translations(localization_dir, "cms")
 
+        self.current_user = self.sql_session.query(User).\
+                            filter(User.username == "test")[0]
+        self.timestamp = make_datetime()
         self.r_params = self.render_params()
 
     def render_params(self):
@@ -421,13 +424,6 @@ class TaskDescriptionHandler(BaseHandler):
                     task=task, **self.r_params)
 
 
-class SubmitHandler(BaseHandler):
-    """Handles the received submissions.
-
-    """
-    def post(self, problem_name):
-        pass
-
 class AddTestcaseHandler(BaseHandler):
     """Add a testcase to a dataset.
 
@@ -489,9 +485,9 @@ class SubmitHandler(BaseHandler):
         # Alias for easy access
         contest = self.contest
         last_submission_t = self.sql_session.query(Submission)\
-        .filter(Submission.task == task)\
-        .filter(Submission.user == self.current_user)\
-        .order_by(Submission.timestamp.desc()).first()
+                           .filter(Submission.task == task)\
+                           .filter(Submission.user == self.current_user)\
+                           .order_by(Submission.timestamp.desc()).first()
 
 
         # Ensure that the user did not submit multiple files with the
@@ -562,26 +558,31 @@ class SubmitHandler(BaseHandler):
             if our_filename.find(".%l") != -1:
                 lang = which_language(user_filename)
                 if lang is None:
-                    error = self._("Cannot recognize submission's language.")
+                    #error = self._("Cannot recognize submission's language.")
+                    error = 1
                     break
                 elif submission_lang is not None and \
                         submission_lang != lang:
-                    error = self._("All sources must be in the same language.")
+                    #error = self._("All sources must be in the same language.")
+                    error = 1
                     break
                 elif lang not in contest.languages:
-                    error = self._(
-                        "Language %s not allowed in this contest." % lang)
+                    error = 1
+                    #error = self._(
+                    #    "Language %s not allowed in this contest." % lang)
                     break
                 else:
                     submission_lang = lang
         if error is not None:
-            self.redirect("/tasks/%s/description" % task.id)
+            print("Incorrect language extension")
+            self.redirect("/task/%s/description" % task.id)
             return
 
         # Check if submitted files are small enough.
         if any([len(f[1]) > config.max_submission_length
                 for f in files.values()]):
-            self.redirect("/tasks/%s/description" % task.id)
+            print("Files are too big")
+            self.redirect("/task/%s/description" % task.id)
             return
 
         # All checks done, submission accepted.
@@ -622,7 +623,8 @@ class SubmitHandler(BaseHandler):
 
         # In case of error, the server aborts the submission
         except Exception as error:
-            self.redirect("/tasks/%s/description" % task.id)
+            print(error)
+            self.redirect("/task/%s/description" % task.id)
             return
 
         submission = Submission(self.timestamp,
@@ -638,12 +640,28 @@ class SubmitHandler(BaseHandler):
             submission_id=submission.id)
 
 
-        self.redirect("/tasks/%s/submissions" % task.id)
+        self.redirect("/task/%s/submissions" % task.id)
+
+class SubmissionsHandler(BaseHandler):
+    def get(self, task_id):
+        try:
+            task = self.get_task_by_id(task_id)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.r_params["submissions"] = self.sql_session.query(Submission)\
+                                      .filter(Submission.task == task)\
+                                      .filter(Submission.user == self.current_user)\
+                                      .order_by(Submission.timestamp.desc())
+
+        self.render("task_submissions.html", **self.r_params)
+        
 
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/task/add", AddTaskHandler),
     (r"/task/([0-9]+)/submit", SubmitHandler),
+    (r"/task/([0-9]+)/submissions", SubmissionsHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
     (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
 ]
