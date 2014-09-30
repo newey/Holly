@@ -342,6 +342,9 @@ class MainHandler(BaseHandler):
         self.r_params["tasks"] = self.contest.tasks
         self.render("welcome.html", **self.r_params)
 
+    def post(self):
+        self.redirect("/task/add")
+
 
 class AddTaskHandler(BaseHandler):
     """Adds a new problem.
@@ -419,6 +422,30 @@ class TaskDescriptionHandler(BaseHandler):
         self.render("task_description.html",
                     task=task, **self.r_params)
 
+# TODO: Implement
+class TaskDeletionHandler(BaseHandler):
+    """Deletes a task.
+
+    """
+
+    def get(self, task_id):
+        try:
+            task = self.get_task_by_id(task_id)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.sql_session.delete(task)
+        self.sql_session.commit()
+        
+        self.redirect("/")
+
+# class TaskEditingHandler(BaseHandler):
+#     """Edits a task.
+#     """
+#     def get(self, task_id):
+
+#user = session.query(User).filter_by(name='ed').first() 
+#user.field = value
 
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
@@ -433,4 +460,5 @@ _tws_handlers = [
     (r"/task/add", AddTaskHandler),
     (r"/task/([0-9]+)/submit", SubmitHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
+    (r"/task/([0-9]+)/delete", TaskDeletionHandler),
 ]
