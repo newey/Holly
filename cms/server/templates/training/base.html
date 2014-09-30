@@ -8,12 +8,19 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="shortcut icon" href="{{ url_root }}/static/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/reset.css">
-    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/css/bootstrap-3.2.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    
+
     <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/tws_style.css">
-    <script type="text/javascript" src="{{ url_root }}/static/jq/jquery-1.7.1.min.js"></script>
-    <script type="text/javascript" src="{{ url_root }}/static/js/bootstrap-3.2.min.js"></script>
+    <!--script type="text/javascript" src="{{ url_root }}/static/jq/jquery-1.7.1.min.js"></script-->
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="{{ url_root }}/static/web_rpc.js"></script>
     <script type="text/javascript" src="{{ url_root }}/static/tws_utils.js"></script>
+    
+    
+
     {% block head %}{% end %}
 
     <title>{% block title %}{% end %}</title>
@@ -62,4 +69,22 @@
       </div>
     </div>  
   </body>
+
+  <script>
+    $(document).ready(function(){
+      $(".innerRow").hide();
+      $("#problems tr:first-child").show();
+
+      $(".outerRow").click(function(){
+          $(this).next("tr").toggle();
+          $(this).toggleClass("open");
+          if ($(this).hasClass("open")) {
+            $(this).find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
+          } else {
+            $(this).find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
+          }
+        });
+      });
+  </script>
+
 </html>
