@@ -439,10 +439,19 @@ class TaskDeletionHandler(BaseHandler):
         
         self.redirect("/")
 
-# class TaskEditingHandler(BaseHandler):
-#     """Edits a task.
-#     """
-#     def get(self, task_id):
+class TaskEditingHandler(BaseHandler):
+    """Edits a task.
+    """
+
+    def get(self, task_id):
+        try:
+            task = self.get_task_by_id(task_id)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+    
+        self.render("edit_task.html", 
+                    task=task, **self.r_params)
+
 
 #user = session.query(User).filter_by(name='ed').first() 
 #user.field = value
@@ -461,4 +470,5 @@ _tws_handlers = [
     (r"/task/([0-9]+)/submit", SubmitHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
     (r"/task/([0-9]+)/delete", TaskDeletionHandler),
+    (r"/task/([0-9]+)/edit", TaskEditingHandler),
 ]
