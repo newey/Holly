@@ -1,0 +1,116 @@
+{% from cms import plugin_list %}
+{% set task_type_list = plugin_list("cms.grading.tasktypes", "tasktypes") %}
+{% set score_type_list = plugin_list("cms.grading.scoretypes", "scoretypes") %}
+
+<div class="core_title">
+  <h1>Edit task</h1>
+</div>
+
+
+<form method="post" >
+  <h2>Edit task information</h2>
+  <table>
+      <tr>
+        <td>Name</td>
+        <td><input type="text" name="name" value="{{ task.name }}"/></td>
+      </tr>
+      <tr>
+        <td>Title</td>
+        <td><input type="text" name="title" value="{{ task.title }}"/></td>
+      </tr>
+      <tr>
+        <td>Primary statements (JSON-encoded list of language codes)</td>
+        <td><input type="text" name="primary_statements" value="{{ task.primary_statements }}"/></td>
+      </tr>
+      <tr>
+        <td>Submission format</td>
+        <td>
+          <table>
+            <tr>
+              <td>
+                <input type="radio" name="submission_format_choice" value="simple" checked/>
+              </td>
+              <td>task_name.%l</td>
+            </tr>
+            <tr>
+              <td><input type="radio" name="submission_format_choice" value="other">
+              </td>
+              <td>
+                Other: <input type="text" name="submission_format"/></td>
+              </td>
+            </tr>
+          </table>
+      </tr>
+      <tr>
+        <td>Time limit</td>
+        <td><input type="text" name="time_limit" value="{{ task.active_dataset.time_limit }}"/> second(s)</td>
+      </tr>
+      <tr>
+        <td>Memory limit</td>
+        <td><input type="text" name="memory_limit" value="{{ task.active_dataset.memory_limit }}"/> MiB</td>
+      </tr>
+
+    </table>
+
+
+  <h2>Edit task type settings</h2>
+
+  <div id="task_type">
+    <table>
+      <tr>
+        <td>Task type</td>
+        <td>
+
+          <select name="task_type">
+            {% for task_type in task_type_list %}
+                {% if task_type.__name__ == task.active_dataset.task_type %}
+                    <option selected="selected" value="{{ task_type.__name__}}">{{task_type.__name__}}</option>
+                {% else %}
+                    <option value="{{ task_type.__name__}}">{{task_type.__name__}}</option>
+                {% end %}
+            {% end %}
+          </select>
+
+        {% for task_type in task_type_list %}
+        <table class="TaskTypeOptions bordered" id="TaskType{{ task_type.__name__ }}Options" style="display: none;">
+          {% for i in range(len(task_type.ACCEPTED_PARAMETERS)) %}
+            {% set param_def = task_type.ACCEPTED_PARAMETERS[i] %}
+            <tr>
+                <td>{{ param_def.name }}</td>
+                <td>
+                    {% raw param_def.render("TaskTypeOptions_%s_" % task_type.__name__) %}
+                </td>
+            </tr>
+          {% end %}
+        </table>
+        {% end %}
+
+
+        </td>
+      </tr>
+
+      <tr>
+        <td>Score Type</td>
+        <td>
+          <select name="score_type">
+            {% for score_type in score_type_list %}
+                {% if score_type.__name__ == task.active_dataset.score_type %}
+                    <option selected="selected" value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
+                {% else %}
+                    <option value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
+                {% end %}
+            {% end %}
+          </select>
+
+        </td>
+      </tr>
+      <tr>
+        <td>Score Parameters</td>
+        <td><textarea name="score_type_parameters"></textarea></td>
+      </tr>
+    </table>
+    <div class="hr"></div>
+  </div>
+
+  <input type="submit"/><input type="reset"/>
+</form>
