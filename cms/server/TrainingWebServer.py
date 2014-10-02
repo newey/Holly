@@ -342,10 +342,6 @@ class MainHandler(BaseHandler):
         self.r_params["tasks"] = self.contest.tasks
         self.render("welcome.html", **self.r_params)
 
-    def post(self):
-        self.redirect("/task/add")
-
-
 class AddTaskHandler(BaseHandler):
     """Adds a new problem.
 
@@ -403,7 +399,7 @@ class AddTaskHandler(BaseHandler):
             self.redirect("/task/add")
             return
 
-        self.redirect("/task/%s" % task.id)
+        self.redirect("/task/%s/description" % task.id)
 
 class TaskDescriptionHandler(BaseHandler):
     """Shows the data of a task.
@@ -418,7 +414,6 @@ class TaskDescriptionHandler(BaseHandler):
 
         # TODO: We can support multiple languages here.
         # see ContestWebServer
-
         self.render("task_description.html",
                     task=task, **self.r_params)
 
@@ -428,7 +423,7 @@ class TaskDeletionHandler(BaseHandler):
 
     """
 
-    def get(self, task_id):
+    def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
         except KeyError:
@@ -439,6 +434,7 @@ class TaskDeletionHandler(BaseHandler):
         
         self.redirect("/")
 
+# Does not edit or load the submission format choice
 class TaskEditingHandler(BaseHandler):
     """Edits a task.
     """
@@ -452,9 +448,46 @@ class TaskEditingHandler(BaseHandler):
         self.render("edit_task.html", 
                     task=task, **self.r_params)
 
+    def post(self, task_id):
+        try:
+            task = self.get_task_by_id(task_id)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
 
-#user = session.query(User).filter_by(name='ed').first() 
-#user.field = value
+        try:
+            attrs = dict()
+
+            # get input
+            self.get_string(attrs, "name", empty=None)
+
+            assert attrs.get("name") is not None, "No task name specified."
+
+            self.get_string(attrs, "title")
+            self.get_string(attrs, "primary_statements")
+            self.get_string(attrs, "time_limit")
+            self.get_string(attrs, "memory_limit")
+            self.get_string(attrs, "task_type")
+            self.get_string(attrs, "score_type")
+            self.get_string(attrs, "score_type_parameters")
+
+            # save input to task
+            task.name = attrs.get("name")
+            task.title = attrs.get("title")
+            task.primary_statements = attrs.get("primary_statements")
+            task.active_dataset.time_limit = attrs.get("time_limit")
+            task.active_dataset.memory_limit = attrs.get("memory_limit")
+            task.active_dataset.task_type = attrs.get("task_type")
+            task.active_dataset.score_type = attrs.get("score_type")
+            task.active_dataset.score_type_parameters = attrs.get("score_type_parameters")
+            
+            self.sql_session.commit()
+
+        except Exception as error:
+            self.redirect("/task/issues")
+            print(error)
+            return
+
+        self.redirect("/")
 
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.

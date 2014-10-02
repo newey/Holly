@@ -2,7 +2,7 @@
   {% for task in tasks %}
     <li>
     	<a href="/task/{{ task.id }}/description">{{ task.title }}</a>
-        <form action="/task/{{ task.id }}/delete">
+        <form action="/task/{{ task.id }}/delete" method="post">
             <input type="submit" value="Delete">
         </form>
         <form action="/task/{{ task.id }}/edit">
