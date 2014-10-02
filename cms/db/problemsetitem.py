@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Problem-related database interface for SQLAlchemy.
+"""Task-related database interface for SQLAlchemy.
 
 """
 
@@ -38,15 +38,19 @@ from sqlalchemy.types import Boolean, Integer, Float, String, Unicode, \
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.orderinglist import ordering_list
 
-from . import Base, Contest
+from . import Base, ProblemSet, Task
 from .smartmappedcollection import smart_mapped_collection
 
 
-class Problem(Base):
-    """Class to store a problem.
+class ProblemSetItem(Base):
+    """ Class to store the membership of a Task or ProblemSet in a ProblemSet
 
     """
-    __tablename__ = 'problems'
+    __tablename__ = 'problemsetitems'
+    __table_args__ = (
+        UniqueConstraint('problemSet_id', 'task_id'),
+        #UniqueConstraint('problemSet_id', 'memberProblemSet_id'),
+    )
 
     # Auto increment primary key.
     id = Column(
@@ -56,10 +60,46 @@ class Problem(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # Short name and long human readable title of the problem.
-    name = Column(
-        Unicode,
+    # Number of the item for sorting.
+    num = Column(
+        Integer,
         nullable=False)
-    title = Column(
-        Unicode,
-        nullable=False)
+
+    # ProblemSet (id and object) that the item is a member of
+    problemSet_id = Column(
+        Integer,
+        ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    problemSet = relationship(
+        ProblemSet,
+        backref=backref(
+            'items',
+            collection_class=ordering_list('num'),
+            order_by=[num],
+            cascade="all, delete-orphan",
+            passive_deletes=True))
+
+    # Whether the item contains a Task or a ProblemSet
+    # isTask = Column(
+    #     Boolean,
+    #     nullable=False)
+
+    # The Task that is a member of the problem set
+    task_id = Column(
+        Integer,
+        ForeignKey(Task.id, onupdate="CASCADE", ondelete="CASCADE"),
+        index=True,
+        nullable=False
+        )
+    task = relationship(
+        Task)
+
+    # Alternatively, the ProblemSet that is a member of the ProblemSet
+    # memberProblemSet_id = Column(
+    #     Integer,
+    #     ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+    #     index=True
+    #     )
+    # memberProblemSet = relationship(
+    #     ProblemSet)

@@ -74,8 +74,8 @@ __all__ = [
     # util
     "test_db_connection", "get_contest_list", "is_contest_id",
     "ask_for_contest",
-    # problem
-    "Problem",
+    # problem sets
+    "ProblemSet", "ProblemSetItem"
 ]
 
 
@@ -110,7 +110,8 @@ from .drop import drop_db
 from .util import test_db_connection, get_contest_list, is_contest_id, \
     ask_for_contest
 
-from .problem import Problem
+from .problemset import ProblemSet
+from .problemsetitem import ProblemSetItem
 
 configure_mappers()
 
