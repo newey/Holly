@@ -71,7 +71,7 @@ class Task(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # Number of the task for sorting.
+    # Number of the task for sorting (not used in problem sets)
     num = Column(
         Integer,
         nullable=False)
