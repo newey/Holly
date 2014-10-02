@@ -461,7 +461,6 @@ class TaskEditingHandler(BaseHandler):
         try:
             attrs = dict()
 
-<<<<<<< HEAD
             # get input
             self.get_string(attrs, "name", empty=None)
 
@@ -493,10 +492,6 @@ class TaskEditingHandler(BaseHandler):
             return
 
         self.redirect("/")
-=======
-#user = session.query(User).filter_by(name='ed').first()
-#user.field = value
->>>>>>> master
 
 class AddTestcaseHandler(BaseHandler):
     """Add a testcase to a dataset.
