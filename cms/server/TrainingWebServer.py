@@ -337,14 +337,17 @@ class TrainingWebServer(WebService):
 
 
 class MainHandler(BaseHandler):
-    """Home page handler, with queue and workers statuses.
+    """Home page handler
 
     """
-
     def get(self, contest_id=None):
         self.r_params = self.render_params()
-        self.r_params["tasks"] = self.contest.tasks
-        self.render("welcome.html", **self.r_params)
+        self.r_params["q"] = self.contest.tasks # TODO include problem sets rather than tasks
+        self.render("home.html", **self.r_params)
+
+    def post(self):
+        self.redirect("/task/add")
+
 
 class AddTaskHandler(BaseHandler):
     """Adds a new problem.

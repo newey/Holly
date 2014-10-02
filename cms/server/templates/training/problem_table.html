@@ -33,7 +33,7 @@
     <tr class="outerRow">
       <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
       <td><a href="#">{{ set.title }}</a></td>
-      <td>{{ size }} Problem</td>
+      <td>Problem</td> <!--  <- TODO: display the number of problems in the problem set -->
       <td>
         <span class="glyphicon glyphicon-chevron-right"></span> <span class="glyphicon glyphicon-pushpin text-danger"></span>
       </td>
@@ -47,6 +47,7 @@
               <col width="100">
               <col>
               <tbody>
+                <!-- TODO get the problems within the problem set rather than just repeating the sets -->
                 {% for problem in q %}
                 <tr>
                   <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
