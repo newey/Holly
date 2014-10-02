@@ -2,9 +2,8 @@
 	margin-top: 0px;
 }
 
-.status {
-	
-}
+/* Problems table
+-------------------------------------------------- */
 
 .status div {
 	max-width: 50px;
@@ -20,10 +19,17 @@ td.last {
 	white-space: nowrap;
 }
 
-/* Side notes for calling out things
+.inner {
+  padding: 0px !important;
+}
+
+.innerRow table {
+  margin-bottom: 0px;
+}
+
+
+/* Callouts from Bootstrap website
 -------------------------------------------------- */
- 
-/* Base styles (regardless of theme) */
 .bs-callout {
   margin: 20px 0;
   padding: 15px 30px 15px 15px;
