@@ -39,6 +39,8 @@ import traceback
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
+import pickle
+import io
 
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
@@ -167,7 +169,7 @@ class BaseHandler(CommonRequestHandler):
 
     def get_task_by_id(self, task_id):
         if not task_id.isdigit():
-            raise keyError
+            raise KeyError
 
         for task in self.contest.tasks:
             if task.id == int(task_id):
