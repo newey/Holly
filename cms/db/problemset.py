@@ -74,7 +74,7 @@ class ProblemSet(Base):
                    index=True)
     contest = relationship(
         Contest,
-        backref=backref('problemSets',
+        backref=backref('problemsets',
                         collection_class=ordering_list('num'),
                         order_by=[num],
                         cascade="all, delete-orphan",

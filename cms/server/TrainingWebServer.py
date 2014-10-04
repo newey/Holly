@@ -52,7 +52,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File
+    Testcase, Submission, User, File, ProblemSet, ProblemSetItem
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -731,9 +731,62 @@ class SubmissionsHandler(BaseHandler):
         self.render("task_submissions.html", **self.r_params)
         
 
+class AddProblemSetHandler(BaseHandler):
+    """Adds a new problem set.
+
+    """
+    def get(self):
+        self.render("add_problemset.html", **self.r_params)
+
+    def post(self):
+        try:
+            attrs = dict()
+
+            self.get_string(attrs, "name", empty=None)
+            self.get_string(attrs, "title")
+            self.get_string(attrs, "num")
+            attrs["contest"] = self.contest
+            #attrs["contest_id"] = self.contest.id
+            attrs["num"] = int(attrs["num"])
+
+
+            assert attrs.get("name") is not None, "No set name specified."
+
+            print(attrs["num"])
+
+            problemset = ProblemSet(**attrs)
+            self.sql_session.add(problemset)
+
+            working = dict()
+            self.get_string(working, "problemids")
+            problemids = working["problemids"].strip().split()
+
+            assert reduce(lambda x, y: x and y.isdigit(), problemids, True), "Not all problem ids are integers"
+
+            problemids = map(int, problemids)
+
+            ## TODO: Ensure all problem ids are actually problems.
+
+            for index, problemid in enumerate(problemids):
+                task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                attrs = {"num":index, "problemSet":problemset, "task":task}
+                problemsetitem = ProblemSetItem(**attrs)
+                self.sql_session.add(problemsetitem)
+
+            self.sql_session.commit()
+
+        except Exception as error:
+            self.redirect("/problemset/add")
+            print(error)
+            return
+
+        self.redirect("/")
+
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/task/add", AddTaskHandler),
+    (r"/problemset/add", AddProblemSetHandler),
     (r"/task/([0-9]+)/submit", SubmitHandler),
     (r"/task/([0-9]+)/submissions", SubmissionsHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
