@@ -68,7 +68,7 @@ class ProblemSetItem(Base):
     # ProblemSet (id and object) that the item is a member of
     problemSet_id = Column(
         Integer,
-        ForeignKey(ProblemSet.id, onupdate="CASCADE"),
+        ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
         nullable=False,
         index=True)
     problemSet = relationship(
