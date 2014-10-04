@@ -29,7 +29,7 @@
       </div>
     -->
 
-    {% for set in q %}
+    {% for set in sets %}
     <tr class="outerRow">
       <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
       <td><a href="#">{{ set.title }}</a></td>
@@ -47,11 +47,10 @@
               <col width="100">
               <col>
               <tbody>
-                <!-- TODO get the problems within the problem set rather than just repeating the sets -->
-                {% for problem in q %}
+                {% for problem in set.items %}
                 <tr>
                   <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
-                  <td><a href="#">{{ problem.title }}</a></td>
+                  <td><a href="#">{{ problem.task.title }}</a></td>
                 </tr>
                 {% end %}
               </tbody>

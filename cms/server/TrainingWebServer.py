@@ -39,6 +39,8 @@ import traceback
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
+import pickle
+import io
 
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
@@ -50,7 +52,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File
+    Testcase, Submission, User, File, ProblemSet, ProblemSetItem
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -167,7 +169,7 @@ class BaseHandler(CommonRequestHandler):
 
     def get_task_by_id(self, task_id):
         if not task_id.isdigit():
-            raise keyError
+            raise KeyError
 
         for task in self.contest.tasks:
             if task.id == int(task_id):
@@ -342,6 +344,7 @@ class MainHandler(BaseHandler):
     """
     def get(self, contest_id=None):
         self.r_params = self.render_params()
+        self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.r_params["q"] = self.contest.tasks # TODO include problem sets rather than tasks
         self.render("home.html", **self.r_params)
 
@@ -543,7 +546,6 @@ class AddTestcaseHandler(BaseHandler):
 
         self.redirect("/task/%s/description" % task.id)
 
-
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
 
@@ -727,7 +729,120 @@ class SubmissionsHandler(BaseHandler):
                                       .order_by(Submission.timestamp.desc())
 
         self.render("task_submissions.html", **self.r_params)
-        
+
+class AddProblemSetHandler(BaseHandler):
+    """Adds a new problem set.
+
+    """
+    def get(self):
+        self.render("add_problemset.html", **self.r_params)
+
+    def post(self):
+        try:
+            attrs = dict()
+
+            self.get_string(attrs, "name", empty=None)
+            self.get_string(attrs, "title")
+            self.get_string(attrs, "num")
+            attrs["contest"] = self.contest
+            #attrs["contest_id"] = self.contest.id
+            attrs["num"] = int(attrs["num"])
+
+            assert attrs.get("name") is not None, "No set name specified."
+
+            print(attrs["num"])
+
+            problemset = ProblemSet(**attrs)
+            self.sql_session.add(problemset)
+
+            working = dict()
+            self.get_string(working, "problemids")
+            problemids = working["problemids"].strip().split()
+
+            assert reduce(lambda x, y: x and y.isdigit(), problemids, True), "Not all problem ids are integers"
+
+            problemids = map(int, problemids)
+
+            ## TODO: Ensure all problem ids are actually problems.
+
+            for index, problemid in enumerate(problemids):
+                task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                attrs = {"num":index, "problemSet":problemset, "task":task}
+                problemsetitem = ProblemSetItem(**attrs)
+                self.sql_session.add(problemsetitem)
+
+            self.sql_session.commit()
+
+        except Exception as error:
+            self.redirect("/problemset/add")
+            print(error)
+            return
+
+        self.redirect("/")
+
+class ProblemSetDeletionHandler(BaseHandler):
+    """Deletes a problem set.
+
+    """
+    def post(self, set_id):
+        try:
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
+
+            self.sql_session.delete(problemset)
+            self.sql_session.commit()
+        except Exception as error:
+            print(error)
+        self.redirect("/")
+
+class ProblemSetEditingHandler(BaseHandler):
+    """Edits a problem set.
+
+    """
+    def get(self, set_id):
+        self.render("edit_problemset.html", **self.r_params)
+
+    def post(self, set_id):
+        try:
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
+        except Exception as error:
+            print(error)
+            self.redirect("/problemset/%d/edit" % set_id)
+        try:
+            attrs = dict()
+            self.get_string(attrs, "name", empty=None)
+            self.get_string(attrs, "title", empty=None)
+            self.get_string(attrs, "problemids", empty=None)
+
+
+            if attrs["name"] is not None:
+                problemset.name = attrs["name"]
+
+            if attrs["title"] is not None:
+                problemset.title = attrs["title"]
+
+            if attrs["problemids"] is not None:
+                for item in problemset.items:
+                    self.sql_session.delete(item)
+
+                problemids = attrs["problemids"].strip().split()
+
+                assert reduce(lambda x, y: x and y.isdigit(), problemids, True), "Not all problem ids are integers"
+
+                problemids = map(int, problemids)
+
+                for index, problemid in enumerate(problemids):
+                    task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                    attrs = {"num":index, "problemSet":problemset, "task":task}
+                    problemsetitem = ProblemSetItem(**attrs)
+                    self.sql_session.add(problemsetitem)
+            self.sql_session.commit()
+
+        except Exception as error:
+            print(error)
+            self.redirect("/problemset/%d/edit" % set_id)
+
+        self.redirect("/")
+
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -738,4 +853,7 @@ _tws_handlers = [
     (r"/task/([0-9]+)/delete", TaskDeletionHandler),
     (r"/task/([0-9]+)/edit", TaskEditingHandler),
     (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
+    (r"/problemset/add", AddProblemSetHandler),
+    (r"/problemset/([0-9]+)/delete", ProblemSetDeletionHandler),
+    (r"/problemset/([0-9]+)/edit", ProblemSetEditingHandler),
 ]
