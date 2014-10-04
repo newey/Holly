@@ -88,7 +88,7 @@ class ProblemSetItem(Base):
     # The Task that is a member of the problem set
     task_id = Column(
         Integer,
-        ForeignKey(Task.id, onupdate="CASCADE"),
+        ForeignKey(Task.id, onupdate="CASCADE", ondelete="CASCADE"),
         index=True,
         nullable=False
         )
