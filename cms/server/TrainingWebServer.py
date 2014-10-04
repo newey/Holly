@@ -546,7 +546,6 @@ class AddTestcaseHandler(BaseHandler):
 
         self.redirect("/task/%s/description" % task.id)
 
-
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
 
@@ -730,7 +729,6 @@ class SubmissionsHandler(BaseHandler):
                                       .order_by(Submission.timestamp.desc())
 
         self.render("task_submissions.html", **self.r_params)
-        
 
 class AddProblemSetHandler(BaseHandler):
     """Adds a new problem set.
@@ -783,16 +781,30 @@ class AddProblemSetHandler(BaseHandler):
 
         self.redirect("/")
 
+class ProblemSetDeletionHandler(BaseHandler):
+    """Deletes a problem set.
+
+    """
+    def post(self, set_id):
+        try:
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
+
+            self.sql_session.delete(problemset)
+            self.sql_session.commit()
+        except Exception as error:
+            print(error)
+        self.redirect("/")
 
 
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/task/add", AddTaskHandler),
-    (r"/problemset/add", AddProblemSetHandler),
     (r"/task/([0-9]+)/submit", SubmitHandler),
     (r"/task/([0-9]+)/submissions", SubmissionsHandler),
     (r"/task/([0-9]+)/description", TaskDescriptionHandler),
     (r"/task/([0-9]+)/delete", TaskDeletionHandler),
     (r"/task/([0-9]+)/edit", TaskEditingHandler),
     (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
+    (r"/problemset/add", AddProblemSetHandler),
+    (r"/problemset/([0-9]+)/delete", ProblemSetDeletionHandler),
 ]
