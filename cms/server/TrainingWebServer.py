@@ -344,6 +344,7 @@ class MainHandler(BaseHandler):
     """
     def get(self, contest_id=None):
         self.r_params = self.render_params()
+        self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.r_params["q"] = self.contest.tasks # TODO include problem sets rather than tasks
         self.render("home.html", **self.r_params)
 
@@ -781,6 +782,7 @@ class AddProblemSetHandler(BaseHandler):
             return
 
         self.redirect("/")
+
 
 
 _tws_handlers = [
