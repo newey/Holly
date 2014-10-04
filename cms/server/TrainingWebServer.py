@@ -748,7 +748,6 @@ class AddProblemSetHandler(BaseHandler):
             #attrs["contest_id"] = self.contest.id
             attrs["num"] = int(attrs["num"])
 
-
             assert attrs.get("name") is not None, "No set name specified."
 
             print(attrs["num"])
@@ -795,6 +794,55 @@ class ProblemSetDeletionHandler(BaseHandler):
             print(error)
         self.redirect("/")
 
+class ProblemSetEditingHandler(BaseHandler):
+    """Edits a problem set.
+
+    """
+    def get(self, set_id):
+        self.render("edit_problemset.html", **self.r_params)
+
+    def post(self, set_id):
+        try:
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
+        except Exception as error:
+            print(error)
+            self.redirect("/problemset/%d/edit" % set_id)
+        try:
+            attrs = dict()
+            self.get_string(attrs, "name", empty=None)
+            self.get_string(attrs, "title", empty=None)
+            self.get_string(attrs, "problemids", empty=None)
+
+
+            if attrs["name"] is not None:
+                problemset.name = attrs["name"]
+
+            if attrs["title"] is not None:
+                problemset.title = attrs["title"]
+
+            if attrs["problemids"] is not None:
+                for item in problemset.items:
+                    self.sql_session.delete(item)
+
+                problemids = attrs["problemids"].strip().split()
+
+                assert reduce(lambda x, y: x and y.isdigit(), problemids, True), "Not all problem ids are integers"
+
+                problemids = map(int, problemids)
+
+                for index, problemid in enumerate(problemids):
+                    task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                    attrs = {"num":index, "problemSet":problemset, "task":task}
+                    problemsetitem = ProblemSetItem(**attrs)
+                    self.sql_session.add(problemsetitem)
+            self.sql_session.commit()
+
+        except Exception as error:
+            print(error)
+            self.redirect("/problemset/%d/edit" % set_id)
+
+        self.redirect("/")
+
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -807,4 +855,5 @@ _tws_handlers = [
     (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
     (r"/problemset/add", AddProblemSetHandler),
     (r"/problemset/([0-9]+)/delete", ProblemSetDeletionHandler),
+    (r"/problemset/([0-9]+)/edit", ProblemSetEditingHandler),
 ]
