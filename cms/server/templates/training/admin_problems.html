@@ -1,13 +1,59 @@
-<ul>
-  {% for task in tasks %}
-    <li>
-    	<a href="/admin/problem/{{ task.id }}">{{ task.title }}</a>
-        <form action="/admin/problem/{{ task.id }}/delete" method="post">
+{% extends base.html %}
+
+{% block js_init %} 
+{% end %}
+
+{% block core %}
+
+<h2>problems</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <td>id</td>
+      <td>name</td>
+      <td></td>
+    </tr>
+  </thead>  
+
+  <tbody>
+    {% for task in tasks %}
+      <tr>
+        <td>{{ task.id }}</td>
+        <td><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></td>
+        <td>
+          <form action="/admin/problem/{{ task.id }}/delete" method="post">
             <input type="submit" value="Delete">
-        </form>
-        <form action="/admin/problem/{{ task.id }}/edit">
-            <input type="submit" value="Edit">
-        </form>
-    </li>
-  {% end %}
-</ul>
+          </form>
+          <button type="button" class="btn btn-default" href="/admin/problem/{{ task.id }}/edit">Edit</button>
+        </td>
+      </tr>
+    {% end %}
+  </tbody>
+</table>
+
+<h2>problem sets</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <td>id</td>
+      <td>name</td>
+      <td></td>
+    </tr>
+  </thead>  
+
+  <tbody>
+    {% for set in sets %}
+      <tr>
+        <td>{{ set.id }}</td>
+        <td>{{ set.name }}</td>
+        <td>
+          <form action="/admin/problemset/{{ set.id }}/delete" method="post">
+            <input type="submit" value="Delete">
+          </form>
+          <button type="button" class="btn btn-default" href="/admin/problemset/{{ set.id }}/edit">Edit</button>
+        </td>
+      </tr>
+    {% end %}
+  </tbody>
+</table>
+{% end %}
