@@ -541,6 +541,7 @@ class TestProblemHandler(BaseHandler):
             input_ = self.request.files["input"][0]
             output = self.request.files["output"][0]
         except KeyError:
+            print("Couldn't find files")
             self.redirect("/admin/problem/%s/test" % task_id)
             return
 
@@ -560,6 +561,7 @@ class TestProblemHandler(BaseHandler):
             self.sql_session.add(testcase)
             self.sql_session.commit()
         except Exception as error:
+            print(error)
             self.redirect("/admin/problem/%s/test" % task_id)
             return
 
@@ -586,6 +588,7 @@ class SubmitHandler(BaseHandler):
         # Ensure that the user did not submit multiple files with the
         # same name.
         if any(len(filename) != 1 for filename in self.request.files.values()):
+            print("Multiple files with the same name")
             self.redirect("/problem/%s" % task.id)
             return
 
@@ -597,6 +600,7 @@ class SubmitHandler(BaseHandler):
         provided = set(self.request.files.keys())
         if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
                                          and required.issuperset(provided))):
+            print("More than one file for every name.")
             self.redirect("/problem/%s" % task.id)
             return
 
