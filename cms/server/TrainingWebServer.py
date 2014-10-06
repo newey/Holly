@@ -444,7 +444,7 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        self.render("task_description.html",
+        self.render("admin_problem.html",
                     task=task, **self.r_params)
 
 class DeleteProblemHandler(BaseHandler):

@@ -1,0 +1,70 @@
+{% extends base.html %}
+
+{% block core %}
+<ol class="breadcrumb">
+  <li><a href="/">Home</a></li>
+  <li class="active">{{ task.title }}</li>
+</ol>
+
+<h1>{{ task.title }}</h1>
+
+<table class="table">
+  <tr>
+    <td>Title</td>
+    <td>{{ task.title }}</td>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td>{{ task.name }}</td>
+  </tr>
+  <tr>
+    <td>Statement</td>
+    <td>{{ task.primary_statements }}</td>
+  </tr>
+  <tr>
+    <td>Time limit</td>
+    <td>{{ task.active_dataset.time_limit }}</td>
+  </tr>
+  <tr>
+    <td>Memory limit</td>
+    <td>{{ task.active_dataset.memory_limit }}</td>
+  </tr>
+  <tr>
+    <td>task type</td>
+    <td>{{ task.active_dataset.task_type }}</td>
+  </tr>
+</table>
+
+<div class="row">
+  <div class="col-md-3 col-md-offset-9">
+    <form action="/admin/problem/{{ task.id }}/delete" method="post">
+      <input type="submit" class="btn btn-default" value="Delete">
+    </form>
+    <a href="/admin/problem/{{ task.id }}/edit">
+      <button type="button" class="btn btn-default">Edit</button>
+    </a>    
+  </div>
+</div>
+
+
+<h3>Test Info</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Input</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for testcase in task.active_dataset.testcases.itervalues() %}
+    <tr>
+      <td>{{ testcase.codename }}</td>
+      <td>{{ testcase.input }}</td>
+      <td>{{ testcase.output }}</td>
+    </tr>
+    {% end %}
+  </tbody>
+</table>
+
+{% end %}

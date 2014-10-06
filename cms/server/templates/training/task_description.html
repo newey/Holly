@@ -1,5 +1,14 @@
-<h2>Task info</h2>
-<table>
+{% extends base.html %}
+
+{% block core %}
+<ol class="breadcrumb">
+  <li><a href="/">Home</a></li>
+  <li class="active">{{ task.title }}</li>
+</ol>
+
+<h1>{{ task.title }}</h1>
+
+<table class="table">
   <tr>
     <td>Title</td>
     <td>{{ task.title }}</td>
@@ -26,30 +35,25 @@
   </tr>
 </table>
 
-<h2>Test info</h2>
-{% for testcase in task.active_dataset.testcases.itervalues() %}
-  <table>
-    <tr>
-      <td>codename</td>
-      <td>{{ testcase.codename }}</td>
-    </tr>
-    <tr>
-      <td>input</td>
-      <td>{{ testcase.input }}</td>
-    </tr>
-    <tr>
-      <td>output</td>
-      <td>{{ testcase.output }}</td>
-    </tr>
-  </table>
-{% end %}
+<h3>Submit a solution</h3>
 
-<h2>Submit a solution</h2>
-<form class="form-horizontal" enctype="multipart/form-data" action="/problem/{{ task.id }}/submit" method="POST">
+<form class="form-horizontal" role="form" method="post">
   {% for idx, filename in enumerate(x.filename for x in task.submission_format) %}
-    <label>{{ filename.replace(".%l", "") }}</label>
-    <input type="file" name="{{ filename }}"/><br>
+    <div class="form-group">
+    <label class="col-md-2 control-label" for="{{ filename }}" style="text-align:left;">{{ filename.replace(".%l", "") }}</label>
+    <div class="col-md-7">
+      <input id="{{ filename }}" name="{{ filename }}" class="input-file" type="file">
+    </div>
+  </div>
   {% end %}
-  <input type="submit" value="Upload">
-  <input type="Reset" >
+
+
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="submit"></label>
+    <div class="col-md-7">
+      <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+    </div>
+  </div>
 </form>
+
+{% end %}
