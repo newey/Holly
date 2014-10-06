@@ -67,7 +67,7 @@ logger = logging.getLogger(__name__)
 def create_training_contest():
     attrs = dict()
     attrs["name"] = "TrainingWebServer"
-    attrs["description"] = "A specialized 'contest' for the training web server"
+    attrs["description"] = "A speciskalized 'contest' for the training web server"
     attrs["allowed_localizations"] = []
     attrs["languages"] = DEFAULT_LANGUAGES
 
@@ -444,7 +444,7 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        self.render("task_description.html",
+        self.render("admin_problem.html",
                     task=task, **self.r_params)
 
 class DeleteProblemHandler(BaseHandler):
@@ -746,6 +746,7 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.task == task)\
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
+        self.r_params["task"] = task
 
         self.render("task_submissions.html", **self.r_params)
 
