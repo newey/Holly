@@ -41,6 +41,7 @@ from StringIO import StringIO
 import zipfile
 import pickle
 import io
+import random
 
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
@@ -770,8 +771,9 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "num")
             attrs["contest"] = self.contest
             #attrs["contest_id"] = self.contest.id
-            attrs["num"] = int(attrs["num"])
-
+            #TODO: CHANGE AFTER DEMO
+            random.seed()
+            attrs["num"] = random.randint(1,100000)
             assert attrs.get("name") is not None, "No set name specified."
 
             print(attrs["num"])
