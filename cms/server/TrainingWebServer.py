@@ -727,6 +727,7 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.task == task)\
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
+        self.r_params["task"] = task
 
         self.render("task_submissions.html", **self.r_params)
 
