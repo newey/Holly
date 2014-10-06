@@ -541,6 +541,7 @@ class TestProblemHandler(BaseHandler):
             input_ = self.request.files["input"][0]
             output = self.request.files["output"][0]
         except KeyError:
+            print("Couldn't find files")
             self.redirect("/admin/problem/%s/test" % task_id)
             return
 
@@ -560,6 +561,7 @@ class TestProblemHandler(BaseHandler):
             self.sql_session.add(testcase)
             self.sql_session.commit()
         except Exception as error:
+            print(error)
             self.redirect("/admin/problem/%s/test" % task_id)
             return
 
