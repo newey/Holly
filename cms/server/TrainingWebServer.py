@@ -348,11 +348,17 @@ class MainHandler(BaseHandler):
         self.r_params["q"] = self.contest.tasks # TODO include problem sets rather than tasks
         self.render("home.html", **self.r_params)
 
-    def post(self):
-        self.redirect("/task/add")
+class AdminMainHandler(BaseHandler):
+    """Admin Home page handler
 
+    """
+    def get(self, contest_id=None):
+        self.r_params = self.render_params()
+        self.r_params["sets"] = self.sql_session.query(ProblemSet)
+        self.r_params["tasks"] = self.contest.tasks
+        self.render("admin_problems.html", **self.r_params)
 
-class AddTaskHandler(BaseHandler):
+class AddProblemHandler(BaseHandler):
     """Adds a new problem.
 
     """
@@ -381,7 +387,7 @@ class AddTaskHandler(BaseHandler):
             self.sql_session.add(task)
 
         except Exception as error:
-            self.redirect("/task/add")
+            self.redirect("/admin/problem/add")
             print(error)
             return
 
@@ -406,12 +412,12 @@ class AddTaskHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/task/add")
+            self.redirect("/admin/problem/add")
             return
 
-        self.redirect("/task/%s/description" % task.id)
+        self.redirect("/admin/problem/%s" % task.id)
 
-class TaskDescriptionHandler(BaseHandler):
+class ProblemHandler(BaseHandler):
     """Shows the data of a task.
 
     """
@@ -427,8 +433,21 @@ class TaskDescriptionHandler(BaseHandler):
         self.render("task_description.html",
                     task=task, **self.r_params)
 
-# TODO: Implement
-class TaskDeletionHandler(BaseHandler):
+class AdminProblemHandler(BaseHandler):
+    """Shows the data of a task.
+
+    """
+
+    def get(self, task_id):
+        try:
+            task = self.get_task_by_id(task_id)
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.render("task_description.html",
+                    task=task, **self.r_params)
+
+class DeleteProblemHandler(BaseHandler):
     """Deletes a task.
 
     """
@@ -445,7 +464,7 @@ class TaskDeletionHandler(BaseHandler):
         self.redirect("/")
 
 # Does not edit or load the submission format choice
-class TaskEditingHandler(BaseHandler):
+class EditProblemHandler(BaseHandler):
     """Edits a task.
     """
 
@@ -493,13 +512,13 @@ class TaskEditingHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            self.redirect("/task/issues")
+            self.redirect("/admin/problem/%s/edit" % task_id)
             print(error)
             return
 
         self.redirect("/")
 
-class AddTestcaseHandler(BaseHandler):
+class TestProblemHandler(BaseHandler):
     """Add a testcase to a dataset.
 
     """
@@ -522,7 +541,7 @@ class AddTestcaseHandler(BaseHandler):
             input_ = self.request.files["input"][0]
             output = self.request.files["output"][0]
         except KeyError:
-            self.redirect("/add_testcase/%s" % task_id)
+            self.redirect("/admin/problem/%s/test" % task_id)
             return
 
         public = self.get_argument("public", None) is not None
@@ -541,10 +560,10 @@ class AddTestcaseHandler(BaseHandler):
             self.sql_session.add(testcase)
             self.sql_session.commit()
         except Exception as error:
-            self.redirect("/add_testcase/%s" % task_id)
+            self.redirect("/admin/problem/%s/test" % task_id)
             return
 
-        self.redirect("/task/%s/description" % task.id)
+        self.redirect("/admin/problem/%s" % task.id)
 
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
@@ -567,7 +586,7 @@ class SubmitHandler(BaseHandler):
         # Ensure that the user did not submit multiple files with the
         # same name.
         if any(len(filename) != 1 for filename in self.request.files.values()):
-            self.redirect("/tasks/%s/description" % task.id)
+            self.redirect("/problem/%s" % task.id)
             return
 
         # This ensure that the user sent one file for every name in
@@ -578,7 +597,7 @@ class SubmitHandler(BaseHandler):
         provided = set(self.request.files.keys())
         if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
                                          and required.issuperset(provided))):
-            self.redirect("/tasks/%s/description" % task.id)
+            self.redirect("/problem/%s" % task.id)
             return
 
         # Add submitted files. After this, files is a dictionary indexed
@@ -649,14 +668,14 @@ class SubmitHandler(BaseHandler):
                     submission_lang = lang
         if error is not None:
             print("Incorrect language extension")
-            self.redirect("/task/%s/description" % task.id)
+            self.redirect("/problem/%s" % task.id)
             return
 
         # Check if submitted files are small enough.
         if any([len(f[1]) > config.max_submission_length
                 for f in files.values()]):
             print("Files are too big")
-            self.redirect("/task/%s/description" % task.id)
+            self.redirect("/problem/%s" % task.id)
             return
 
         # All checks done, submission accepted.
@@ -698,7 +717,7 @@ class SubmitHandler(BaseHandler):
         # In case of error, the server aborts the submission
         except Exception as error:
             print(error)
-            self.redirect("/task/%s/description" % task.id)
+            self.redirect("/problem/%s" % task.id)
             return
 
         submission = Submission(self.timestamp,
@@ -714,7 +733,7 @@ class SubmitHandler(BaseHandler):
             submission_id=submission.id)
 
 
-        self.redirect("/task/%s/submissions" % task.id)
+        self.redirect("/problem/%s/submissions" % task.id)
 
 class SubmissionsHandler(BaseHandler):
     def get(self, task_id):
@@ -774,13 +793,13 @@ class AddProblemSetHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            self.redirect("/problemset/add")
+            self.redirect("/admin/problemset/add")
             print(error)
             return
 
-        self.redirect("/")
+        self.redirect("/admin/problems")
 
-class ProblemSetDeletionHandler(BaseHandler):
+class DeleteProblemSetHandler(BaseHandler):
     """Deletes a problem set.
 
     """
@@ -792,9 +811,9 @@ class ProblemSetDeletionHandler(BaseHandler):
             self.sql_session.commit()
         except Exception as error:
             print(error)
-        self.redirect("/")
+        self.redirect("/admin/problems")
 
-class ProblemSetEditingHandler(BaseHandler):
+class EditProblemSetHandler(BaseHandler):
     """Edits a problem set.
 
     """
@@ -806,7 +825,7 @@ class ProblemSetEditingHandler(BaseHandler):
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
         except Exception as error:
             print(error)
-            self.redirect("/problemset/%d/edit" % set_id)
+            self.redirect("/admin/problemset/%d/edit" % set_id)
         try:
             attrs = dict()
             self.get_string(attrs, "name", empty=None)
@@ -839,21 +858,24 @@ class ProblemSetEditingHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/problemset/%d/edit" % set_id)
+            self.redirect("/admin/problemset/%d/edit" % set_id)
 
-        self.redirect("/")
+        self.redirect("/admin/problems")
 
 
 _tws_handlers = [
     (r"/", MainHandler),
-    (r"/task/add", AddTaskHandler),
-    (r"/task/([0-9]+)/submit", SubmitHandler),
-    (r"/task/([0-9]+)/submissions", SubmissionsHandler),
-    (r"/task/([0-9]+)/description", TaskDescriptionHandler),
-    (r"/task/([0-9]+)/delete", TaskDeletionHandler),
-    (r"/task/([0-9]+)/edit", TaskEditingHandler),
-    (r"/add_testcase/([0-9]+)", AddTestcaseHandler),
-    (r"/problemset/add", AddProblemSetHandler),
-    (r"/problemset/([0-9]+)/delete", ProblemSetDeletionHandler),
-    (r"/problemset/([0-9]+)/edit", ProblemSetEditingHandler),
+    (r"/problem/([0-9]+)", ProblemHandler),
+    (r"/problem/([0-9]+)/submit", SubmitHandler),
+    (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/admin/problems", AdminMainHandler),
+    (r"/admin/problem/([0-9]+)", AdminProblemHandler),
+    (r"/admin/problem/add", AddProblemHandler),
+    (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
+    (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
+    (r"/admin/problem/([0-9]+)/test", TestProblemHandler),
+    #(r"/admin/problemset/([0-9]+)", AdminProblemSetHandler),
+    (r"/admin/problemset/add", AddProblemSetHandler),
+    (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
+    (r"/admin/problemset/([0-9]+)/edit", EditProblemSetHandler),
 ]
