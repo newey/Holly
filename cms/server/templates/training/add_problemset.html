@@ -1,7 +1,33 @@
-<form method="post">
-  name: <input type="text" name="name"><br>
-  title: <input type="text" name="title"><br>
-  number: <input type="text" name="num"><br>
-  problem numbers (space separated): <input type="text" name="problemids"><br>
-  <input type="submit" value="Submit"><br>
+{% extends base.html %}
+
+{% block core %}
+<form class="form-horizontal" role="form" method="post">
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+    </div>
+  </div>
+
+	<div class="form-group">
+    <label for="problemids" class="col-sm-2 control-label" style="text-align:left;">Problems Numbers (space seperated)</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="problemids" name="problemids" placeholder="Numbers">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="submit"></label>
+    <div class="col-md-7">
+      <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+    </div>
+  </div>
 </form>
+{% end %}

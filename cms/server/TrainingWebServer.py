@@ -67,7 +67,7 @@ logger = logging.getLogger(__name__)
 def create_training_contest():
     attrs = dict()
     attrs["name"] = "TrainingWebServer"
-    attrs["description"] = "A specialized 'contest' for the training web server"
+    attrs["description"] = "A speciskalized 'contest' for the training web server"
     attrs["allowed_localizations"] = []
     attrs["languages"] = DEFAULT_LANGUAGES
 
