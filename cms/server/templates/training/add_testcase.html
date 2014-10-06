@@ -1,31 +1,53 @@
-<h1><a href="/task/{{ task.id }}">{{ task.title }} ({{ task.name }})</a> - Upload testcase</h1>
-<form enctype="multipart/form-data" action="{{ url_root }}/add_testcase/{{ task.id }}" method="POST">
-  <table>
-    <tr>
-      <td>Codename:</td>
-      <td>
-        <input type="text" name="codename"/>
-      </td>
-    </tr>
-    <tr>
-      <td>Input:</td>
-      <td>
-        <input type="file" name="input"/>
-      </td>
-    </tr>
-    <tr>
-      <td>Output:</td>
-      <td>
-        <input type="file" name="output"/>
-      </td>
-    </tr>
-    <tr>
-      <td>Public</td>
-      <td>
-        <input type="checkbox" name="public">
-      </td>
-    </tr>
-  </table>
-  <input type="submit" value="Upload">
-  <input type="Reset" >
+{% extends base.html %}
+
+{% block core %}
+<ol class="breadcrumb">
+  <li><a href="/admin/problems">Problems</a></li>
+  <li><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></li>
+  <li class="active">Testcase</li>
+</ol>
+
+<h1>Upload testcase</h1>
+
+<form class="form-horizontal" role="form" method="post">
+  <div class="form-group">
+    <label for="codename" class="col-sm-2 control-label" style="text-align:left;">Name</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="codename" name="codename" placeholder="Name">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="input" style="text-align:left;">Input</label>
+    <div class="col-md-7">
+      <input id="input" name="input" class="input-file" type="file">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="output" style="text-align:left;">Output</label>
+    <div class="col-md-7">
+      <input id="output" name="output" class="input-file" type="file">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="public"></label>
+    <div class="col-md-7">
+    <div class="checkbox">
+      <label for="checkboxes-0">
+        <input type="checkbox" name="public" id="checkboxes-0">
+        Public
+      </label>
+    </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="submit"></label>
+    <div class="col-md-7">
+      <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+    </div>
+  </div>
 </form>
+{% end %}
