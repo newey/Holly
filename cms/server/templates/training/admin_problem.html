@@ -35,16 +35,12 @@
   </tr>
 </table>
 
-<div class="row">
-  <div class="col-md-3 col-md-offset-9">
-    <form action="/admin/problem/{{ task.id }}/delete" method="post">
-      <input type="submit" class="btn btn-default" value="Delete">
-    </form>
-    <a href="/admin/problem/{{ task.id }}/edit">
-      <button type="button" class="btn btn-default">Edit</button>
-    </a>    
-  </div>
-</div>
+<form action="/admin/problem/{{ task.id }}/delete" method="post">
+  <input type="submit" class="btn btn-primary" value="Delete">
+</form>
+<a href="/admin/problem/{{ task.id }}/edit">
+  <button type="button" class="btn btn-primary">Edit</button>
+</a>
 
 
 <h3>Test Info</h3>
@@ -66,5 +62,8 @@
     {% end %}
   </tbody>
 </table>
+<a href="/admin/problem/{{ task.id }}/test">
+  <button type="button" class="btn btn-primary">Add</button>
+</a>
 
 {% end %}
