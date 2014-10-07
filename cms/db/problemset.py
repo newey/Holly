@@ -91,3 +91,6 @@ class ProblemSet(Base):
     # We could add the other parameters from Task here and combine
     # the rules here with the rules for each task, but it doesn't
     # seem important...
+
+    def numProblems(self):
+        return len(self.items)
