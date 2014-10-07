@@ -3,14 +3,14 @@
   <col>
   <col>
   <col width="60">
-  <thead>
+  <!--<thead>
     <tr>
       <th>Status</th>
       <th>Problem Sets</th>
       <th>Count</th>
       <th></th>
     </tr>
-  </thead>
+  </thead>-->
   <tbody>
 
     <!-- Status Minus
@@ -33,7 +33,7 @@
     <tr class="outerRow">
       <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
       <td><a href="#">{{ set.title }}</a></td>
-      <td>Problem</td> <!--  <- TODO: display the number of problems in the problem set -->
+      <td>{{ set.numProblems() }} problems</td>
       <td>
         <span class="glyphicon glyphicon-chevron-right"></span> <span class="glyphicon glyphicon-pushpin text-danger"></span>
       </td>
