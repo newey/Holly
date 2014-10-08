@@ -17,6 +17,11 @@ $("select[name=task_type]").change(showTaskTypeOption);
 {% set score_type_list = plugin_list("cms.grading.scoretypes", "scoretypes") %}
 
 <h1 class="page-header">Edit Problems</h1>
+<ol class="breadcrumb page-breadcrumb">
+  <li><a href="/admin/problems">Problems</a></li>
+  <li><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></li>
+  <li class="active">Edit Problem</li>
+</ol>
 
 <form class="form-horizontal" role="form" method="post">
   <div class="form-group">

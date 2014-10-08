@@ -1,12 +1,11 @@
 {% extends admin_base.html %}
 
 {% block core %}
+<h1 class="page-header">{{ task.title }}</h1>
 <ol class="breadcrumb">
-  <li><a href="/">Home</a></li>
+  <li><a href="/admin/problems">Problems</a></li>
   <li class="active">{{ task.title }}</li>
 </ol>
-
-<h1>{{ task.title }}</h1>
 
 <table class="table">
   <tr>
