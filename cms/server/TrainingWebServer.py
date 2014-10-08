@@ -116,6 +116,8 @@ class BaseHandler(CommonRequestHandler):
 
     """
 
+    refresh_cookie = True
+
     def prepare(self):
         """This method is executed at the beginning of each request.
 
@@ -152,10 +154,52 @@ class BaseHandler(CommonRequestHandler):
         if os.path.exists(localization_dir):
             tornado.locale.load_gettext_translations(localization_dir, "cms")
 
-        self.current_user = self.sql_session.query(User).\
-                            filter(User.username == "test")[0]
         self.timestamp = make_datetime()
         self.r_params = self.render_params()
+
+    def get_current_user(self):
+        """Gets the current user logged in from the cookies
+
+        If a valid cookie is retrieved, return a User object with the
+        username specified in the cookie. Otherwise, return None.
+
+        """
+        if self.get_secure_cookie("login") is None:
+            return None
+
+        # Parse cookie.
+        try:
+            cookie = pickle.loads(self.get_secure_cookie("login"))
+            username = cookie[0]
+            password = cookie[1]
+            last_update = make_datetime(cookie[2])
+        except:
+            self.clear_cookie("login")
+            return None
+
+        # Check if the cookie is expired.
+        if self.timestamp - last_update > \
+                timedelta(seconds=config.cookie_duration):
+            self.clear_cookie("login")
+            return None
+
+        # Load the user from DB.
+        user = self.sql_session.query(User)\
+            .filter(User.contest == self.contest)\
+            .filter(User.username == username).first()
+
+        # Check if user exists and is allowed to login.
+        if user is None or user.password != password:
+            self.clear_cookie("login")
+            return None
+
+        if self.refresh_cookie:
+            self.set_secure_cookie("login",
+                                   pickle.dumps((user.username,
+                                                 user.password,
+                                                 make_timestamp())),
+                                   expires_days=None)
+        return user
 
     def render_params(self):
         """Return the default render params used by almost all handlers.
@@ -316,7 +360,7 @@ class TrainingWebServer(WebService):
 
     def __init__(self, shard):
         parameters = {
-            "login_url": "/",
+            "login_url": "/login",
             "template_path": pkg_resources.resource_filename(
                 "cms.server", "templates/training"),
             "static_path": pkg_resources.resource_filename(
@@ -343,16 +387,81 @@ class MainHandler(BaseHandler):
     """Home page handler
 
     """
-    def get(self, contest_id=None):
-        self.r_params = self.render_params()
+    @tornado.web.authenticated
+    def get(self):
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.r_params["q"] = self.contest.tasks # TODO include problem sets rather than tasks
         self.render("home.html", **self.r_params)
 
-class AdminMainHandler(BaseHandler):
-    """Admin Home page handler
+class LoginHandler(BaseHandler):
+    """Login handler.
 
     """
+    def get(self):
+        self.render("login.html", **self.r_params)
+
+    def post(self):
+        username = self.get_argument("username", "")
+        password = self.get_argument("password", "")
+        user = self.sql_session.query(User)\
+            .filter(User.contest == self.contest)\
+            .filter(User.username == username).first()
+
+        if user is None or user.password != password:
+            self.redirect("/login")
+            return
+
+        self.set_secure_cookie("login",
+                               pickle.dumps((user.username,
+                                             user.password,
+                                             make_timestamp())),
+                               expires_days=None)
+        self.redirect("/")
+
+
+class SignupHandler(BaseHandler):
+    def get(self):
+        self.render("signup.html", **self.r_params)
+
+    def post(self):
+        try:
+            attrs = dict()
+
+            self.get_string(attrs, "first_name")
+            self.get_string(attrs, "last_name")
+            self.get_string(attrs, "username", empty=None)
+            self.get_string(attrs, "password")
+            self.get_string(attrs, "email")
+
+            assert attrs.get("username") is not None, \
+                "No username specified."
+
+            # Create the user.
+            attrs["contest"] = self.contest
+            user = User(**attrs)
+            self.sql_session.add(user)
+            self.sql_session.commit()
+
+        except Exception as error:
+            print(error)
+            self.redirect("/signup")
+            return
+
+        self.redirect("/")
+
+class LogoutHandler(BaseHandler):
+    """Logout handler.
+
+    """
+    def get(self):
+        self.clear_cookie("login")
+        self.redirect("/")
+
+class AdminMainHandler(BaseHandler):
+    """Admin Home page handler
+    
+    """
+    @tornado.web.authenticated
     def get(self, contest_id=None):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
@@ -363,9 +472,11 @@ class AddProblemHandler(BaseHandler):
     """Adds a new problem.
 
     """
+    @tornado.web.authenticated
     def get(self):
         self.render("add_task.html", **self.r_params)
 
+    @tornado.web.authenticated
     def post(self):
         try:
             attrs = dict()
@@ -423,6 +534,7 @@ class ProblemHandler(BaseHandler):
 
     """
 
+    @tornado.web.authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -439,6 +551,7 @@ class AdminProblemHandler(BaseHandler):
 
     """
 
+    @tornado.web.authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -453,6 +566,7 @@ class DeleteProblemHandler(BaseHandler):
 
     """
 
+    @tornado.web.authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -469,6 +583,7 @@ class EditProblemHandler(BaseHandler):
     """Edits a task.
     """
 
+    @tornado.web.authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -478,6 +593,7 @@ class EditProblemHandler(BaseHandler):
         self.render("edit_task.html", 
                     task=task, **self.r_params)
 
+    @tornado.web.authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -523,6 +639,7 @@ class TestProblemHandler(BaseHandler):
     """Add a testcase to a dataset.
 
     """
+    @tornado.web.authenticated
     def get(self, task_id):
         task = self.get_task_by_id(task_id)
         dataset = task.active_dataset
@@ -532,6 +649,7 @@ class TestProblemHandler(BaseHandler):
         self.r_params["dataset"] = dataset
         self.render("add_testcase.html", **self.r_params)
 
+    @tornado.web.authenticated
     def post(self, task_id):
         task = self.get_task_by_id(task_id)
         dataset = task.active_dataset
@@ -572,6 +690,7 @@ class SubmitHandler(BaseHandler):
     """Handles the received submissions.
 
     """
+    @tornado.web.authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -741,6 +860,7 @@ class SubmitHandler(BaseHandler):
         self.redirect("/problem/%s/submissions" % task.id)
 
 class SubmissionsHandler(BaseHandler):
+    @tornado.web.authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -759,9 +879,11 @@ class AddProblemSetHandler(BaseHandler):
     """Adds a new problem set.
 
     """
+    @tornado.web.authenticated
     def get(self):
         self.render("add_problemset.html", **self.r_params)
 
+    @tornado.web.authenticated
     def post(self):
         try:
             attrs = dict()
@@ -810,6 +932,7 @@ class DeleteProblemSetHandler(BaseHandler):
     """Deletes a problem set.
 
     """
+    @tornado.web.authenticated
     def post(self, set_id):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
@@ -824,9 +947,11 @@ class EditProblemSetHandler(BaseHandler):
     """Edits a problem set.
 
     """
+    @tornado.web.authenticated
     def get(self, set_id):
         self.render("edit_problemset.html", **self.r_params)
 
+    @tornado.web.authenticated
     def post(self, set_id):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
@@ -872,6 +997,9 @@ class EditProblemSetHandler(BaseHandler):
 
 _tws_handlers = [
     (r"/", MainHandler),
+    (r"/login", LoginHandler),
+    (r"/signup", SignupHandler),
+    (r"/logout", LogoutHandler),
     (r"/problem/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
