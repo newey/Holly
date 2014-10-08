@@ -1,0 +1,15 @@
+{% extends base.html %}
+
+{% block js_init %} 
+{% end %}
+
+{% block core %}
+<form method="POST">
+  Username: <input type="text" name="username"><br>
+  Password: <input type="text" name="password"><br>
+  First name (optional): <input type="text" name="first_name"><br>
+  Last name (optional): <input type="text" name="last_name"><br>
+  email (optional): <input type="text" name="email"><br>
+  <input type="submit" value="Submit">
+</form>
+{% end %}
