@@ -12,8 +12,12 @@
     </div>
     <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="#">Sign-Up</a></li>
-        <li><a href="#">Login</a></li>
+        {% if current_user.first_name and current_user.last_name %}
+          <li><a>{{ current_user.first_name }} {{ current_user.last_name }}</a></li>
+        {% else %}
+          <li><a>{{ current_user.username }}</a></li>
+        {% end %}
+        <li><a href="/logout">Logout</a></li>
       </ul>
     </nav>
   </div>

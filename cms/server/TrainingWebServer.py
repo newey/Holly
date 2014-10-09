@@ -210,6 +210,7 @@ class BaseHandler(CommonRequestHandler):
         params = {}
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
+        params["current_user"] = self.current_user
         return params
 
     def get_task_by_id(self, task_id):
