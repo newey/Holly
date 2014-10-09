@@ -76,6 +76,8 @@ __all__ = [
     "ask_for_contest",
     # problem sets
     "ProblemSet", "ProblemSetItem"
+    # user sets
+    "UserSet", "UserSetItem"
 ]
 
 
@@ -112,6 +114,9 @@ from .util import test_db_connection, get_contest_list, is_contest_id, \
 
 from .problemset import ProblemSet
 from .problemsetitem import ProblemSetItem
+
+from .userset import UserSet
+from .usersetitem import UserSetItem
 
 configure_mappers()
 

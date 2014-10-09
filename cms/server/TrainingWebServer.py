@@ -53,7 +53,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, ProblemSetItem
+    Testcase, Submission, User, File, ProblemSet, ProblemSetItem, UserSet, UserSetItem
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -994,6 +994,73 @@ class EditProblemSetHandler(BaseHandler):
 
         self.redirect("/admin/problems")
 
+class ViewUserSetsHandler(BaseHandler):
+    """View all user sets.
+
+    """
+    @tornado.web.authenticated
+    def get(self):
+        # TODO: query UserSet instead
+        self.r_params["sets"] = self.sql_session.query(UserSet)
+        self.render("view_usersets.html", **self.r_params)
+
+class AddUserSetHandler(BaseHandler):
+    """Adds a new user set.
+
+    """
+    @tornado.web.authenticated
+    def get(self):
+        self.r_params["users"] = self.sql_session.query(User)
+        self.render("add_userset.html", **self.r_params)
+
+    @tornado.web.authenticated
+    def post(self):
+        try:
+            attrs = dict()
+
+            self.get_string(attrs, "name", empty=None)
+            assert attrs.get("name") is not None, "No set name specified."
+            self.get_string(attrs, "title")
+
+            #TODO: CHANGE AFTER DEMO
+            #random.seed()
+            #attrs["num"] = random.randint(1,100000)
+            #print(attrs["num"])
+            print(attrs.get("name"))
+            print(attrs.get("title"))
+
+            userset = UserSet(**attrs)
+            self.sql_session.add(userset)
+
+            #############################
+            ##########Add Users########## 
+            #############################
+
+            # data = dict()
+            # self.get_string(data, "userids")
+            # userids = data["userids"].strip().split()
+
+            # # convert string to int
+            # userids = map(int, userids)
+
+            # # make users to UserSetItems
+            # for index, userids in enumerate(userids):
+            #     task = self.sql_session.query(Task).filter(Task.id==userids).one()
+            #     attrs = {"num":index, "userSet":userset, "task":task}
+            #     usersetitem = UserSetItem(**attrs)
+            #     self.sql_session.add(usersetitem)
+
+            #############################
+            
+
+            self.sql_session.commit()
+
+        except Exception as error:
+            self.redirect("/")
+            print(error)
+            return
+
+        self.redirect("/admin/usersets")
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -1013,4 +1080,6 @@ _tws_handlers = [
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/edit", EditProblemSetHandler),
+    (r"/admin/usersets", ViewUserSetsHandler),
+    (r"/admin/userset/add", AddUserSetHandler),
 ]
