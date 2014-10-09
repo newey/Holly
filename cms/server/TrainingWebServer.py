@@ -462,7 +462,7 @@ class AdminMainHandler(BaseHandler):
     
     """
     @tornado.web.authenticated
-    def get(self, contest_id=None):
+    def get(self):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.r_params["tasks"] = self.contest.tasks
