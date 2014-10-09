@@ -420,9 +420,6 @@ class LoginHandler(BaseHandler):
 
 
 class SignupHandler(BaseHandler):
-    def get(self):
-        self.render("signup.html", **self.r_params)
-
     def post(self):
         try:
             attrs = dict()
