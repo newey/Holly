@@ -42,7 +42,9 @@
           </li>
           <li class="divider"></li>
           <li>
-            <a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+            <form id="logout" action="/logout" method="GET">
+              <a href="#" onclick="document.getElementById('logout').submit();"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+            </form>
           </li>
         </ul>
         <!-- /.dropdown-user -->
