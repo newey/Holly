@@ -3,10 +3,11 @@
 {% block js_init %} 
 {% end %}
 
-{% block core %}
+{% block body %}
 <form method="POST">
   Username: <input type="text" name="username"><br>
   Password: <input type="text" name="password"><br>
   <input type="submit" value="Submit">
 </form>
+<a href="/signup">Sign up</a>
 {% end %}
