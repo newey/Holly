@@ -1,13 +1,12 @@
-{% extends base.html %}
+{% extends admin_base.html %}
 
 {% block core %}
+<h1 class="page-header">Upload testcase</h1>
 <ol class="breadcrumb">
   <li><a href="/admin/problems">Problems</a></li>
   <li><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></li>
   <li class="active">Testcase</li>
 </ol>
-
-<h1>Upload testcase</h1>
 
 <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post">
   <div class="form-group">

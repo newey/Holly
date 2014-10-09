@@ -1,75 +1,147 @@
-{% extends base.html %}
+{% extends admin_base.html %}
 
 {% block js_init %} 
 {% end %}
 
 {% block core %}
 
-<h2>Problems</h2>
-<table class="table">
-  <col>
-  <col>
-  <col width="200">
-  <thead>
-    <tr>
-      <td>Id</td>
-      <td>Name</td>
-      <td></td>
-    </tr>
-  </thead>  
+<h1 class="page-header" style="margin-bottom: 20px">Problems</h1>
 
-  <tbody>
-    {% for task in tasks %}
-      <tr>
-        <td>{{ task.id }}</td>
-        <td><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></td>
-        <td>
-          <form action="/admin/problem/{{ task.id }}/delete" method="post">
-            <button class="btn btn-danger btn-md col-md-6" type="submit" value="Delete">Delete</button>
-          </form>
-          <a href="/admin/problem/{{ task.id }}/edit">
-            <button type="button" class="btn btn-primary btn-md col-md-6">Edit</button>
-          </a>
-        </td>
-      </tr>
-    {% end %}
-  </tbody>
-</table>
-<a href="/admin/problem/add">
-  <button type="button" class="btn btn-primary">Add</button>
-</a>
+<div class="panel with-nav-tabs panel-default">
+  <div class="panel-heading">
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#tab1problem" data-toggle="tab">Individual Problems</a></li>
+      <li><a href="#tab2problemset" data-toggle="tab">Problem Sets</a></li>
+    </ul>
+  </div>
+  <div class="panel-body">
+    <div class="tab-content">
+      <div class="tab-pane fade in active" id="tab1problem">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered table-hover" id="problems">
+            <col>
+            <col>
+            <col width="60">
+            <col width="60">
+            <col width="60">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Edit</th>
+                <th>Stats</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for task in tasks %}
+              <tr>
+                <td>{{ task.id }}</td>
+                <td><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></td>
+                <td style="text-align: center;">
+                  <a href="/admin/problem/{{ task.id }}/edit">
+                    <button class="btn btn-success btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" data-placement="top" rel="tooltip"><i class="fa fa-edit fa-fw"></i></button>
+                  </a>
+                </td>
+                <td style="text-align: center;">
+                  <a href="/admin/problem/{{ task.id }}">
+                    <button class="btn btn-primary btn-xs" data-title="Stat" data-toggle="modal" data-target="#stat" data-placement="top" rel="tooltip"><i class="fa fa-bar-chart fa-fw"></i></button>
+                  </a>
+                </td>
+                <td style="text-align: center;">
+                  <form action="/admin/problem/{{ task.id }}/delete" method="post">
+                    <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-close fa-fw"></i></button>
+                  </form>
+                </td>
+              </tr>
+            {% end %}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-<h2>Problem Sets</h2>
-<table class="table">
-  <col>
-  <col>
-  <col width="200">
-  <thead>
-    <tr>
-      <td>Id</td>
-      <td>Name</td>
-      <td></td>
-    </tr>
-  </thead>  
+      <div class="tab-pane fade" id="tab2problemset">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered table-hover" id="problemsets">
+            <col>
+            <col>
+            <col width="60">
+            <col width="60">
+            <col width="60">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Edit</th>
+                <th>Stats</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for set in sets %}
+              <tr>
+                <td>{{ set.id }}</td>
+                <td>{{ set.name }}</td>
+                <td style="text-align: center;">
+                  <a href="/admin/problemset/{{ set.id }}/edit">
+                    <button class="btn btn-success btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" data-placement="top" rel="tooltip"><i class="fa fa-edit fa-fw"></i></button>
+                  </a>
+                </td>
+                <td style="text-align: center;">
+                  <a href="/admin/problemset/{{ set.id }}/edit">
+                    <button class="btn btn-primary btn-xs" data-title="Stat" data-toggle="modal" data-target="#stat" data-placement="top" rel="tooltip"><i class="fa fa-bar-chart fa-fw"></i></button>
+                  </a>  
+                </td>
+                <td style="text-align: center;">
+                  <form action="/admin/problemset/{{ set.id }}/delete" method="post">
+                    <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-close fa-fw"></i></button>
+                  </form>
+                </td>
+              </tr>
+            {% end %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}
 
-  <tbody>
-    {% for set in sets %}
-      <tr>
-        <td>{{ set.id }}</td>
-        <td>{{ set.name }}</td>
-        <td>
-          <form action="/admin/problemset/{{ set.id }}/delete" method="post">
-            <button class="btn btn-danger btn-md col-md-6" type="submit" value="Delete">Delete</button>
-          </form>
-          <a href="/admin/problemset/{{ set.id }}/edit">
-            <button type="button" class="btn btn-primary btn-md col-md-6">Edit</button>
-          </a>        
-        </td>
-      </tr>
-    {% end %}
-  </tbody>
-</table>
-<a href="/admin/problemset/add">
-  <button type="button" class="btn btn-primary">Add</button>
-</a>
+{% block scripts %}
+<script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+<script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#problems').dataTable({
+      "fnDrawCallback":function(){
+          if($("#problems").find("tr:not(.ui-widget-header)").length<=5){
+              $('#problems_paginate')[0].style.display = "none";
+          } else {
+              $('#problems_paginate')[0].style.display = "block";
+          }
+      },
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2,3,4 ] }
+       ]
+    });
+
+    $('#problems_filter').find("label").append('<a href="/admin/problem/add"><button type="button" class="btn btn-success" style="margin-left: 20px;">Add <i class="fa fa-plus fa-fw"></i></button></a>')
+
+    $('#problemsets').dataTable({
+      "fnDrawCallback":function(){
+          if($("#problemsets").find("tr:not(.ui-widget-header)").length<=5){
+              $('#problemsets_paginate')[0].style.display = "none";
+          } else {
+              $('#problemsets_paginate')[0].style.display = "block";
+          }
+      },
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2,3,4 ] }
+       ]
+    });
+
+    $('#problemsets_filter').find("label").append('<a href="/admin/problem/add"><button type="button" class="btn btn-success" style="margin-left: 20px;">Add <i class="fa fa-plus fa-fw"></i></button></a>');
+  });
+</script>
 {% end %}
