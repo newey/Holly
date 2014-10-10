@@ -394,6 +394,16 @@ class MainHandler(BaseHandler):
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
+class ProblemListHandler(BaseHandler):
+    """Problem list handler
+
+    """
+    @tornado.web.authenticated
+    def get(self):
+        self.r_params["sets"] = self.sql_session.query(ProblemSet)
+        self.r_params["active_sidebar_item"] = "problems"
+        self.render("contestant_problemlist.html", **self.r_params)
+
 class LoginHandler(BaseHandler):
     """Login handler.
 
@@ -995,6 +1005,7 @@ class EditProblemSetHandler(BaseHandler):
 
 _tws_handlers = [
     (r"/", MainHandler),
+    (r"/problems", ProblemListHandler),
     (r"/login", LoginHandler),
     (r"/signup", SignupHandler),
     (r"/logout", LogoutHandler),

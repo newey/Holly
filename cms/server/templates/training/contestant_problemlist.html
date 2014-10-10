@@ -1,0 +1,24 @@
+<!-- problemlist.html
+	This page displays the list of problem sets and associated problems
+-->
+{% extends contestant_base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block head %}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--<link href="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+	<script src="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.js"></script>-->
+{% end %}
+
+{% block core %}
+  <h1 class="page-header">Problems</h1>
+  <!--h3>Pinned Problems</h3-->
+  <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><span class="glyphicon glyphicon-pushpin"><span> Pinned-Problems</div>
+    {% include problem_table.html %}
+  </div>
+{% end %}
