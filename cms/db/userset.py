@@ -70,6 +70,18 @@ class UserSet(Base):
     #     backref=backref('usersets',
     #                     cascade="all, delete-orphan",
     #                     passive_deletes=True))
+    # Contest (id and object) owning the user set.
+    contest_id = Column(
+        Integer,
+        ForeignKey(Contest.id,
+                   onupdate="CASCADE", ondelete="CASCADE"),
+                   nullable=False,
+                   index=True)
+    contest = relationship(
+        Contest,
+        backref=backref('usersets',
+                        cascade="all, delete-orphan",
+                        passive_deletes=True))
 
 
     # Short name and long human readable title of the user set.

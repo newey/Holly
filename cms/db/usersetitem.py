@@ -55,7 +55,6 @@
 #         # are referenced by a foreign key defined on this table.
 #         autoincrement='ignore_fk')
 
-
 #     # UserSet (id and object) that the item is a member of
 #     userSet_id = Column(
 #         Integer,
