@@ -55,8 +55,6 @@ class UserSetItem(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-
-############################This doesn't work. UserSetItem contains a LIST of user sets it is a member of############################
     # UserSet (id and object) that the item is a member of
     userSet_id = Column(
         Integer,
@@ -85,5 +83,3 @@ class UserSetItem(Base):
             cascade="all, delete-orphan",
             passive_deletes=True)
         )
-
-    # TODO: list of user sets
