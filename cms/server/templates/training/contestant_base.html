@@ -49,13 +49,14 @@ $(document).ready(function(){
   $(".innerRow").hide();
   $("#problems tr:first-child").show();
 
-  $(".outerRow").click(function(){
-      $(this).next("tr").toggle();
-      $(this).toggleClass("open");
-      if ($(this).hasClass("open")) {
-        $(this).find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
+  $(".outerRow .expandset").click(function(){
+      var $row = $(this).closest(".outerRow");
+      $row.next("tr").toggle();
+      $row.toggleClass("open");
+      if ($row.hasClass("open")) {
+        $row.find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
       } else {
-        $(this).find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
+        $row.find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
       }
     });
   });
