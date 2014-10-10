@@ -113,10 +113,10 @@ from .util import test_db_connection, get_contest_list, is_contest_id, \
     ask_for_contest
 
 from .problemset import ProblemSet
-from .problemsetitem import ProblemSetItem
+from .problemset import ProblemSetItem
 
 from .userset import UserSet
-from .usersetitem import UserSetItem
+from .userset import UserSetItem
 
 configure_mappers()
 

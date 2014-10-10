@@ -1012,6 +1012,7 @@ class AddUserSetHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
         self.render("add_userset.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1023,21 +1024,10 @@ class AddUserSetHandler(BaseHandler):
             assert attrs.get("name") is not None, "No set name specified."
             self.get_string(attrs, "title")
 
-            #TODO: CHANGE AFTER DEMO
-            #random.seed()
-            #attrs["num"] = random.randint(1,100000)
-            #print(attrs["num"])
-            print(attrs.get("name"))
-            print(attrs.get("title"))
-
             userset = UserSet(**attrs)
             self.sql_session.add(userset)
 
-            #####################
-            ##Add UsersSetItems##
-            #####################
-
-            # get list of checked boxs
+            # get list of user checked boxs
             users = self.request.arguments['add_users']
 
             # create userSetItems for each user
@@ -1046,6 +1036,13 @@ class AddUserSetHandler(BaseHandler):
                 attrs = {"user":user, "userSet":userset}
                 userSetItem = UserSetItem(**attrs)
                 self.sql_session.add(userSetItem)
+
+            # get list of problem set checked boxs
+            # TODO: FIX BUG ONLY READING FIRST WORK FROM NAME e.g.(my name => my)
+            problemsets = self.request.arguments['add_problem_sets']
+
+            for problemset in problemsets:
+                print(problemset)
 
             self.sql_session.commit()
 

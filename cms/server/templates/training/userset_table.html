@@ -33,13 +33,13 @@
               <col>
               <tbody>
                 <!-- set.items do not exist yet -->
-                {% for user in set.items %}
+                {% for usersetitem in set.items %}
                 <tr>
                   <td class="status">
                     <span class="glyphicon glyphicon-minus text-primary"></span>
                   </td>
                   <td>
-                    {{ user.task.title }}
+                    {{ usersetitem.user.username }}
                   </td>
                 </tr>
                 {% end %}

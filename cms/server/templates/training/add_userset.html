@@ -25,6 +25,13 @@
     {% end %}
   </div>
 
+  <div class="form-group">
+    {% for problem_set in problem_sets %}
+        <input type="checkbox" name="add_problem_sets" id="add_problem_sets{{problem_set.id}}" value={{problem_set.name}} />
+        <b>{{problem_set.name}}</b><br />
+    {% end %}
+  </div>
+
 
   <div class="form-group">
     <label for="problemids" class="col-sm-2 control-label" style="text-align:left;">Problems Numbers (space seperated)</label>

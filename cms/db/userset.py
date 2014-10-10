@@ -38,9 +38,8 @@ from sqlalchemy.types import Boolean, Integer, Float, String, Unicode, \
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.orderinglist import ordering_list
 
-from . import Base, Contest
+from . import Base, Contest, User
 from .smartmappedcollection import smart_mapped_collection
-
 
 class UserSet(Base):
     """ Class to store a user set for training purposes
@@ -59,7 +58,7 @@ class UserSet(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # Contest (id and object) owning the user set.
+    # TODO: Add Contest (id and object) to the user set
     # contest_id = Column(
     #     Integer,
     #     ForeignKey(Contest.id,
@@ -84,3 +83,50 @@ class UserSet(Base):
     # We could add the other parameters from Task here and combine
     # the rules here with the rules for each task, but it doesn't
     # seem important...
+
+
+class UserSetItem(Base):
+    """ Class to store the membership of a User in a UserSet
+
+    """
+    __tablename__ = 'usersetitem'
+
+    # Auto increment primary key.
+    id = Column(
+        Integer,
+        primary_key=True,
+        # Needed to enable autoincrement on integer primary keys that
+        # are referenced by a foreign key defined on this table.
+        autoincrement='ignore_fk')
+
+
+    # UserSet (id and object) that the item is a member of
+    userSet_id = Column(
+        Integer,
+        ForeignKey(UserSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    userSet = relationship(
+        UserSet,
+        backref=backref(
+            'items',
+            cascade="all, delete-orphan",
+            passive_deletes=True)
+        )
+
+    # The User has all memberships to usersets
+    user_id = Column(
+        Integer,
+        ForeignKey(User.id, onupdate="CASCADE", ondelete="CASCADE"),
+        index=True,
+        nullable=False
+        )
+    user = relationship(
+        User,
+        backref=backref(
+            'memberships',
+            cascade="all, delete-orphan",
+            passive_deletes=True)
+        )
+
+    # TODO: list of user sets

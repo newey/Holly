@@ -38,9 +38,8 @@ from sqlalchemy.types import Boolean, Integer, Float, String, Unicode, \
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.orderinglist import ordering_list
 
-from . import Base, Contest
+from . import Base, Contest, Task
 from .smartmappedcollection import smart_mapped_collection
-
 
 class ProblemSet(Base):
     """ Class to store a problem set for training purposes
@@ -80,6 +79,20 @@ class ProblemSet(Base):
                         cascade="all, delete-orphan",
                         passive_deletes=True))
 
+    # userset_id = Column(
+    #     Integer,
+    #     ForeignKey(UserSet.id,
+    #                onupdate="CASCADE", ondelete="CASCADE"),
+    #                nullable=False,
+    #                index=True)
+    # userset = relationship(
+    #     UserSet,
+    #     backref=backref('problemsets',
+    #                     collection_class=ordering_list('num'),
+    #                     order_by=[num],
+    #                     cascade="all, delete-orphan",
+    #                     passive_deletes=True))
+
     # Short name and long human readable title of the problem set.
     name = Column(
         Unicode,
@@ -91,3 +104,65 @@ class ProblemSet(Base):
     # We could add the other parameters from Task here and combine
     # the rules here with the rules for each task, but it doesn't
     # seem important...
+
+class ProblemSetItem(Base):
+    """ Class to store the membership of a Task or ProblemSet in a ProblemSet
+
+    """
+    __tablename__ = 'problemsetitems'
+    __table_args__ = (
+        UniqueConstraint('problemSet_id', 'task_id'),
+        #UniqueConstraint('problemSet_id', 'memberProblemSet_id'),
+    )
+
+    # Auto increment primary key.
+    id = Column(
+        Integer,
+        primary_key=True,
+        # Needed to enable autoincrement on integer primary keys that
+        # are referenced by a foreign key defined on this table.
+        autoincrement='ignore_fk')
+
+    # Number of the item for sorting.
+    num = Column(
+        Integer,
+        nullable=False)
+
+    # ProblemSet (id and object) that the item is a member of
+    problemSet_id = Column(
+        Integer,
+        ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    problemSet = relationship(
+        ProblemSet,
+        backref=backref(
+            'items',
+            collection_class=ordering_list('num'),
+            order_by=[num],
+            cascade="all, delete-orphan",
+            passive_deletes=True))
+
+    # Whether the item contains a Task or a ProblemSet
+    # isTask = Column(
+    #     Boolean,
+    #     nullable=False)
+
+    # The Task that is a member of the problem set
+    task_id = Column(
+        Integer,
+        ForeignKey(Task.id, onupdate="CASCADE", ondelete="CASCADE"),
+        index=True,
+        nullable=False
+        )
+    task = relationship(
+        Task)
+
+    # Alternatively, the ProblemSet that is a member of the ProblemSet
+    # memberProblemSet_id = Column(
+    #     Integer,
+    #     ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+    #     index=True
+    #     )
+    # memberProblemSet = relationship(
+    #     ProblemSet)
