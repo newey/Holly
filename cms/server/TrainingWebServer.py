@@ -1023,6 +1023,7 @@ class AddUserSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             assert attrs.get("name") is not None, "No set name specified."
             self.get_string(attrs, "title")
+            attrs["contest"] = self.contest
 
             userset = UserSet(**attrs)
             self.sql_session.add(userset)
@@ -1041,8 +1042,12 @@ class AddUserSetHandler(BaseHandler):
             # TODO: FIX BUG ONLY READING FIRST WORK FROM NAME e.g.(my name => my)
             problemsets = self.request.arguments['add_problem_sets']
 
-            for problemset in problemsets:
-                print(problemset)
+            # at the moment, this says each problemset can only be set to ONE userset
+            # TODO: change problemset table to allow many to many relationship equivalent
+            for problemsetname in problemsets:
+                print(problemsetname)
+                problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
+                problemset.userset = userset
 
             self.sql_session.commit()
 
@@ -1063,7 +1068,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
-    (r"/admin/problem/add", AddProblemHandler),
+    (r"/admin/problem/add", AddProblemHandler),# theresabugwhereifyouhavespacesitwillonlyreadthefirstwordresultinginthenamenotbeingfoundcorrectly
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
     (r"/admin/problem/([0-9]+)/test", TestProblemHandler),

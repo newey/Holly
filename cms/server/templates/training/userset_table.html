@@ -32,7 +32,7 @@
               <col width="100">
               <col>
               <tbody>
-                <!-- set.items do not exist yet -->
+                <td> Users </td>
                 {% for usersetitem in set.items %}
                 <tr>
                   <td class="status">
@@ -43,6 +43,18 @@
                   </td>
                 </tr>
                 {% end %}
+                <td> Problem Sets </td>
+                {% for problemset in set.problemsets %}
+                <tr>
+                  <td class="status">
+                    <span class="glyphicon glyphicon-minus text-primary"></span>
+                  </td>
+                  <td>
+                    {{ problemset.name }}
+                  </td>
+                </tr>
+                {% end %}
+
               </tbody>
             </table>
           </div>
@@ -53,3 +65,4 @@
     {% end %}
   </tbody>
 </table>
+

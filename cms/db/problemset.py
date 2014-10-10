@@ -39,6 +39,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.orderinglist import ordering_list
 
 from . import Base, Contest, Task
+from .userset import UserSet
 from .smartmappedcollection import smart_mapped_collection
 
 class ProblemSet(Base):
@@ -79,19 +80,19 @@ class ProblemSet(Base):
                         cascade="all, delete-orphan",
                         passive_deletes=True))
 
-    # userset_id = Column(
-    #     Integer,
-    #     ForeignKey(UserSet.id,
-    #                onupdate="CASCADE", ondelete="CASCADE"),
-    #                nullable=False,
-    #                index=True)
-    # userset = relationship(
-    #     UserSet,
-    #     backref=backref('problemsets',
-    #                     collection_class=ordering_list('num'),
-    #                     order_by=[num],
-    #                     cascade="all, delete-orphan",
-    #                     passive_deletes=True))
+    userset_id = Column(
+        Integer,
+        ForeignKey(UserSet.id,
+                   onupdate="CASCADE", ondelete="CASCADE"),
+                   nullable=True,
+                   index=True)
+    userset = relationship(
+        UserSet,
+        backref=backref('problemsets',
+                        collection_class=ordering_list('num'),
+                        order_by=[num],
+                        cascade="all, delete-orphan",
+                        passive_deletes=True))
 
     # Short name and long human readable title of the problem set.
     name = Column(
