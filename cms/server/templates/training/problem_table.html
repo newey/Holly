@@ -3,14 +3,6 @@
   <col>
   <col>
   <col width="60">
-  <!--<thead>
-    <tr>
-      <th>Status</th>
-      <th>Problem Sets</th>
-      <th>Count</th>
-      <th></th>
-    </tr>
-  </thead>-->
   <tbody>
 
     <!-- Status Minus
@@ -33,7 +25,7 @@
     <tr class="outerRow">
       <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
       <td><a href="#">{{ set.title }}</a></td>
-      <td>{{ set.numProblems() }} problems</td>
+      <td>{{ len(set.items) }} problem{% if len(set.items) > 1 %}s{% end %}</td>
       <td>
         <span class="glyphicon glyphicon-chevron-right"></span> <span class="glyphicon glyphicon-pushpin text-danger"></span>
       </td>
