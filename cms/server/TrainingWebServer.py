@@ -440,6 +440,7 @@ class SignupHandler(BaseHandler):
             attrs["contest"] = self.contest
             user = User(**attrs)
             self.sql_session.add(user)
+
             self.sql_session.commit()
 
         except Exception as error:
@@ -1032,26 +1033,19 @@ class AddUserSetHandler(BaseHandler):
             userset = UserSet(**attrs)
             self.sql_session.add(userset)
 
-            #############################
-            ##########Add Users########## 
-            #############################
+            #####################
+            ##Add UsersSetItems##
+            #####################
 
-            # data = dict()
-            # self.get_string(data, "userids")
-            # userids = data["userids"].strip().split()
+            # get list of checked boxs
+            users = self.request.arguments['add_users']
 
-            # # convert string to int
-            # userids = map(int, userids)
-
-            # # make users to UserSetItems
-            # for index, userids in enumerate(userids):
-            #     task = self.sql_session.query(Task).filter(Task.id==userids).one()
-            #     attrs = {"num":index, "userSet":userset, "task":task}
-            #     usersetitem = UserSetItem(**attrs)
-            #     self.sql_session.add(usersetitem)
-
-            #############################
-            
+            # create userSetItems for each user
+            for username in users:
+                user = self.sql_session.query(User).filter(User.username==username).one()
+                attrs = {"user":user, "userSet":userset}
+                userSetItem = UserSetItem(**attrs)
+                self.sql_session.add(userSetItem)
 
             self.sql_session.commit()
 
