@@ -27,12 +27,12 @@
   <div class="row">
     <div class="col-md-2">
       <div class="list-group">
-        <a class ="list-group-item" href="/">Home</a>
-        <a class ="list-group-item disabled" href="#">Problems</a>
-        <a class ="list-group-item disabled" href="#">Competitions</a>
-        <a class ="list-group-item disabled" href="#">History</a>
-        <a class ="list-group-item disabled" href="#">Hall of Fame</a>
-        <a class ="list-group-item disabled" href="#">Help</a>
+        <a class ="list-group-item {% if active_sidebar_item == "home" %}active{% end %}" href="/">Home</a>
+        <a class ="list-group-item {% if active_sidebar_item == "problems" %}active{% end %}" href="/problems">Problems</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "competitions" %}active{% end %}" href="#">Competitions</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "history" %}active{% end %}" href="#">History</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "fame" %}active{% end %}" href="#">Hall of Fame</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "help" %}active{% end %}" href="#">Help</a>
         <a class ="list-group-item" href="/admin/problems">Administration</a>
       </div>
     </div>
