@@ -9,6 +9,147 @@ function showTaskTypeOption() {
 
 showTaskTypeOption();
 $("select[name=task_type]").change(showTaskTypeOption);
+
+var testrows = 0;
+var count = 0;
+
+function submitTest() {
+  count++;
+  if (count > testrows) {
+    count = 0;
+    alert("YAY finished :)")
+  } else {
+    var form = $("#test-form"+count);
+    alert(form.find('input[name=codename]').attr('class'));
+    if (form.hasClass('add')) {
+      alert("ADD: "+form.attr("id"));
+      var formData = new FormData();
+      formData.append("codename", form.find('input[name=codename]').val());
+      formData.append("input", form.find('input[name=input]').prop('files')[0]);
+      formData.append("output", form.find('input[name=output]').prop('files')[0]);
+      $.ajax( {
+        url: '/admin/problem/{{ task.id }}/test',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false
+      });
+    } else if (form.hasClass('edit')) {
+      submitTest();
+    } else if (form.hasClass('remove')) {
+      submitTest();
+    } else {
+      alert("ELSE");
+    }
+  }
+}
+
+function submittedTask( data ) {
+  alert("Task succesfully updated");
+  $("#task-form").find('input').addClass("disabled");
+  submitTest();
+}
+
+function submitTask() {
+  var taskForm = $("#task-form");
+  $.ajax({
+    type: "POST",
+    url: "/admin/problem/{{ task.id }}/edit",
+    data: taskForm.serialize(),
+    success: submittedTask,
+  }); 
+}
+$('#submit-task').click(submitTask);
+
+function updateButtons(row) {
+  row.find('.delete-test').click(function() {
+    $(this).parents('form').attr('class', 'remove');
+    $(this).parents('form').hide();
+  });
+
+  row.find('.edit-upload').click(function() {
+    $(this).parent().hide();
+    $(this).parent().next().attr('class', '');
+    $(this).parent().next().find('input').attr('class', 'used');
+  });
+};
+
+function addOldRow(id, codename, score) {
+  testrows++;
+  $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="edit"> \
+      <input type="hidden" name="id" value=""/> \
+      <table class="table table-striped table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
+        <col width="40%"> \
+        <col width="30%"> \
+        <col width="30%"> \
+        <col width="100"> \
+        <col width="70"> \
+        <col width="60"> \
+        <tbody> \
+          <tr> \
+            <td><input type="text" name="codename" class="form-control" value="'+codename+'"/></td> \
+            <td> \
+              <div><button class="btn btn-primary btn-xs edit-upload" type="button"><i class="fa fa-edit fa-fw"></i></button> Change</div> \
+              <div class="ignore-upload"><input type="file" name="input" class="dicks1"/></div> \
+            </td> \
+            <td> \
+              <div><button class="btn btn-primary btn-xs edit-upload" type="button"><i class="fa fa-edit fa-fw"></i></button> Change</div> \
+              <div class="ignore-upload"><input type="file" name="output" class="dicks2"/></div> \
+            </td> \
+            <td><input type="text" name="score" class="form-control" value="'+score+'"/></td> \
+            <td style="text-align: center;"> \
+              <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-close fa-fw"></i></button> \
+            </td> \
+            <td> \
+                <label> \
+                  <input type="checkbox" name="public"> \
+                </label> \
+            </td> \
+          </tr> \
+        </tbody> \
+      </table> \
+    </form>');
+  updateButtons($("#test"+testrows));
+};
+
+{% for testcase in task.active_dataset.testcases.itervalues() %}
+addOldRow({{ testcase.id }}, "{{ testcase.codename }}", 1);
+{% end %}
+
+function addNewRow() {
+  testrows++;
+  $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="add"> \
+      <input type="hidden" name="id" value=""/> \
+      <table class="table table-striped table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
+        <col width="40%"> \
+        <col width="30%"> \
+        <col width="30%"> \
+        <col width="100"> \
+        <col width="70"> \
+        <col width="60"> \
+        <tbody> \
+          <tr> \
+            <td><input type="text" id="codename" name="codename" class="form-control"></td> \
+            <td><input type="file" id="input" name="input" class="input-file"></td> \
+            <td><input type="file" id="output" name="output" class="input-file"></td> \
+            <td><input type="text" id="score" name="score" class="form-control"></td> \
+            <td style="text-align: center;"> \
+              <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-close fa-fw"></i></button> \
+            </td> \
+            <td> \
+                <label> \
+                  <input type="checkbox" name="public"> \
+                </label> \
+            </td> \
+          </tr> \
+        </tbody> \
+      </table> \
+    </form>');
+  updateButtons($("#test"+testrows));
+};
+addNewRow();
+$("#addTest").click(addNewRow);
+
 {% end %}
 
 {% block core %}
@@ -23,7 +164,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
   <li class="active">Edit Problem</li>
 </ol>
 
-<form class="form-horizontal" role="form" method="post">
+<form id="task-form" class="form-horizontal" role="form" method="post">
   <div class="form-group">
     <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
     <div class="col-sm-7">
@@ -176,131 +317,40 @@ $("select[name=task_type]").change(showTaskTypeOption);
         </div>
     </div>
   </div>
-  
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" class="btn btn-primary">Create</button>
-      <button type="reset" class="btn btn-primary">Reset</button>
-    </div>
-  </div>
 </form>
-{% end %}
 
-<!--
-{% from cms import plugin_list %}
-{% set task_type_list = plugin_list("cms.grading.tasktypes", "tasktypes") %}
-{% set score_type_list = plugin_list("cms.grading.scoretypes", "scoretypes") %}
-
-<div class="core_title">
-  <h1>Edit task</h1>
-</div>
-
-
-<form method="post" >
-  <h2>Edit task information</h2>
-  <table>
-      <tr>
-        <td>Name</td>
-        <td><input type="text" name="name" value="{{ task.name }}"/></td>
-      </tr>
-      <tr>
-        <td>Title</td>
-        <td><input type="text" name="title" value="{{ task.title }}"/></td>
-      </tr>
-      <tr>
-        <td>Primary statements (JSON-encoded list of language codes)</td>
-        <td><input type="text" name="primary_statements" value="{{ task.primary_statements }}"/></td>
-      </tr>
-      <tr>
-        <td>Submission format</td>
-        <td>
-          <table>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Tests</h3>
+  </div>
+  <div class="panel-body">
+    <div class="tab-pane fade in active" style="margin-bottom: 20px;">
+      <div class="table-responsive" id="tests">
+        <table class="table table-striped table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
+          <col width="40%">
+          <col width="30%">
+          <col width="30%">
+          <col width="100">
+          <col width="70">
+          <col width="60">
+          <thead>
             <tr>
-              <td>
-                <input type="radio" name="submission_format_choice" value="simple" checked/>
-              </td>
-              <td>task_name.%l</td>
+              <th>Name</th>
+              <th>Input</th>
+              <th>Output</th>
+              <th>Score</th>
+              <th>Remove</th>
+              <th>Public</th>
             </tr>
-            <tr>
-              <td><input type="radio" name="submission_format_choice" value="other">
-              </td>
-              <td>
-                Other: <input type="text" name="submission_format"/></td>
-              </td>
-            </tr>
-          </table>
-      </tr>
-      <tr>
-        <td>Time limit</td>
-        <td><input type="text" name="time_limit" value="{{ task.active_dataset.time_limit }}"/> second(s)</td>
-      </tr>
-      <tr>
-        <td>Memory limit</td>
-        <td><input type="text" name="memory_limit" value="{{ task.active_dataset.memory_limit }}"/> MiB</td>
-      </tr>
-
-    </table>
-
-
-  <h2>Edit task type settings</h2>
-
-  <div id="task_type">
-    <table>
-      <tr>
-        <td>Task type</td>
-        <td>
-
-          <select name="task_type">
-            {% for task_type in task_type_list %}
-                {% if task_type.__name__ == task.active_dataset.task_type %}
-                    <option selected="selected" value="{{ task_type.__name__}}">{{task_type.__name__}}</option>
-                {% else %}
-                    <option value="{{ task_type.__name__}}">{{task_type.__name__}}</option>
-                {% end %}
-            {% end %}
-          </select>
-
-        {% for task_type in task_type_list %}
-        <table class="TaskTypeOptions bordered" id="TaskType{{ task_type.__name__ }}Options" style="display: none;">
-          {% for i in range(len(task_type.ACCEPTED_PARAMETERS)) %}
-            {% set param_def = task_type.ACCEPTED_PARAMETERS[i] %}
-            <tr>
-                <td>{{ param_def.name }}</td>
-                <td>
-                    {% raw param_def.render("TaskTypeOptions_%s_" % task_type.__name__) %}
-                </td>
-            </tr>
-          {% end %}
+          </thead>
+          <tbody>
+          </tbody>
         </table>
-        {% end %}
-
-
-        </td>
-      </tr>
-
-      <tr>
-        <td>Score Type</td>
-        <td>
-          <select name="score_type">
-            {% for score_type in score_type_list %}
-                {% if score_type.__name__ == task.active_dataset.score_type %}
-                    <option selected="selected" value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
-                {% else %}
-                    <option value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
-                {% end %}
-            {% end %}
-          </select>
-
-        </td>
-      </tr>
-      <tr>
-        <td>Score Parameters</td>
-        <td><textarea name="score_type_parameters">{{ task.active_dataset.score_type_parameters }}</textarea></td>
-      </tr>
-    </table>
-    <div class="hr"></div>
+      </div>
+    </div>
+    <button id="addTest" type="button" class="btn btn-success">Add Test</button>    
   </div>
-
-  <input type="submit"/><input type="reset"/>
-</form>
- -->
+</div>
+ 
+<button id="submit-task" type="button" class="btn btn-primary">Create</button>
+{% end %}

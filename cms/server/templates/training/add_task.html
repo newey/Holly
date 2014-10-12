@@ -22,7 +22,8 @@ $("select[name=task_type]").change(showTaskTypeOption);
   <li class="active">New Problem</li>
 </ol>
 
-<form class="form-horizontal" role="form" method="post">
+<form id="task-form" class="form-horizontal" role="form" method="post">
+  <input type="hidden" name="task-name" value="">
   <div class="form-group">
     <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
     <div class="col-sm-7">
@@ -44,27 +45,16 @@ $("select[name=task_type]").change(showTaskTypeOption);
 
   <div class="row">
     <div class="col-md-6">
-        <div class="form-group">
-          <label for="name" class="col-sm-4 control-label" style="text-align:left;">Time Limit</label>
-          <div class="col-sm-8">
-            <div class="input-group">
-              <input type="text" class="form-control" id="time_limit" name="time_limit" value="1" placeholder="Time Limit">
-              <span class="input-group-addon">Sec</span>    
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="name" class="col-sm-4 control-label" style="text-align:left;">Memory Limit</label>
-          <div class="col-sm-8">
-            <div class="input-group">
-              <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="512" placeholder="Time Limit">
-              <span class="input-group-addon">MiB</span>    
-            </div>
-          </div>
-        </div>
-    </div>
-    <div class="col-md-6">    
       <div class="form-group">
+        <label for="name" class="col-sm-4 control-label" style="text-align:left;">Time Limit</label>
+        <div class="col-sm-8">
+          <div class="input-group">
+            <input type="text" class="form-control" id="time_limit" name="time_limit" value="1" placeholder="Time Limit">
+            <span class="input-group-addon">Sec</span>    
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="display: none;">
         <label for="name" class="col-sm-4 control-label" style="text-align:left;">Submission Format</label>
         <div class="col-sm-8">
           <div class="radio">
@@ -81,10 +71,21 @@ $("select[name=task_type]").change(showTaskTypeOption);
           </div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="display: none;">
           <div class="col-sm-4 col-sm-offset-4">
             <input type="text" class="form-control" id="submission_format" placeholder="Format"> 
           </div>
+      </div>
+    </div>
+    <div class="col-md-6">    
+      <div class="form-group">
+        <label for="name" class="col-sm-4 control-label" style="text-align:left;">Memory Limit</label>
+        <div class="col-sm-8">
+          <div class="input-group">
+            <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="512" placeholder="Time Limit">
+            <span class="input-group-addon">MiB</span>    
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -92,86 +93,97 @@ $("select[name=task_type]").change(showTaskTypeOption);
 
   <div class="row">
     <div class="col-md-6">
-      <div class="task-type">
-        <h3>Task Options</h3>
-        <div class="form-group">
-          <label for="name" class="col-sm-4 control-label" style="text-align:left;">Task Type</label>
-          <div class="col-sm-8">
-            <select class="form-control" name="task_type">
-              <option value="Batch">Batch</option>
-              <option value="OutputOnly">OutputOnly</option>
-            </select>
-          </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Task Type</h3>
         </div>
-      
-        <div class="TaskTypeOptions bordered" id="TaskTypeBatchOptions" style="display: none;">
+        <div class="panel-body">
+          <div class="task-type">
             <div class="form-group">
-              <label for="name" class="col-sm-4 control-label" style="text-align:left;">Compilation</label>
+              <label for="name" class="col-sm-4 control-label" style="text-align:left;">Task Type</label>
               <div class="col-sm-8">
-                <select class="form-control" name="TaskTypeOptions_Batch_compilation">
-                  <option value="alone">Submissions are self-sufficient</option>
-                  <option value="grader">Submissions are compiled with a grader</option>
+                <select class="form-control" name="task_type">
+                  <option value="Batch">Batch</option>
+                  <option value="OutputOnly">OutputOnly</option>
                 </select>
               </div>
             </div>
-            <div class="form-group">
-              <label for="name" class="col-sm-4 control-label" style="text-align:left;">I/O</label>
-              <div class="col-sm-8">
-                <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_0_inputfile" value="" placeholder="Leave blank for STDIN">
-                <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_1_outputfile" value="" placeholder="Leave blank for STDOUT">
-              </div>
+          
+            <div class="TaskTypeOptions bordered" id="TaskTypeBatchOptions" style="display: none;">
+                <div class="form-group">
+                  <label for="name" class="col-sm-4 control-label" style="text-align:left;">Compilation</label>
+                  <div class="col-sm-8">
+                    <select class="form-control" name="TaskTypeOptions_Batch_compilation">
+                      <option value="alone">Submissions are self-sufficient</option>
+                      <option value="grader">Submissions are compiled with a grader</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="name" class="col-sm-4 control-label" style="text-align:left;">I/O</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_0_inputfile" value="" placeholder="Leave blank for STDIN">
+                    <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_1_outputfile" value="" placeholder="Leave blank for STDOUT">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="TaskTypeOptions_Batch_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evaluation</label>
+                  <div class="col-sm-8">
+                    <select class="form-control" name="TaskTypeOptions_Batch_output_eval">
+                      <option value="diff">Outputs compared with white diff</option>
+                      <option value="comparator">Outputs are compared by a comparator</option>
+                    </select>
+                  </div>
+                </div>
             </div>
-            <div class="form-group">
-              <label for="TaskTypeOptions_Batch_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evaluation</label>
-              <div class="col-sm-8">
-                <select class="form-control" name="TaskTypeOptions_Batch_output_eval">
-                  <option value="diff">Outputs compared with white diff</option>
-                  <option value="comparator">Outputs are compared by a comparator</option>
-                </select>
-              </div>
-            </div>
-        </div>
 
-        <div class="TaskTypeOptions bordered" id="TaskTypeOutputOnlyOptions" style="display: none;">
-            <div class="form-group">
-              <label for="TaskTypeOptions_OutputOnly_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evalutaion</label>
-              <div class="col-sm-8">
-                <select class="form-control" name="TaskTypeOptions_OutputOnly_output_eval">
-                  <option value="diff">Outputs compared with white diff</option>
-                  <option value="comparator">Outputs are compared by a comparator</option>
-                </select>
-              </div>
+            <div class="TaskTypeOptions bordered" id="TaskTypeOutputOnlyOptions" style="display: none;">
+                <div class="form-group">
+                  <label for="TaskTypeOptions_OutputOnly_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evalutaion</label>
+                  <div class="col-sm-8">
+                    <select class="form-control" name="TaskTypeOptions_OutputOnly_output_eval">
+                      <option value="diff">Outputs compared with white diff</option>
+                      <option value="comparator">Outputs are compared by a comparator</option>
+                    </select>
+                  </div>
+                </div>
             </div>
+          </div>
         </div>
       </div>
     </div>
     <div class="col-md-6">
-      <h3>Score Options</h3>
-        <div class="form-group">
-          <label for="score_type" class="col-sm-4 control-label" style="text-align:left;">Score Type</label>
-          <div class="col-sm-8">
-            <select class="form-control" name="score_type">
-              {% for score_type in score_type_list %}
-                <option value="{{ score_type.__name__}}">{{ score_type.__name__ }}</option>
-              {% end %}
-            </select>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Score Options</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="score_type" class="col-sm-4 control-label" style="text-align:left;">Score Type</label>
+            <div class="col-sm-8">
+              <select class="form-control" name="score_type">
+                {% for score_type in score_type_list %}
+                  <option value="{{ score_type.__name__}}">{{ score_type.__name__ }}</option>
+                {% end %}
+              </select>
+            </div>
+          </div>
+        
+          <div class="form-group">
+            <label for="score_type_parameters" class="col-sm-4 control-label" style="text-align:left;">Score Parameters</label>
+            <div class="col-sm-8">
+              <textarea class="form-control" rows="6" name="score_type_parameters" placeholder="Parameters"></textarea>
+            </div>
           </div>
         </div>
-      
-        <div class="form-group">
-          <label for="score_type_parameters" class="col-sm-4 control-label" style="text-align:left;">Score Parameters</label>
-          <div class="col-sm-8">
-            <textarea class="form-control" rows="6" name="score_type_parameters" placeholder="Parameters"></textarea>
-          </div>
-        </div>
-    </div>
-  </div>
-  
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" class="btn btn-primary">Create</button>
-      <button type="reset" class="btn btn-primary">Reset</button>
+      </div>
     </div>
   </div>
 </form>
+
+<button id="submit-task" type="button" class="btn btn-primary">Create</button>
+{% end %}
+
+{% block scripts %}
+
 {% end %}

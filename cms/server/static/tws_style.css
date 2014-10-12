@@ -1,6 +1,14 @@
+.table th, .table td {
+  border-top: none;
+}
+
 .form-group.required .control-label:after {
   content:"*";
   color:red;
+}
+
+.ignore-upload {
+  display: none;
 }
 
 .page-header {
