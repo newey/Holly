@@ -38,8 +38,7 @@ from sqlalchemy.types import Boolean, Integer, Float, String, Unicode, \
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.orderinglist import ordering_list
 
-from . import Base, Contest, Task
-from .userset import UserSet
+from . import Base, Contest, Task, User, UserSet
 from .smartmappedcollection import smart_mapped_collection
 
 class ProblemSet(Base):
@@ -106,6 +105,13 @@ class ProblemSet(Base):
     # the rules here with the rules for each task, but it doesn't
     # seem important...
 
+    def numProblems(self):
+        return len(self.items)
+
+    def isPinned(self, user):
+        return self in [pin.problemSet for pin in user.pins]
+
+
 class ProblemSetItem(Base):
     """ Class to store the membership of a Task or ProblemSet in a ProblemSet
 
@@ -167,3 +173,100 @@ class ProblemSetItem(Base):
     #     )
     # memberProblemSet = relationship(
     #     ProblemSet)
+
+class ProblemSetToUserSet(Base):
+    """ Class to store the relationship between a problem set and a user set.
+        The existence of this class means that its problem set is accessible
+        by its user set
+    """
+    __tablename__ = 'problemsetpins'
+    __table_args__ = (
+        UniqueConstraint('problemSet_id', 'userSet_id'),
+    )
+
+    # Auto increment primary key.
+    id = Column(
+        Integer,
+        primary_key=True,
+        # Needed to enable autoincrement on integer primary keys that
+        # are referenced by a foreign key defined on this table.
+        autoincrement='ignore_fk')
+
+    # Number of the item for sorting.
+    num = Column(
+        Integer,
+        nullable=False)
+
+    # ProblemSet (id and object) that the user set has a relationship with
+    problemSet_id = Column(
+        Integer,
+        ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    problemSet = relationship(
+        ProblemSet,
+        backref=backref(
+            'userSetRelationships',
+            collection_class=ordering_list('num'),
+            order_by=[num],
+            cascade="all, delete-orphan",
+            passive_deletes=True))
+
+    # user set (id and object) that has a relationship with the problem set
+    userSet_id = Column(
+        Integer,
+        ForeignKey(UserSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    userSet = relationship(
+        UserSet,
+        backref=backref(
+            'problemSetRelationships',
+            collection_class=ordering_list('num'),
+            order_by=[num],
+            cascade="all, delete-orphan",
+            passive_deletes=True))
+
+class ProblemSetPin(Base):
+    """ Class to store the relationship between a problem set and a user.
+        The existence of this class means that its problem set is pinned
+        by its user
+    """
+    __tablename__ = 'problemsettouserset'
+    __table_args__ = (
+        UniqueConstraint('problemSet_id', 'user_id'),
+    )
+
+    # Auto increment primary key.
+    id = Column(
+        Integer,
+        primary_key=True,
+        # Needed to enable autoincrement on integer primary keys that
+        # are referenced by a foreign key defined on this table.
+        autoincrement='ignore_fk')
+
+    # ProblemSet (id and object) that the user set has a relationship with
+    problemSet_id = Column(
+        Integer,
+        ForeignKey(ProblemSet.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    problemSet = relationship(
+        ProblemSet,
+        backref=backref(
+            'pins',
+            cascade="all, delete-orphan",
+            passive_deletes=True))
+
+    # user set (id and object) that has a relationship with the problem set
+    user_id = Column(
+        Integer,
+        ForeignKey(User.id, onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+        index=True)
+    user = relationship(
+        User,
+        backref=backref(
+            'pins',
+            cascade="all, delete-orphan",
+            passive_deletes=True))

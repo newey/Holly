@@ -53,7 +53,8 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, ProblemSetItem, UserSet, UserSetItem
+    Testcase, Submission, User, File, ProblemSet, ProblemSetItem, UserSet, \
+    UserSetItem, ProblemSetPin, ProblemSetToUserSet
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -210,6 +211,7 @@ class BaseHandler(CommonRequestHandler):
         params = {}
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
+        params["current_user"] = self.current_user
         return params
 
     def get_task_by_id(self, task_id):
@@ -389,9 +391,19 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
-        self.r_params["sets"] = self.sql_session.query(ProblemSet)
-        self.r_params["q"] = self.contest.tasks # TODO include problem sets rather than tasks
+        self.r_params["sets"] = [self.sql_session.query(ProblemSet).filter(ProblemSet.id==pin.problemSet_id).one() for pin in self.current_user.pins]
+        self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
+
+class ProblemListHandler(BaseHandler):
+    """Problem list handler
+
+    """
+    @tornado.web.authenticated
+    def get(self):
+        self.r_params["sets"] = self.sql_session.query(ProblemSet)
+        self.r_params["active_sidebar_item"] = "problems"
+        self.render("contestant_problemlist.html", **self.r_params)
 
 class LoginHandler(BaseHandler):
     """Login handler.
@@ -420,9 +432,6 @@ class LoginHandler(BaseHandler):
 
 
 class SignupHandler(BaseHandler):
-    def get(self):
-        self.render("signup.html", **self.r_params)
-
     def post(self):
         try:
             attrs = dict()
@@ -463,7 +472,7 @@ class AdminMainHandler(BaseHandler):
     
     """
     @tornado.web.authenticated
-    def get(self, contest_id=None):
+    def get(self):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.r_params["tasks"] = self.contest.tasks
@@ -876,6 +885,23 @@ class SubmissionsHandler(BaseHandler):
 
         self.render("task_submissions.html", **self.r_params)
 
+class ProblemSetPinHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self, set_id, action, unused):
+        if action == "unpin":
+            self.sql_session.query(ProblemSetPin).filter(ProblemSetPin.problemSet_id==set_id,
+                                                         ProblemSetPin.user_id==self.current_user.id).delete()
+
+        elif action == "pin":
+            attrs = {
+                'problemSet': self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one(),
+                'user': self.current_user,
+            }
+            problemSetPin = ProblemSetPin(**attrs)
+            self.sql_session.add(problemSetPin)
+
+        self.sql_session.commit()
+
 class AddProblemSetHandler(BaseHandler):
     """Adds a new problem set.
 
@@ -1060,12 +1086,14 @@ class AddUserSetHandler(BaseHandler):
 
 _tws_handlers = [
     (r"/", MainHandler),
+    (r"/problems", ProblemListHandler),
     (r"/login", LoginHandler),
     (r"/signup", SignupHandler),
     (r"/logout", LogoutHandler),
     (r"/problem/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),# theresabugwhereifyouhavespacesitwillonlyreadthefirstwordresultinginthenamenotbeingfoundcorrectly

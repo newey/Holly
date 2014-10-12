@@ -6,25 +6,22 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <link rel="shortcut icon" href="{{ url_root }}/static/favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/reset.css">
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="/static/reset.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-    
-
-    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/tws_style.css">
-    <!--script type="text/javascript" src="{{ url_root }}/static/jq/jquery-1.7.1.min.js"></script-->
-    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="{{ url_root }}/static/web_rpc.js"></script>
-    <script type="text/javascript" src="{{ url_root }}/static/tws_utils.js"></script>
-    
-    
+    <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
+    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/tws_style.css">   
 
     {% block head %}{% end %}
 
     <title>{% block title %}{% end %}</title>
 
+  </head>
+  <body>
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{{ url_root }}/static/web_rpc.js"></script>
+    <script type="text/javascript" src="{{ url_root }}/static/tws_utils.js"></script>
     <script type="text/javascript">
       function init()  {
           utils = new CMS.TWSUtils("{{ url_root }}", {{ make_timestamp(timestamp) }}, 0, 0, -1);
@@ -32,59 +29,8 @@
       }
       $(document).ready(init);
     </script>
-
-  </head>
-  <body>
-
-    <header class="navbar navbar-default navbar-static-top" role="banner">
-      <div class="container">
-        <div class="navbar-header">
-          <a href="#" class="navbar-brand">Holly</a>
-        </div>
-        <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Sign-Up</a></li>
-            <li><a href="#">Login</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-
-    <div class="container">
-      <div class="row">
-        <div class="col-md-2">
-          <div class="list-group">
-            <a class ="list-group-item" href="/">Home</a>
-            <a class ="list-group-item disabled" href="#">Problems</a>
-            <a class ="list-group-item disabled" href="#">Competitions</a>
-            <a class ="list-group-item disabled" href="#">History</a>
-            <a class ="list-group-item disabled" href="#">Hall of Fame</a>
-            <a class ="list-group-item disabled" href="#">Help</a>
-            <a class ="list-group-item" href="/admin/problems">Administration</a>
-          </div>
-        </div>
-        <div class="col-md-10">
-          {% block core %} {% end %}
-        </div>
-      </div>
-    </div>  
+    {% block body %} {% end %}
+    {% block tail %} {% end %}
+    
   </body>
-
-  <script>
-    $(document).ready(function(){
-      $(".innerRow").hide();
-      $("#problems tr:first-child").show();
-
-      $(".outerRow").click(function(){
-          $(this).next("tr").toggle();
-          $(this).toggleClass("open");
-          if ($(this).hasClass("open")) {
-            $(this).find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
-          } else {
-            $(this).find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
-          }
-        });
-      });
-  </script>
-
 </html>
