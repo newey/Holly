@@ -27,7 +27,7 @@
       <td><a href="#">{{ set.title }}</a></td>
       <td>{{ len(set.items) }} problem{% if len(set.items) > 1 %}s{% end %}</td>
       <td>
-        <span class="expandset glyphicon glyphicon-chevron-right"></span> <span class="pinned glyphicon glyphicon-pushpin text-danger"></span> <!-- TODO check if it is pinned -->
+        <span class="expandset glyphicon glyphicon-chevron-right"></span> <span class="{% if set.isPinned(current_user) %}pinned text-danger {% else %}unpinned {% end %}glyphicon glyphicon-pushpin"></span>
       </td>
     </tr>
     <tr class="innerRow" style="display: none">

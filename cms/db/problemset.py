@@ -107,7 +107,10 @@ class ProblemSet(Base):
 
     def numProblems(self):
         return len(self.items)
-        
+
+    def isPinned(self, user):
+        return self in [pin.problemSet for pin in user.pins]
+
 
 class ProblemSetItem(Base):
     """ Class to store the membership of a Task or ProblemSet in a ProblemSet
@@ -242,11 +245,6 @@ class ProblemSetPin(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # Number of the item for sorting.
-    num = Column(
-        Integer,
-        nullable=False)
-
     # ProblemSet (id and object) that the user set has a relationship with
     problemSet_id = Column(
         Integer,
@@ -257,8 +255,6 @@ class ProblemSetPin(Base):
         ProblemSet,
         backref=backref(
             'pins',
-            collection_class=ordering_list('num'),
-            order_by=[num],
             cascade="all, delete-orphan",
             passive_deletes=True))
 
@@ -272,7 +268,5 @@ class ProblemSetPin(Base):
         User,
         backref=backref(
             'pins',
-            collection_class=ordering_list('num'),
-            order_by=[num],
             cascade="all, delete-orphan",
             passive_deletes=True))

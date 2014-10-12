@@ -53,7 +53,8 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, ProblemSetItem, UserSet, UserSetItem
+    Testcase, Submission, User, File, ProblemSet, ProblemSetItem, UserSet, \
+    UserSetItem, ProblemSetPin, ProblemSetToUserSet
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -390,7 +391,7 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
-        self.r_params["sets"] = self.sql_session.query(ProblemSet)
+        self.r_params["sets"] = [self.sql_session.query(ProblemSet).filter(ProblemSet.id==pin.problemSet_id).one() for pin in self.current_user.pins]
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -888,10 +889,18 @@ class ProblemSetPinHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self, set_id, action, unused):
         if action == "unpin":
-            pass # TODO unpin
+            self.sql_session.query(ProblemSetPin).filter(ProblemSetPin.problemSet_id==set_id,
+                                                         ProblemSetPin.user_id==self.current_user.id).delete()
 
         elif action == "pin":
-            pass # TODO pin
+            attrs = {
+                'problemSet': self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one(),
+                'user': self.current_user,
+            }
+            problemSetPin = ProblemSetPin(**attrs)
+            self.sql_session.add(problemSetPin)
+
+        self.sql_session.commit()
 
 class AddProblemSetHandler(BaseHandler):
     """Adds a new problem set.
