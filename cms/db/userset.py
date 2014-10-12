@@ -58,18 +58,6 @@ class UserSet(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # TODO: Add Contest (id and object) to the user set
-    # contest_id = Column(
-    #     Integer,
-    #     ForeignKey(Contest.id,
-    #                onupdate="CASCADE", ondelete="CASCADE"),
-    #                nullable=False,
-    #                index=True)
-    # contest = relationship(
-    #     Contest,
-    #     backref=backref('usersets',
-    #                     cascade="all, delete-orphan",
-    #                     passive_deletes=True))
     # Contest (id and object) owning the user set.
     contest_id = Column(
         Integer,
@@ -110,7 +98,6 @@ class UserSetItem(Base):
         # Needed to enable autoincrement on integer primary keys that
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
-
 
     # UserSet (id and object) that the item is a member of
     userSet_id = Column(
