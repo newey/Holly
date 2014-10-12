@@ -105,6 +105,10 @@ class ProblemSet(Base):
     # the rules here with the rules for each task, but it doesn't
     # seem important...
 
+    def numProblems(self):
+        return len(self.items)
+        
+
 class ProblemSetItem(Base):
     """ Class to store the membership of a Task or ProblemSet in a ProblemSet
 

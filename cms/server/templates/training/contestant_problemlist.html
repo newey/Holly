@@ -1,0 +1,48 @@
+<!-- problemlist.html
+	This page displays the list of problem sets and associated problems
+-->
+{% extends contestant_base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block head %}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--<link href="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+	<script src="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.js"></script>-->
+{% end %}
+
+{% block core %}
+  <h1 class="page-header">Problems</h1>
+  <!--h3>Pinned Problems</h3-->
+  <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><span>All Problem Sets</span></div>
+    {% include problem_table.html %}
+  </div>
+{% end %}
+
+{% block tail %}
+<script>
+  $(document).on('click', '.pinned', function() {
+    var $pin = $(this)
+    var setID = $pin.closest(".outerRow").data("id");
+    $.post("/problemset/"+setID+"/unpin", function() {
+      $pin.removeClass("text-danger");
+      $pin.removeClass("pinned");
+      $pin.addClass("unpinned");
+    })
+  });
+
+  $(document).on('click', '.unpinned', function() {
+    var $pin = $(this)
+    var setID = $pin.closest(".outerRow").data("id");
+    $.post("/problemset/"+setID+"/pin", function() {
+      $pin.addClass("text-danger");
+      $pin.removeClass("unpinned");
+      $pin.addClass("pinned");
+    })
+  });
+</script>
+{% end %}

@@ -1,0 +1,44 @@
+{% extends base.html %}
+
+{% block title %}Contestant{% end %}
+
+{% block head %} {% end %}
+
+{% block body %}
+<header class="navbar navbar-default navbar-static-top" role="banner">
+  <div class="container">
+    <div class="navbar-header">
+      <a href="#" class="navbar-brand">Holly</a>
+    </div>
+    <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+      <ul class="nav navbar-nav navbar-right">
+        {% if current_user.first_name and current_user.last_name %}
+          <li><a>{{ current_user.first_name }} {{ current_user.last_name }}</a></li>
+        {% else %}
+          <li><a>{{ current_user.username }}</a></li>
+        {% end %}
+        <li><a href="/logout">Logout</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-2">
+      <div class="list-group">
+        <a class ="list-group-item {% if active_sidebar_item == "home" %}active{% end %}" href="/">Home</a>
+        <a class ="list-group-item {% if active_sidebar_item == "problems" %}active{% end %}" href="/problems">Problems</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "competitions" %}active{% end %}" href="#">Competitions</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "history" %}active{% end %}" href="#">History</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "fame" %}active{% end %}" href="#">Hall of Fame</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "help" %}active{% end %}" href="#">Help</a>
+        <a class ="list-group-item" href="/admin/problems">Administration</a>
+      </div>
+    </div>
+    <div class="col-md-10">
+      {% block core %} {% end %}
+    </div>
+  </div>
+</div>
+{% end %}
