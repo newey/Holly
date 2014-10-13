@@ -597,7 +597,7 @@ class EditProblemHandler(BaseHandler):
             task = self.get_task_by_id(task_id)
         except KeyError:
             raise tornado.web.HTTPError(404)
-    
+
         self.render("edit_task.html", 
                     task=task, **self.r_params)
 
@@ -898,6 +898,8 @@ class AddProblemSetHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
+        tasks = self.sql_session.query(Task.id, Task.title).all()
+        self.r_params['taskdata'] = tasks
         self.render("add_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -966,6 +968,18 @@ class EditProblemSetHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self, set_id):
+        problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
+        selectedids = set([x.task_id for x in problemSet.items])
+
+        tasks = self.sql_session.query(Task.id, Task.name).all()
+
+        seltasks = filter(lambda x: x[0] in selectedids, tasks)
+        unseltasks = filter(lambda x: x[0] not in selectedids, tasks)
+
+        self.r_params["problemset"] = problemSet
+        self.r_params["seltaskdata"] = seltasks
+        self.r_params["unseltaskdata"] = unseltasks
+
         self.render("edit_problemset.html", **self.r_params)
 
     @tornado.web.authenticated

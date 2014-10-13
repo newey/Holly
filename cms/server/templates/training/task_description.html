@@ -19,7 +19,7 @@
   </tr>
   <tr>
     <td>Statement</td>
-    <td>{{ task.primary_statements }}</td>
+    <td>{% raw task.primary_statements %}</td>
   </tr>
   <tr>
     <td>Time limit</td>
@@ -30,7 +30,7 @@
     <td>{{ task.active_dataset.memory_limit }}</td>
   </tr>
   <tr>
-    <td>task type</td>
+    <td>Task type</td>
     <td>{{ task.active_dataset.task_type }}</td>
   </tr>
 </table>
