@@ -1,0 +1,68 @@
+<table id="usersets" class="table table-hover">
+  <col width="100">
+  <col>
+  <col>
+  <col width="60">
+  <thead>
+    <tr>
+      <th>User Set Title</th>
+      <th>User Set Users</th>
+      <th>User Set Problems</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for set in sets %}
+    <tr class="outerRow">
+      <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
+      <td><a href="#">{{ set.title }}</a></td>
+      <td>INSERT USERS HERE</td> <!-- TODO: display the number of users in the problem set -->
+      <td>INSERT PROBLEMS HERE</td> <!-- TODO: display the number of problems in the problem set -->
+      <td>
+        <span class="glyphicon glyphicon-chevron-right"></span>
+        <span class="glyphicon glyphicon-pushpin text-danger"></span>
+      </td>
+    </tr>
+    <tr class="innerRow">
+      <td class="inner" colspan="4">
+        <div class="row">
+          <div class="col-md-1"></div>
+          <div class="col-md-10">
+            <table class="table">
+              <col width="100">
+              <col>
+              <tbody>
+                <td> Users </td>
+                {% for usersetitem in set.items %}
+                <tr>
+                  <td class="status">
+                    <span class="glyphicon glyphicon-minus text-primary"></span>
+                  </td>
+                  <td>
+                    {{ usersetitem.user.username }}
+                  </td>
+                </tr>
+                {% end %}
+                <td> Problem Sets </td>
+                {% for problemset in set.problemsets %}
+                <tr>
+                  <td class="status">
+                    <span class="glyphicon glyphicon-minus text-primary"></span>
+                  </td>
+                  <td>
+                    {{ problemset.name }}
+                  </td>
+                </tr>
+                {% end %}
+
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-1"></div>
+        </div> 
+      </td>
+    </tr>
+    {% end %}
+  </tbody>
+</table>
+

@@ -1,0 +1,23 @@
+<!-- view_usersets.html
+	Currently, a webpage to view usersets for the purpose of confirming they exist
+	Created for the purposes of testing, but can be expanded to usable page
+-->
+
+{% extends admin_base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block head %}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% end %}
+
+{% block core %}
+  <h1 class="page-header">User Groups</h1>
+  <!--h3>Pinned Problems</h3-->
+  <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><span>User set</div>
+    {% include userset_table.html %}
+  </div>
+{% end %}
