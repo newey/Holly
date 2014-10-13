@@ -66,6 +66,12 @@ from cmscommon.datetime import make_datetime, make_timestamp
 
 logger = logging.getLogger(__name__)
 
+def xstr(src):
+    if src:
+        return str(src)
+    else:
+        return ""
+
 def create_training_contest():
     attrs = dict()
     attrs["name"] = "TrainingWebServer"
@@ -119,6 +125,62 @@ class BaseHandler(CommonRequestHandler):
 
     refresh_cookie = True
 
+    def createIndividualUserSet(self, user):
+        individualSets = self.sql_session.query(UserSetItem).\
+                             filter(UserSetItem.user==user,
+                                    UserSetItem.userSet.has(UserSet.setType==1))
+
+        assert individualSets.count() <= 1
+        if individualSets.count() == 0:
+            attrs = {
+                'contest': self.contest,
+                'name': user.username,
+                'title': xstr(user.first_name) + " " + xstr(user.last_name),
+                'setType': 1
+            }
+            individualSet = UserSet(**attrs)
+            self.sql_session.add(individualSet)
+
+            attrs = {
+                'user': user,
+                'userSet': individualSet
+            }
+            membership = UserSetItem(**attrs)
+            self.sql_session.add(membership)
+
+    def createSpecialUserSets(self):
+        # Ensure the all users group exists
+        userSets = self.sql_session.query(UserSet).filter(UserSet.setType==2)
+        assert userSets.count() <= 1
+        if userSets.count() == 0:
+            attrs = {
+                'name': "AllUsers",
+                'title': "All Users",
+                'contest': self.contest,
+                'setType': 2
+            }
+            allUsersSet = UserSet(**attrs)
+            self.sql_session.add(allUsersSet)
+
+            # Ensure that each user has their own userset and is in the all users set
+            for user in self.contest.users:
+                self.createIndividualUserSet(user)
+
+                allUsersMemberships = self.sql_session.query(UserSetItem).\
+                                           filter(UserSetItem.user==user,
+                                                  UserSetItem.userSet==allUsersSet)
+
+                assert allUsersMemberships.count() <= 1
+                if allUsersMemberships.count() == 0:
+                    attrs = {
+                        'user': user,
+                        'userSet': allUsersSet
+                    }
+                    self.sql_session.add(UserSetItem(**attrs))
+
+            self.sql_session.commit()
+
+
     def prepare(self):
         """This method is executed at the beginning of each request.
 
@@ -146,6 +208,10 @@ class BaseHandler(CommonRequestHandler):
                 return
         else:
             self.contest = contests[0]
+
+        self.createSpecialUserSets()
+
+        self.all_users = self.sql_session.query(UserSet).filter(UserSet.setType==2).one()
 
         if config.installed:
             localization_dir = os.path.join("/", "usr", "local", "share",
@@ -449,6 +515,30 @@ class SignupHandler(BaseHandler):
             attrs["contest"] = self.contest
             user = User(**attrs)
             self.sql_session.add(user)
+
+            # Add the user to the all users group
+            attrs = {
+                'userSet': self.all_users,
+                'user': user
+            }
+            print(self.current_user)
+            self.sql_session.add(UserSetItem(**attrs))
+
+            # Add the user to its own unique userset
+            attrs = {
+                'name': user.username,
+                'title': xstr(user.first_name) + " " + xstr(user.last_name),
+                'setType': 1,
+                'contest': self.contest
+            }
+            individualSet = UserSet(**attrs)
+            self.sql_session.add(individualSet)
+
+            attrs = {
+                'userSet': individualSet,
+                'user': user
+            }
+            self.sql_session.add(UserSetItem(**attrs))
 
             self.sql_session.commit()
 
