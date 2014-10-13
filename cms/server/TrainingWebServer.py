@@ -1185,7 +1185,7 @@ _tws_handlers = [
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
-    (r"/admin/problem/add", AddProblemHandler),# theresabugwhereifyouhavespacesitwillonlyreadthefirstwordresultinginthenamenotbeingfoundcorrectly
+    (r"/admin/problem/add", AddProblemHandler),
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
     (r"/admin/problem/([0-9]+)/test", TestProblemHandler),
