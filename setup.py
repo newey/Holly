@@ -62,6 +62,7 @@ def do_setup():
             os.path.join("static", "js/plugins/dataTables", "*.*"),
             os.path.join("static", "js/plugins/flot", "*.*"),
             os.path.join("static", "js/plugins/metisMenu", "*.*"),
+            os.path.join("static", "js/plugins/morris", "*.*"),
             os.path.join("static", "font-awesome/css", "*.*"),
             os.path.join("static", "font-awesome/fonts", "*.*"),
             os.path.join("static", "img", "*.*"),

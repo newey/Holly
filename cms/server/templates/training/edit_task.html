@@ -13,51 +13,72 @@ $("select[name=task_type]").change(showTaskTypeOption);
 var testrows = 0;
 var count = 0;
 
+function testFailed() {
+  var form = $("#test-form"+count);
+  form.addClass('has-error');
+  form.find('tbody tr').addClass("danger");
+  count--;
+  $('#submit-task').prop("disabled", ""); 
+}
+
+function testPassed() {
+  var form = $("#test-form"+count);
+  form.find('input, .btn').prop('disabled', 'true');
+  submitTest();
+}
+
 function submitTest() {
   count++;
-  if (count > testrows) {
-    count = 0;
-    alert("YAY finished :)")
-  } else {
+
+  if (count <= testrows) {
     var form = $("#test-form"+count);
-    alert(form.find('input[name=codename]').attr('class'));
     if (form.hasClass('add')) {
-      alert("ADD: "+form.attr("id"));
       var formData = new FormData();
       formData.append("codename", form.find('input[name=codename]').val());
       formData.append("input", form.find('input[name=input]').prop('files')[0]);
       formData.append("output", form.find('input[name=output]').prop('files')[0]);
+
       $.ajax( {
         url: '/admin/problem/{{ task.id }}/test',
         type: "POST",
         data: formData,
         processData: false,
-        contentType: false
+        contentType: false,
+        success: testPassed,
+        error: testFailed
       });
     } else if (form.hasClass('edit')) {
-      submitTest();
+      testPassed();
     } else if (form.hasClass('remove')) {
-      submitTest();
+      testPassed();
     } else {
-      alert("ELSE");
+      alert("Stop doing crazy shit");
     }
+  } else {
+    count = 0;
+    alert("YAY finished :)")
+    window.location.href = "/admin/problem/{{ task.id }}";
   }
 }
 
 function submittedTask( data ) {
-  alert("Task succesfully updated");
-  $("#task-form").find('input').addClass("disabled");
+  $("#task-form").find('input, textarea, select').prop('disabled', 'true');
   submitTest();
 }
 
 function submitTask() {
-  var taskForm = $("#task-form");
-  $.ajax({
-    type: "POST",
-    url: "/admin/problem/{{ task.id }}/edit",
-    data: taskForm.serialize(),
-    success: submittedTask,
-  }); 
+  $('#submit-task').prop("disabled", "true");  
+  if (count == 0) {
+    var taskForm = $("#task-form");
+    $.ajax({
+      type: "POST",
+      url: "/admin/problem/{{ task.id }}/edit",
+      data: taskForm.serialize(),
+      success: submittedTask,
+    });
+  } else {
+    submitTest();
+  }
 }
 $('#submit-task').click(submitTask);
 
@@ -78,7 +99,7 @@ function addOldRow(id, codename, score) {
   testrows++;
   $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="edit"> \
       <input type="hidden" name="id" value=""/> \
-      <table class="table table-striped table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
+      <table class="table table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
         <col width="40%"> \
         <col width="30%"> \
         <col width="30%"> \
@@ -98,7 +119,7 @@ function addOldRow(id, codename, score) {
             </td> \
             <td><input type="text" name="score" class="form-control" value="'+score+'"/></td> \
             <td style="text-align: center;"> \
-              <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-close fa-fw"></i></button> \
+              <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-trash fa-fw"></i></button> \
             </td> \
             <td> \
                 <label> \
@@ -120,7 +141,7 @@ function addNewRow() {
   testrows++;
   $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="add"> \
       <input type="hidden" name="id" value=""/> \
-      <table class="table table-striped table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
+      <table class="table table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
         <col width="40%"> \
         <col width="30%"> \
         <col width="30%"> \
@@ -147,7 +168,6 @@ function addNewRow() {
     </form>');
   updateButtons($("#test"+testrows));
 };
-addNewRow();
 $("#addTest").click(addNewRow);
 
 {% end %}
@@ -157,7 +177,7 @@ $("#addTest").click(addNewRow);
 {% set task_type_list = plugin_list("cms.grading.tasktypes", "tasktypes") %}
 {% set score_type_list = plugin_list("cms.grading.scoretypes", "scoretypes") %}
 
-<h1 class="page-header">Edit Problems</h1>
+<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit Problems</h1>
 <ol class="breadcrumb page-breadcrumb">
   <li><a href="/admin/problems">Problems</a></li>
   <li><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></li>
@@ -165,156 +185,157 @@ $("#addTest").click(addNewRow);
 </ol>
 
 <form id="task-form" class="form-horizontal" role="form" method="post">
-  <div class="form-group">
-    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ task.name }}">
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <div class="form-group">
+        <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ task.name }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="{{ task.title }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="primary_statements" class="col-sm-2 control-label" style="text-align:left;">Decripition</label>
+        <div class="col-sm-10">
+          <textarea class="form-control" rows="6" name="primary_statements" placeholder="Description">{{ task.primary_statements }}</textarea>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="form-group">
-    <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="{{ task.title }}">
+  <div class="form-group" style="display: none;">
+    <label for="name" class="col-sm-4 control-label" style="text-align:left;">Submission Format</label>
+    <div class="col-sm-8">
+      <div class="radio">
+        <label>
+          <input type="radio" name="submission_format_choice" id="submission_format_choice1" value="simple">
+          task_name.%l
+        </label>
+      </div>
+      <div class="radio">
+        <label>
+          <input type="radio" name="submission_format_choice" id="submission_format_choice2" value="other"> 
+          Other
+        </label>
+      </div>
     </div>
   </div>
-  <div class="form-group">
-    <label for="primary_statements" class="col-sm-2 control-label" style="text-align:left;">Decripition</label>
-    <div class="col-sm-10">
-      <textarea class="form-control" rows="6" name="primary_statements" placeholder="Description">{{ task.primary_statements }}</textarea>
-    </div>
+  <div class="form-group" style="display: none;">
+      <div class="col-sm-4 col-sm-offset-4">
+        <input type="text" class="form-control" id="submission_format" placeholder="Format"> 
+      </div>
   </div>
 
   <div class="row">
     <div class="col-md-6">
-        <div class="form-group">
-          <label for="name" class="col-sm-4 control-label" style="text-align:left;">Time Limit</label>
-          <div class="col-sm-8">
-            <div class="input-group">
-              <input type="text" class="form-control" id="time_limit" name="time_limit" value="{{ task.active_dataset.time_limit }}" placeholder="Time Limit">
-              <span class="input-group-addon">Sec</span>    
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Task Type</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="name" class="col-sm-4 control-label" style="text-align:left;">Task Type</label>
+            <div class="col-sm-8">
+              <select class="form-control" name="task_type">
+              {% if task.active_dataset.task_type == "Batch" %}
+                <option selected="selected" value="Batch">Batch</option>
+                <option value="OutputOnly">OutputOnly</option>
+              {% elif task.active_dataset.task_type == "OutputOnly" %}
+                <option value="Batch">Batch</option>
+                <option selected="selected" value="OutputOnly">OutputOnly</option>
+              {% end %}
+              </select>
             </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label for="name" class="col-sm-4 control-label" style="text-align:left;">Memory Limit</label>
-          <div class="col-sm-8">
-            <div class="input-group">
-              <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="{{ task.active_dataset.memory_limit }}" placeholder="Time Limit">
-              <span class="input-group-addon">MiB</span>    
-            </div>
+        
+          <div class="TaskTypeOptions bordered" id="TaskTypeBatchOptions" style="display: none;">
+              <div class="form-group">
+                <label for="name" class="col-sm-4 control-label" style="text-align:left;">Compilation</label>
+                <div class="col-sm-8">
+                  <select class="form-control" name="TaskTypeOptions_Batch_compilation">
+                    <option value="alone">Submissions are self-sufficient</option>
+                    <option value="grader">Submissions are compiled with a grader</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="name" class="col-sm-4 control-label" style="text-align:left;">I/O</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_0_inputfile" value="" placeholder="Leave blank for STDIN">
+                  <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_1_outputfile" value="" placeholder="Leave blank for STDOUT">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="TaskTypeOptions_Batch_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evaluation</label>
+                <div class="col-sm-8">
+                  <select class="form-control" name="TaskTypeOptions_Batch_output_eval">
+                    <option value="diff">Outputs compared with white diff</option>
+                    <option value="comparator">Outputs are compared by a comparator</option>
+                  </select>
+                </div>
+              </div>
           </div>
-        </div>
-    </div>
-    <div class="col-md-6">    
-      <div class="form-group">
-        <label for="name" class="col-sm-4 control-label" style="text-align:left;">Submission Format</label>
-        <div class="col-sm-8">
-          <div class="radio">
-            <label>
-              <input type="radio" name="submission_format_choice" id="submission_format_choice1" value="simple">
-              task_name.%l
-            </label>
-          </div>
-          <div class="radio">
-            <label>
-              <input type="radio" name="submission_format_choice" id="submission_format_choice2" value="other"> 
-              Other
-            </label>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-          <div class="col-sm-4 col-sm-offset-4">
-            <input type="text" class="form-control" id="submission_format" placeholder="Format"> 
-          </div>
-      </div>
-    </div>
-  </div>
 
-
-  <div class="row">
-    <div class="col-md-6">
-      <div class="task-type">
-        <h3>Task Options</h3>
-        <div class="form-group">
-          <label for="name" class="col-sm-4 control-label" style="text-align:left;">Task Type</label>
-          <div class="col-sm-8">
-            <select class="form-control" name="task_type">
-            {% if task.active_dataset.task_type == "Batch" %}
-              <option selected="selected" value="Batch">Batch</option>
-              <option value="OutputOnly">OutputOnly</option>
-            {% elif task.active_dataset.task_type == "OutputOnly" %}
-              <option value="Batch">Batch</option>
-              <option selected="selected" value="OutputOnly">OutputOnly</option>
-            {% end %}
-            </select>
+          <div class="TaskTypeOptions bordered" id="TaskTypeOutputOnlyOptions" style="display: none;">
+              <div class="form-group">
+                <label for="TaskTypeOptions_OutputOnly_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evalutaion</label>
+                <div class="col-sm-8">
+                  <select class="form-control" name="TaskTypeOptions_OutputOnly_output_eval">
+                    <option value="diff">Outputs compared with white diff</option>
+                    <option value="comparator">Outputs are compared by a comparator</option>
+                  </select>
+                </div>
+              </div>
           </div>
-        </div>
-      
-        <div class="TaskTypeOptions bordered" id="TaskTypeBatchOptions" style="display: none;">
-            <div class="form-group">
-              <label for="name" class="col-sm-4 control-label" style="text-align:left;">Compilation</label>
-              <div class="col-sm-8">
-                <select class="form-control" name="TaskTypeOptions_Batch_compilation">
-                  <option value="alone">Submissions are self-sufficient</option>
-                  <option value="grader">Submissions are compiled with a grader</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="name" class="col-sm-4 control-label" style="text-align:left;">I/O</label>
-              <div class="col-sm-8">
-                <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_0_inputfile" value="" placeholder="Leave blank for STDIN">
-                <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_1_outputfile" value="" placeholder="Leave blank for STDOUT">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="TaskTypeOptions_Batch_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evaluation</label>
-              <div class="col-sm-8">
-                <select class="form-control" name="TaskTypeOptions_Batch_output_eval">
-                  <option value="diff">Outputs compared with white diff</option>
-                  <option value="comparator">Outputs are compared by a comparator</option>
-                </select>
-              </div>
-            </div>
-        </div>
-
-        <div class="TaskTypeOptions bordered" id="TaskTypeOutputOnlyOptions" style="display: none;">
-            <div class="form-group">
-              <label for="TaskTypeOptions_OutputOnly_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evalutaion</label>
-              <div class="col-sm-8">
-                <select class="form-control" name="TaskTypeOptions_OutputOnly_output_eval">
-                  <option value="diff">Outputs compared with white diff</option>
-                  <option value="comparator">Outputs are compared by a comparator</option>
-                </select>
-              </div>
-            </div>
         </div>
       </div>
     </div>
     <div class="col-md-6">
-      <h3>Score Options</h3>
-        <div class="form-group">
-          <label for="score_type" class="col-sm-4 control-label" style="text-align:left;">Score Type</label>
-          <div class="col-sm-8">
-            <select class="form-control" name="score_type">
-              {% for score_type in score_type_list %}
-                {% if score_type.__name__ == task.active_dataset.score_type %}
-                    <option selected="selected" value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
-                {% else %}
-                    <option value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
-                {% end %}
-            {% end %}
-            </select>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Details</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="name" class="col-sm-4 control-label" style="text-align:left;">Time Limit</label>
+            <div class="col-sm-8">
+              <div class="input-group">
+                <input type="text" class="form-control" id="time_limit" name="time_limit" value="{{ task.active_dataset.time_limit }}" placeholder="Time Limit">
+                <span class="input-group-addon">Sec</span>    
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="name" class="col-sm-4 control-label" style="text-align:left;">Memory Limit</label>
+            <div class="col-sm-8">
+              <div class="input-group">
+                <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="{{ task.active_dataset.memory_limit }}" placeholder="Time Limit">
+                <span class="input-group-addon">MiB</span>    
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="display: none;">
+            <label for="score_type" class="col-sm-4 control-label" style="text-align:left;">Score Type</label>
+            <div class="col-sm-8">
+              <select class="form-control" name="score_type">
+                {% for score_type in score_type_list %}
+                  {% if score_type.__name__ == task.active_dataset.score_type %}
+                      <option selected="selected" value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
+                  {% else %}
+                      <option value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
+                  {% end %}
+              {% end %}
+              </select>
+            </div>
           </div>
         </div>
-      
-        <div class="form-group">
-          <label for="score_type_parameters" class="col-sm-4 control-label" style="text-align:left;">Score Parameters</label>
-          <div class="col-sm-8">
-            <textarea class="form-control" rows="6" name="score_type_parameters" placeholder="Parameters">{{ task.active_dataset.score_type_parameters }}</textarea>
-          </div>
-        </div>
+      </div>
     </div>
   </div>
 </form>
@@ -324,9 +345,9 @@ $("#addTest").click(addNewRow);
     <h3 class="panel-title">Tests</h3>
   </div>
   <div class="panel-body">
-    <div class="tab-pane fade in active" style="margin-bottom: 20px;">
+    <div class="tab-pane fade in active" style="margin-bottom: 10px;">
       <div class="table-responsive" id="tests">
-        <table class="table table-striped table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
+        <table class="table table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
           <col width="40%">
           <col width="30%">
           <col width="30%">

@@ -8,19 +8,17 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="shortcut icon" href="/static/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="/static/reset.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-    <!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
-    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/tws_style.css">   
-
+    <link rel="stylesheet" href="/static/css/bootstrap-3.2.min.css">
     {% block head %}{% end %}
+    <link rel="stylesheet" type="text/css" href="{{ url_root }}/static/tws_style.css"> 
 
     <title>{% block title %}{% end %}</title>
 
   </head>
   <body>
     {% block body %} {% end %}
-    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="/static/js/jquery-1.11.0.js"></script>
+    <script src="/static/js/bootstrap-3.2.min.js"></script>
     <script type="text/javascript" src="{{ url_root }}/static/web_rpc.js"></script>
     <script type="text/javascript" src="{{ url_root }}/static/tws_utils.js"></script>
     <script type="text/javascript">

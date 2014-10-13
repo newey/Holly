@@ -1,72 +1,90 @@
 {% extends admin_base.html %}
 
+{% block styles %}
+<link href="/static/css/plugins/morris.css" rel="stylesheet">
+{% end %}
+
+{% block scripts %}
+<script src="/static/js/plugins/morris/raphael.min.js"></script>
+<script src="/static/js/plugins/morris/morris.min.js"></script>
+<script src="/static/js/plugins/morris/morris-data.js"></script>
+{% end %}
+
 {% block core %}
-<h1 class="page-header">{{ task.title }}</h1>
+<h1 class="page-header"><i class="fa fa-bar-chart fa-fw"></i> {{ task.title }} <small>Statistics</small></h1>
 <ol class="breadcrumb">
   <li><a href="/admin/problems">Problems</a></li>
   <li class="active">{{ task.title }}</li>
 </ol>
 
-<div class="panel">
-  
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-6">
+        <table class="table">
+          <tr>
+            <td>Title</td>
+            <td>{{ task.title }}</td>
+          </tr>
+          <tr>
+            <td>Name</td>
+            <td>{{ task.name }}</td>
+          </tr>
+          <tr>
+            <td>Statement</td>
+            <td>{{ task.primary_statements }}</td>
+          </tr>
+          <tr>
+            <td>Time limit</td>
+            <td>{{ task.active_dataset.time_limit }}</td>
+          </tr>
+          <tr>
+            <td>Memory limit</td>
+            <td>{{ task.active_dataset.memory_limit }}</td>
+          </tr>
+          <tr>
+            <td>Task type</td>
+            <td>{{ task.active_dataset.task_type }}</td>
+          </tr>
+        </table>
+        <a href="/admin/problem/{{ task.id }}/edit" class="pull-left" style="margin-right: 10px;">
+          <button type="button" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
+        </a>
+        <form action="/admin/problem/{{ task.id }}/delete" method="post">
+          <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <div id="example-chart"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<table class="table">
-  <tr>
-    <td>Title</td>
-    <td>{{ task.title }}</td>
-  </tr>
-  <tr>
-    <td>Name</td>
-    <td>{{ task.name }}</td>
-  </tr>
-  <tr>
-    <td>Statement</td>
-    <td>{{ task.primary_statements }}</td>
-  </tr>
-  <tr>
-    <td>Time limit</td>
-    <td>{{ task.active_dataset.time_limit }}</td>
-  </tr>
-  <tr>
-    <td>Memory limit</td>
-    <td>{{ task.active_dataset.memory_limit }}</td>
-  </tr>
-  <tr>
-    <td>task type</td>
-    <td>{{ task.active_dataset.task_type }}</td>
-  </tr>
-</table>
-
-<form action="/admin/problem/{{ task.id }}/delete" method="post">
-  <input type="submit" class="btn btn-primary" value="Delete">
-</form>
-<a href="/admin/problem/{{ task.id }}/edit">
-  <button type="button" class="btn btn-primary">Edit</button>
-</a>
-
-
-<h3>Test Info</h3>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Input</th>
-      <th>Output</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for testcase in task.active_dataset.testcases.itervalues() %}
-    <tr>
-      <td>{{ testcase.codename }}</td>
-      <td>{{ testcase.input }}</td>
-      <td>{{ testcase.output }}</td>
-    </tr>
-    {% end %}
-  </tbody>
-</table>
-<a href="/admin/problem/{{ task.id }}/test">
-  <button type="button" class="btn btn-primary">Add</button>
-</a>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Tests</h3>
+  </div>
+  <div class="panel-body">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Input</th>
+          <th>Output</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for testcase in task.active_dataset.testcases.itervalues() %}
+        <tr>
+          <td>{{ testcase.codename }}</td>
+          <td>{{ testcase.input }}</td>
+          <td>{{ testcase.output }}</td>
+        </tr>
+        {% end %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
 {% end %}

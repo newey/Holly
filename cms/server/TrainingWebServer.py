@@ -657,6 +657,8 @@ class TestProblemHandler(BaseHandler):
             input_ = self.request.files["input"][0]
             output = self.request.files["output"][0]
         except KeyError:
+            assert attrs.get("codename") is not None, "No test name specified"
+
             print("Couldn't find files")
             self.redirect("/admin/problem/%s/test" % task_id)
             return
