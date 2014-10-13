@@ -80,6 +80,16 @@ class UserSet(Base):
         Unicode,
         nullable=False)
 
+    # The type of userset:
+    #  0: normal userSet editable by administrators
+    #  1: Special non-editable set for an individual user
+    #  2: Special non-editable set for all users
+    setType = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        index=True)
+
     # We could add the other parameters from Task here and combine
     # the rules here with the rules for each task, but it doesn't
     # seem important...
@@ -109,7 +119,7 @@ class UserSetItem(Base):
     userSet = relationship(
         UserSet,
         backref=backref(
-            'items',
+            'memberships',
             cascade="all, delete-orphan",
             passive_deletes=True)
         )
