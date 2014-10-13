@@ -967,11 +967,6 @@ class EditProblemSetHandler(BaseHandler):
         seltasks = filter(lambda x: x[0] in selectedids, tasks)
         unseltasks = filter(lambda x: x[0] not in selectedids, tasks)
 
-        logger.info("selectedIds: " + str(selectedids))
-        logger.info("tasks: " + str(tasks))
-        logger.info("seltasks: " + str(seltasks))
-        logger.info("unseltasks: " + str(unseltasks))
-
         self.r_params["problemset"] = problemSet
         self.r_params["seltaskdata"] = seltasks
         self.r_params["unseltaskdata"] = unseltasks
