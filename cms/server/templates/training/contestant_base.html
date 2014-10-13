@@ -42,22 +42,3 @@
   </div>
 </div>
 {% end %}
-
-{% block tail %}
-<script>
-$(document).ready(function(){
-  $(".innerRow").hide();
-  $("#problems tr:first-child").show();
-
-  $(".outerRow").click(function(){
-      $(this).next("tr").toggle();
-      $(this).toggleClass("open");
-      if ($(this).hasClass("open")) {
-        $(this).find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
-      } else {
-        $(this).find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
-      }
-    });
-  });
-</script>
-{% end %}
