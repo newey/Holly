@@ -82,4 +82,14 @@
       </div>
     </div>
   </div>
+  <script>
+    $(document).on('click', '.pinned', function() {
+      var $pin = $(this)
+      var setID = $pin.closest(".outerRow").data("id");
+      $.post("/problemset/"+setID+"/unpin", function() {
+        $pin.closest(".outerRow").next().remove();
+        $pin.closest(".outerRow").remove();
+      })
+    });
+  </script>
 {% end %}

@@ -1,4 +1,43 @@
-{% extends contestant_base.html %}
+{% extends admin_base.html %}
+
+{% block headextension %}
+<link href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.css" rel="stylesheet">
+{% end %}
+
+{% block scripts %}
+<script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+<script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    var unseltable = $('#unselectedproblems').DataTable();
+    var seltable = $('#selectedproblems').DataTable();
+
+    $('.problemsseln tbody').on( 'click', 'tr', function () {
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+        }
+        else {
+            unseltable.$('tr.selected').removeClass('selected');
+            seltable.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+        }
+    } );
+
+    $('#button').click( function () {
+        if (unseltable.row('.selected').length > 0) {
+            seltable.row.add(unseltable.row('.selected').data()).draw(false);
+            unseltable.row('.selected').remove().draw( false );
+        } else if (seltable.row('.selected').length > 0) {
+            unseltable.row.add(seltable.row('.selected').data()).draw(false);
+            seltable.row('.selected').remove().draw( false );
+        }
+        $("#problemids").val(seltable.column(0).data().reduce(function (a,b) {
+            return a.concat(" ").concat(b);
+        }), "");
+    } );
+} );
+</script>
+{% end %}
 
 {% block core %}
 <h1 class="page-header">New Problem Set</h1>
@@ -22,12 +61,7 @@
     </div>
   </div>
 
-	<div class="form-group">
-    <label for="problemids" class="col-sm-2 control-label" style="text-align:left;">Problems Numbers (space seperated)</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="problemids" name="problemids" placeholder="Numbers">
-    </div>
-  </div>
+  <input type="hidden" id="problemids" name="problemids">
 
   <div class="form-group">
     <label class="col-md-2 control-label" for="submit"></label>
@@ -35,5 +69,42 @@
       <input id="submit" type="submit" value="Submit" class="btn btn-primary">
     </div>
   </div>
+  <div class="row">
+        <button id="button">Switch selected</button>
+  </div>
 </form>
+  <div class="row">
+    <div class="col-md-6">
+        <label for="name" class="col-sm-6 control-label" style="text-align:left;">Unselected Problems</label>
+        <table id="unselectedproblems" class="problemsseln" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for id, name in taskdata %}
+                <tr>
+                    <td>{{ id }}</td>
+                    <td>{{ name }}</td>
+                </tr>
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <label for="name" class="col-sm-6 control-label" style="text-align:left;">Selected Problems</label>
+        <table id="selectedproblems" class="problemsseln" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
 {% end %}

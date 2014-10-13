@@ -12,8 +12,12 @@
     </div>
     <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="#">Sign-Up</a></li>
-        <li><a href="#">Login</a></li>
+        {% if current_user.first_name and current_user.last_name %}
+          <li><a>{{ current_user.first_name }} {{ current_user.last_name }}</a></li>
+        {% else %}
+          <li><a>{{ current_user.username }}</a></li>
+        {% end %}
+        <li><a href="/logout">Logout</a></li>
       </ul>
     </nav>
   </div>
@@ -23,12 +27,12 @@
   <div class="row">
     <div class="col-md-2">
       <div class="list-group">
-        <a class ="list-group-item" href="/">Home</a>
-        <a class ="list-group-item disabled" href="#">Problems</a>
-        <a class ="list-group-item disabled" href="#">Competitions</a>
-        <a class ="list-group-item disabled" href="#">History</a>
-        <a class ="list-group-item disabled" href="#">Hall of Fame</a>
-        <a class ="list-group-item disabled" href="#">Help</a>
+        <a class ="list-group-item {% if active_sidebar_item == "home" %}active{% end %}" href="/">Home</a>
+        <a class ="list-group-item {% if active_sidebar_item == "problems" %}active{% end %}" href="/problems">Problems</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "competitions" %}active{% end %}" href="#">Competitions</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "history" %}active{% end %}" href="#">History</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "fame" %}active{% end %}" href="#">Hall of Fame</a>
+        <a class ="list-group-item disabled {% if active_sidebar_item == "help" %}active{% end %}" href="#">Help</a>
         <a class ="list-group-item" href="/admin/problems">Administration</a>
       </div>
     </div>
@@ -37,23 +41,4 @@
     </div>
   </div>
 </div>
-{% end %}
-
-{% block tail %}
-<script>
-$(document).ready(function(){
-  $(".innerRow").hide();
-  $("#problems tr:first-child").show();
-
-  $(".outerRow").click(function(){
-      $(this).next("tr").toggle();
-      $(this).toggleClass("open");
-      if ($(this).hasClass("open")) {
-        $(this).find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
-      } else {
-        $(this).find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
-      }
-    });
-  });
-</script>
 {% end %}
