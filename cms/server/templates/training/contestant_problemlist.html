@@ -18,7 +18,31 @@
   <!--h3>Pinned Problems</h3-->
   <div class="panel panel-default">
     <!-- Default panel contents -->
-    <div class="panel-heading"><span class="glyphicon glyphicon-pushpin"><span> Pinned-Problems</div>
+    <div class="panel-heading"><span>All Problem Sets</span></div>
     {% include problem_table.html %}
   </div>
+{% end %}
+
+{% block tail %}
+<script>
+  $(document).on('click', '.pinned', function() {
+    var $pin = $(this)
+    var setID = $pin.closest(".outerRow").data("id");
+    $.post("/problemset/"+setID+"/unpin", function() {
+      $pin.removeClass("text-danger");
+      $pin.removeClass("pinned");
+      $pin.addClass("unpinned");
+    })
+  });
+
+  $(document).on('click', '.unpinned', function() {
+    var $pin = $(this)
+    var setID = $pin.closest(".outerRow").data("id");
+    $.post("/problemset/"+setID+"/pin", function() {
+      $pin.addClass("text-danger");
+      $pin.removeClass("unpinned");
+      $pin.addClass("pinned");
+    })
+  });
+</script>
 {% end %}

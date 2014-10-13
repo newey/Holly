@@ -883,6 +883,15 @@ class SubmissionsHandler(BaseHandler):
 
         self.render("task_submissions.html", **self.r_params)
 
+class ProblemSetPinHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self, set_id, action, unused):
+        if action == "unpin":
+            pass # TODO unpin
+
+        elif action == "pin":
+            pass # TODO pin
+
 class AddProblemSetHandler(BaseHandler):
     """Adds a new problem set.
 
@@ -1026,6 +1035,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),

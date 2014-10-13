@@ -3,14 +3,6 @@
   <col>
   <col>
   <col width="60">
-  <thead>
-    <tr>
-      <th>Status</th>
-      <th>Problem Sets</th>
-      <th>Count</th>
-      <th></th>
-    </tr>
-  </thead>
   <tbody>
 
     <!-- Status Minus
@@ -30,15 +22,15 @@
     -->
 
     {% for set in sets %}
-    <tr class="outerRow">
+    <tr class="outerRow" data-id="{{ set.id }}">
       <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
       <td><a href="#">{{ set.title }}</a></td>
-      <td>Problem</td> <!--  <- TODO: display the number of problems in the problem set -->
+      <td>{{ len(set.items) }} problem{% if len(set.items) > 1 %}s{% end %}</td>
       <td>
-        <span class="glyphicon glyphicon-chevron-right"></span> <span class="glyphicon glyphicon-pushpin text-danger"></span>
+        <span class="expandset glyphicon glyphicon-chevron-right"></span> <span class="pinned glyphicon glyphicon-pushpin text-danger"></span> <!-- TODO check if it is pinned -->
       </td>
     </tr>
-    <tr class="innerRow">
+    <tr class="innerRow" style="display: none">
       <td class="inner" colspan="4">
         <div class="row">
           <div class="col-md-1"></div>
@@ -63,3 +55,18 @@
     {% end %}
   </tbody>
 </table>
+
+<script>
+  $(document).ready(function(){
+    $(".outerRow .expandset").click(function(){
+      var $row = $(this).closest(".outerRow");
+      $row.next("tr").toggle();
+      $row.toggleClass("open");
+      if ($row.hasClass("open")) {
+        $row.find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
+      } else {
+        $row.find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
+      }
+    });
+  });
+</script>
