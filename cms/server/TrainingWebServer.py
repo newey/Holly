@@ -1065,13 +1065,12 @@ class AddUserSetHandler(BaseHandler):
                 self.sql_session.add(userSetItem)
 
             # get list of problem set checked boxs
-            # TODO: FIX BUG ONLY READING FIRST WORK FROM NAME e.g.(my name => my)
             problemsets = self.request.arguments['add_problem_sets']
 
             # at the moment, this says each problemset can only be set to ONE userset
             # TODO: change problemset table to allow many to many relationship equivalent
             for problemsetname in problemsets:
-                print(problemsetname)
+                # print("problemsetname <"+problemsetname+">")
                 problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
                 problemset.userset = userset
 
