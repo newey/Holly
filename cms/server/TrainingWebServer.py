@@ -889,6 +889,8 @@ class AddProblemSetHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
+        tasks = self.sql_session.query(Task.id, Task.title).all()
+        self.r_params['taskdata'] = tasks
         self.render("add_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
