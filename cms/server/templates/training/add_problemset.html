@@ -69,11 +69,13 @@ $(document).ready(function() {
       <input id="submit" type="submit" value="Submit" class="btn btn-primary">
     </div>
   </div>
-
+  <div class="row">
+        <button id="button">Switch selected</button>
+  </div>
 </form>
   <div class="row">
     <div class="col-md-6">
-        <button id="button">Delete selected row</button>
+        <label for="name" class="col-sm-6 control-label" style="text-align:left;">Unselected Problems</label>
         <table id="unselectedproblems" class="problemsseln" cellspacing="0">
             <thead>
                 <tr>
@@ -92,6 +94,7 @@ $(document).ready(function() {
         </table>
     </div>
     <div class="col-md-6">
+        <label for="name" class="col-sm-6 control-label" style="text-align:left;">Selected Problems</label>
         <table id="selectedproblems" class="problemsseln" cellspacing="0">
             <thead>
                 <tr>
