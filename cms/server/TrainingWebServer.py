@@ -1142,7 +1142,6 @@ class AddUserSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             assert attrs.get("name") is not None, "No set name specified."
             self.get_string(attrs, "title")
-            attrs["contest"] = self.contest
 
             userset = UserSet(**attrs)
             self.sql_session.add(userset)
@@ -1152,20 +1151,20 @@ class AddUserSetHandler(BaseHandler):
 
             # create userSetItems for each user
             for username in users:
-                user = self.sql_session.query(User).filter(User.username==username).one()
-                attrs = {"user":user, "userSet":userset}
-                userSetItem = UserSetItem(**attrs)
-                self.sql_session.add(userSetItem)
+                user = self.sql_session.query(User).\
+                       filter(Contest.id == self.contest.id).\
+                       filter(User.username==username).one()
+                userset.items.append(user.item) 
 
             # get list of problem set checked boxs
-            problemsets = self.request.arguments['add_problem_sets']
+            #problemsets = self.request.arguments['add_problem_sets']
 
             # at the moment, this says each problemset can only be set to ONE userset
             # TODO: change problemset table to allow many to many relationship equivalent
-            for problemsetname in problemsets:
+            #for problemsetname in problemsets:
                 # print("problemsetname <"+problemsetname+">")
-                problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
-                problemset.userset = userset
+                #problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
+                #problemset.userset = userset
 
             self.sql_session.commit()
 
