@@ -121,4 +121,8 @@ class UserSetItem(Base):
             uselist=False)
         )
 
+    is_admin = Column(
+        Boolean,
+        nullable=False,
+        default=False)
     # TODO: list of user sets

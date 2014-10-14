@@ -174,6 +174,49 @@ class BaseHandler(CommonRequestHandler):
 
             self.sql_session.commit()
 
+    def create_admin(self):
+        num_admin = self.sql_session.query(User).\
+                    filter(User.contest == self.contest).\
+                    filter(User.username == 'admin').count()
+
+        if num_admin == 1:
+            return
+
+        attrs = {
+            'first_name' : 'admin',
+            'last_name'  : 'adminson',
+            'username'   : 'admin',
+            'password'   : 'password',
+            'contest'    : self.contest
+        } 
+
+       
+        # Create the admin.
+        admin = User(**attrs)
+        self.sql_session.add(admin)
+
+        # Add the user to the all users group
+        attrs = {
+            'user': admin,
+            'is_admin' : True,
+        }
+        setitem = UserSetItem(**attrs) 
+        self.sql_session.add(setitem)
+        self.all_users.items.append(setitem)            
+
+
+        # Add the user to its own unique userset
+        attrs = {
+            'name': admin.username,
+            'title': xstr(admin.first_name) + " " + xstr(admin.last_name),
+            'setType': 1
+        }
+        individualSet = UserSet(**attrs)
+        self.sql_session.add(individualSet)
+        individualSet.items.append(setitem)
+
+        self.sql_session.commit()
+        
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -206,6 +249,8 @@ class BaseHandler(CommonRequestHandler):
         self.createSpecialUserSets()
 
         self.all_users = self.sql_session.query(UserSet).filter(UserSet.setType==2).one()
+
+        self.create_admin()
 
         if config.installed:
             localization_dir = os.path.join("/", "usr", "local", "share",
@@ -1175,6 +1220,22 @@ class AddUserSetHandler(BaseHandler):
 
         self.redirect("/admin/usersets")
 
+class AddAdminHandler(BaseHandler):
+    """Adds a new admin.
+
+    """
+
+    #TODO: make this doable on the user edit page.
+    @tornado.web.authenticated
+    def post(self, user_id):
+        user = self.sql_session.query(User).\
+            filter(Contest.id == self.contest.id).\
+            filter(User.id==user_id).one()
+
+        user.item.is_admin = True
+        self.sql_session.commit()
+        
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -1197,4 +1258,5 @@ _tws_handlers = [
     (r"/admin/problemset/([0-9]+)/edit", EditProblemSetHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
+    (r"/admin/new/([0-9]+)", AddAdminHandler),
 ]
