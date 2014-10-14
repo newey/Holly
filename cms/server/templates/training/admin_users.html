@@ -1,0 +1,64 @@
+{% extends admin_base.html %}
+
+{% block js_init %} 
+{% end %}
+
+{% block core %}
+
+<h1 class="page-header" style="margin-bottom: 20px">Users</h1>
+
+<div class="panel with-nav-tabs panel-default">
+  <div class="panel-heading">
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#tab1user" data-toggle="tab">Individual Users</a></li>
+    </ul>
+  </div>
+  <div class="panel-body">
+    <div class="tab-content">
+      <div class="tab-pane fade in active" id="tab1user">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered table-hover" id="users">
+            <col>
+            <col>
+            <col width="60">
+            <col width="60">
+            <col width="60">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Edit</th>
+                <th>Stats</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td><a href="/admin/user/{{ user.id }}">{{ user.username }}</a></td>
+                <td style="text-align: center;">
+                  <a href="/admin/user/{{ user.id }}/edit">
+                    <button class="btn btn-success btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" data-placement="top" rel="tooltip"><i class="fa fa-edit fa-fw"></i></button>
+                  </a>
+                </td>
+                <td style="text-align: center;">
+                  <a href="/admin/user/{{ user.id }}">
+                    <button class="btn btn-primary btn-xs" data-title="Stat" data-toggle="modal" data-target="#stat" data-placement="top" rel="tooltip"><i class="fa fa-bar-chart fa-fw"></i></button>
+                  </a>
+                </td>
+                <td style="text-align: center;">
+                  <form action="/admin/user/{{ user.id }}/delete" method="post">
+                    <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-close fa-fw"></i></button>
+                  </form>
+                </td>
+              </tr>
+            {% end %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}

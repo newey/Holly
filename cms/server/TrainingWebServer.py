@@ -1125,6 +1125,51 @@ class EditProblemSetHandler(BaseHandler):
 
         self.redirect("/admin/problems")
 
+class AdminUserHandler(BaseHandler):
+    """Admin Users page handler
+    
+    """
+    @tornado.web.authenticated
+    def get(self):
+        self.r_params = self.render_params()
+        self.r_params["users"] = self.sql_session.query(User)
+        self.render("admin_users.html", **self.r_params)
+
+class UserHandler(BaseHandler):
+    """Shows the data of a user.
+
+    """
+
+    @tornado.web.authenticated
+    def get(self, user_id):
+        try:
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.render("user_description.html",
+                    user=user, **self.r_params)
+
+class DeleteUserHandler(BaseHandler):
+    """Deletes a user.
+
+    """
+
+    @tornado.web.authenticated
+    def post(self, user_id):
+        try:
+            print("user_id <"+user_id+">")
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.sql_session.delete(user)
+        self.sql_session.commit()
+
+        self.redirect("/admin/users")
+
 class ViewUserSetsHandler(BaseHandler):
     """View all user sets.
 
@@ -1207,6 +1252,10 @@ _tws_handlers = [
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/edit", EditProblemSetHandler),
+    (r"/admin/users", AdminUserHandler),
+    (r"/admin/user/([0-9]+)", UserHandler),
+    # (r"/admin/user/([0-9]+)/edit", EditUserHandler),
+    (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
 ]
