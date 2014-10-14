@@ -66,6 +66,16 @@ from cmscommon.datetime import make_datetime, make_timestamp
 
 logger = logging.getLogger(__name__)
 
+def admin_authenticated(foo):
+    def func(self, *args, **kwargs):
+        print('self is %s' % self)
+        if self.current_user.item.is_admin == False:
+            self.redirect("/")
+        else:
+            return foo(self, *args, **kwargs)
+    return func
+
+
 def xstr(src):
     if src:
         return str(src)
@@ -596,6 +606,7 @@ class AdminMainHandler(BaseHandler):
     
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
@@ -607,10 +618,12 @@ class AddProblemHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.render("add_task.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self):
         try:
             attrs = dict()
@@ -686,6 +699,7 @@ class AdminProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -701,6 +715,7 @@ class DeleteProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -718,6 +733,7 @@ class EditProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -728,6 +744,7 @@ class EditProblemHandler(BaseHandler):
                     task=task, **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -774,6 +791,7 @@ class TestProblemHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, task_id):
         task = self.get_task_by_id(task_id)
         dataset = task.active_dataset
@@ -784,6 +802,7 @@ class TestProblemHandler(BaseHandler):
         self.render("add_testcase.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, task_id):
         task = self.get_task_by_id(task_id)
         dataset = task.active_dataset
@@ -1031,12 +1050,14 @@ class AddProblemSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         tasks = self.sql_session.query(Task.id, Task.title).all()
         self.r_params['taskdata'] = tasks
         self.render("add_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self):
         try:
             attrs = dict()
@@ -1086,6 +1107,7 @@ class DeleteProblemSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, set_id):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
@@ -1101,6 +1123,7 @@ class EditProblemSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
         selectedids = set([x.task_id for x in problemSet.items])
@@ -1117,6 +1140,7 @@ class EditProblemSetHandler(BaseHandler):
         self.render("edit_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, set_id):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
@@ -1164,6 +1188,7 @@ class ViewUserSetsHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         # TODO: query UserSet instead
         self.r_params["sets"] = self.sql_session.query(UserSet)
@@ -1174,12 +1199,14 @@ class AddUserSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.r_params["users"] = self.sql_session.query(User)
         self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
         self.render("add_userset.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self):
         try:
             attrs = dict()
@@ -1227,6 +1254,18 @@ class AddAdminHandler(BaseHandler):
 
     #TODO: make this doable on the user edit page.
     @tornado.web.authenticated
+    @admin_authenticated
+    def get(self, user_id):
+        user = self.sql_session.query(User).\
+            filter(Contest.id == self.contest.id).\
+            filter(User.id==user_id).one()
+
+        user.item.is_admin = True
+        self.sql_session.commit()
+    
+   #TODO: make this doable on the user edit page.
+    @tornado.web.authenticated
+    @admin_authenticated
     def post(self, user_id):
         user = self.sql_session.query(User).\
             filter(Contest.id == self.contest.id).\
