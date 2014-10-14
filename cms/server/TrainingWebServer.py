@@ -75,7 +75,7 @@ def xstr(src):
 def create_training_contest():
     attrs = dict()
     attrs["name"] = "TrainingWebServer"
-    attrs["description"] = "A speciskalized 'contest' for the training web server"
+    attrs["description"] = "A specialized 'contest' for the training web server"
     attrs["allowed_localizations"] = []
     attrs["languages"] = DEFAULT_LANGUAGES
 
@@ -133,7 +133,6 @@ class BaseHandler(CommonRequestHandler):
         assert individualSets.count() <= 1
         if individualSets.count() == 0:
             attrs = {
-                'contest': self.contest,
                 'name': user.username,
                 'title': xstr(user.first_name) + " " + xstr(user.last_name),
                 'setType': 1
@@ -156,7 +155,6 @@ class BaseHandler(CommonRequestHandler):
             attrs = {
                 'name': "AllUsers",
                 'title': "All Users",
-                'contest': self.contest,
                 'setType': 2
             }
             allUsersSet = UserSet(**attrs)
@@ -164,7 +162,7 @@ class BaseHandler(CommonRequestHandler):
 
             # Ensure that each user has their own userset and is in the all users set
             for user in self.contest.users:
-                self.createIndividualUserSet(user)
+                # self.createIndividualUserSet(user)
 
                 allUsersMemberships = self.sql_session.query(UserSetItem).\
                                            filter(UserSetItem.user==user,
@@ -172,11 +170,7 @@ class BaseHandler(CommonRequestHandler):
 
                 assert allUsersMemberships.count() <= 1
                 if allUsersMemberships.count() == 0:
-                    attrs = {
-                        'user': user,
-                        'userSet': allUsersSet
-                    }
-                    self.sql_session.add(UserSetItem(**attrs))
+                    allUsersSet.items.append(user.item)
 
             self.sql_session.commit()
 
@@ -518,27 +512,22 @@ class SignupHandler(BaseHandler):
 
             # Add the user to the all users group
             attrs = {
-                'userSet': self.all_users,
                 'user': user
             }
-            print(self.current_user)
-            self.sql_session.add(UserSetItem(**attrs))
+            setitem = UserSetItem(**attrs) 
+            self.sql_session.add(setitem)
+            self.all_users.items.append(setitem)            
+
 
             # Add the user to its own unique userset
             attrs = {
                 'name': user.username,
                 'title': xstr(user.first_name) + " " + xstr(user.last_name),
-                'setType': 1,
-                'contest': self.contest
+                'setType': 1
             }
             individualSet = UserSet(**attrs)
             self.sql_session.add(individualSet)
-
-            attrs = {
-                'userSet': individualSet,
-                'user': user
-            }
-            self.sql_session.add(UserSetItem(**attrs))
+            individualSet.items.append(setitem)
 
             self.sql_session.commit()
 
@@ -1199,7 +1188,7 @@ _tws_handlers = [
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
-    (r"/admin/problem/add", AddProblemHandler),# theresabugwhereifyouhavespacesitwillonlyreadthefirstwordresultinginthenamenotbeingfoundcorrectly
+    (r"/admin/problem/add", AddProblemHandler),
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
     (r"/admin/problem/([0-9]+)/test", TestProblemHandler),
