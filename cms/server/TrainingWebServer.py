@@ -471,29 +471,35 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type_parameters"] = params
 
     def check_signup_valid_input(self, attrs):
-        assert attrs.get("username") is not None, 
+        assert attrs.get("username") is not None,\
             "No username specified."
         name_len = len(attrs["username"])
-        assert name_len >= 4 and name_len <= 24, \
+        assert name_len >= 4 and name_len <= 24,\
             "Username must be between 4 and 24 chars."
-        assert re.match(r'^[\w-]+$', attrs["username"]),
+        assert re.match(r'^[\w-]+$', attrs["username"]),\
             "Username can only contain alphanumeric characters and dashes."
 
-        assert attrs.get("password") is not None, 
+        assert attrs.get("password") is not None,\
             "No password specified."
         pass_len = len(attrs["password"])
-        assert pass_len >= 8 and pass_len <= 64,
+        assert pass_len >= 8 and pass_len <= 64,\
             "Password must be between 8 and 64 chars."
         
         result = email.utils.parseaddr(attrs["email"])
-        assert result[0] != "" or result[1] != "",
+        assert result[0] != "" or result[1] != "",\
             "Invalid email."        
 
-        assert re.match(r'^[\w-]+$', attrs["first_name"]),
+        assert re.match(r'^[\w-]*$', attrs["first_name"]),\
             "First name can only contain alphanumeric characters and dashes."
 
-        assert re.match(r'^[\w-]+$', attrs["last_name"]),
+        assert re.match(r'^[\w-]*$', attrs["last_name"]),\
             "Last name can only contain alphanumeric characters and dashes."
+
+        num_users = self.sql_session.query(User).\
+                    filter(User.username == attrs["username"]).\
+                    filter(User.contest == self.contest).count()
+        assert num_users < 1,\
+            "Username already exists."
 
 class TrainingWebServer(WebService):
     """Service that runs the web server serving the managers.
@@ -558,16 +564,17 @@ class LoginHandler(BaseHandler):
     def post(self):
         username = self.get_argument("username", "")
         password = self.get_argument("password", "")
+        next_page = self.get_argument("next", "/")
         user = self.sql_session.query(User)\
             .filter(User.contest == self.contest)\
             .filter(User.username == username).first()
 
         if user is None:
-            self.redirect("/login?error=Invalid Username")
+            self.redirect("/login?error=Invalid Username%next=%s" % next_page)
             return
 
         if user.password != password:
-            self.redirect("/login?error=Invalid Password")
+            self.redirect("/login?error=Invalid Password&next=%s" % next_page)
             return
 
         self.set_secure_cookie("login",
@@ -575,7 +582,7 @@ class LoginHandler(BaseHandler):
                                              user.password,
                                              make_timestamp())),
                                expires_days=None)
-        self.redirect("/")
+        self.redirect(next_page)
 
 class SignupHandler(BaseHandler):
     def post(self):
@@ -618,7 +625,7 @@ class SignupHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/login?error=%s" % error)
+            self.redirect("/login?error=%s&signup=T" % error)
             return
 
         self.redirect("/")
@@ -718,8 +725,7 @@ class ProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        # TODO: We can support multiple languages here.
-        # see ContestWebServer
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("task_description.html",
                     task=task, **self.r_params)
 
