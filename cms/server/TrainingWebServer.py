@@ -1151,6 +1151,39 @@ class UserHandler(BaseHandler):
         self.render("user_description.html",
                     user=user, **self.r_params)
 
+class EditProblemHandler(BaseHandler):
+    """Edits a task.
+    """
+
+    @tornado.web.authenticated
+    def get(self, user_id):
+        try:
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.render("edit_user.html", 
+                    user=user, **self.r_params)
+
+    @tornado.web.authenticated
+    def post(self, user_id):
+        try:
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        try:
+            attrs = dict()
+        except Exception as error:
+            self.redirect("/admin/user/%s/edit" % task_id)
+            print(error)
+            return
+
+        self.redirect("/admin/users")
+
+
 class DeleteUserHandler(BaseHandler):
     """Deletes a user.
 
