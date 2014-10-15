@@ -7,17 +7,150 @@
 
 {% block title %}Holly{% end %}
 
-{% block head %}
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% block js_init %} 
+function filterByGroup() {
+    var options = $("#group-select")[0].options;
+    var i;
+    for (i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        $("#" + options[i].value + "-details").show("fast");
+      } else {
+        $("#" + options[i].value + "-details:visible").hide("fast");
+      }
+    }
+};
+
+$("#group-select").change(filterByGroup);
 {% end %}
 
 {% block core %}
-  <h1 class="page-header">User Groups</h1>
-  <!--h3>Pinned Problems</h3-->
-  <div class="panel panel-default">
-    <!-- Default panel contents -->
-    <div class="panel-heading"><span>User set</div>
-    {% include userset_table.html %}
+<h1 class="page-header"><i class="fa fa-group fa-fw"></i> Users</h1>
+<ol class="breadcrumb page-breadcrumb">
+  <li class="active">Users</li>
+</ol>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Groups</h3>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-10">
+            <div class="input-group">
+              <input type="search" class="form-control">
+              <span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span>
+            </div>
+          </div>
+          <div class="col-sm-2 clearfix">
+            <a href="/admin/userset/add" class="pull-right">
+              <button type="button" class="btn btn-success" style="margin-bottom: 16px;"><i class="fa fa-plus fa-fw"></i></button>
+            </a>
+          </div>
+        </div>
+        <div class="form-group">
+          <select multiple class="form-control" id="group-select" size="6">
+            {% for userset in sets %}
+            <option>{{ userset.name }}</option>
+            {% end %}
+          </select>
+        </div>
+      </div>
+    </div>
+    {% for userset in sets %}
+    <div id="{{ userset.name }}-details" class="panel panel-default userset-panel" style="display: none;">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ userset.name }}</h3>
+      </div>
+      <div class="panel-body">
+        {% for items in userset.memberships %}
+          {{ items.user.username }}<br>
+        {% end %}
+
+        <form action="/admin/userset/{{ userset.id }}" method="post" style="display: inline;">
+          <button type="submit" class="btn btn-primary" disabled="true"><i class="fa fa-bar-chart fa-fw"></i> Stats</button>
+        </form>
+
+        <form action="/admin/userset/{{ userset.id }}/edit" method="get" style="display: inline;">
+          <button type="submit" class="btn btn-success" disabled="true"><i class="fa fa-edit fa-fw"></i> Edit</button>
+        </form>
+
+        <form action="/admin/userset/{{ userset.id }}/delete" method="post" style="display: inline;">
+          <button type="submit" class="btn btn-danger" disabled="true"><i class="fa fa-trash fa-fw"></i> Delete</button>
+        </form>
+      </div>
+    </div>
+    {% end %}
   </div>
+  <div class="col-md-8">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Users</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="users" class="table table-striped" id="problems">
+          <col>
+          <col>
+          <col width="120">
+          <col width="0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+              <th style="display: none;">Groups</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                <form action="/admin/user/{{ user.id }}" method="get" style="display: inline;">
+                  <button class="btn btn-primary btn-xs" type="submit" value="Stats" disabled="true"><i class="fa fa-bar-chart fa-fw"></i></button>
+                </form>
+                <form action="/admin/user/{{ user.id }}/edit" method="get" style="display: inline;">
+                  <button class="btn btn-success btn-xs" type="submit" value="Edit" disabled="true"><i class="fa fa-edit fa-fw"></i></button>
+                </form>
+                <form action="/admin/user/{{ user.id }}/delete" method="post" style="display: inline;">
+                  <button class="btn btn-danger btn-xs" type="submit" value="Delete" disabled="true"><i class="fa fa-trash fa-fw"></i></button>
+                </form>
+              </td>
+              <td style="display: none;">
+                {% for item in user.memberships %}{{ item.userSet.name }} {% end %}
+              </td>
+            </tr>
+          {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>  
+{% end %}
+
+{% block scripts %}
+<script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+<script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#users').dataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+
+    $('#users_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div><a href="/admin/user/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
+    $('#users_length').find("label").empty().append('<label><select name="users_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+  });
+</script>
 {% end %}

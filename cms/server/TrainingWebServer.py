@@ -1135,6 +1135,7 @@ class ViewUserSetsHandler(BaseHandler):
     def get(self):
         # TODO: query UserSet instead
         self.r_params["sets"] = self.sql_session.query(UserSet)
+        self.r_params["users"] = self.sql_session.query(User)
         self.render("view_usersets.html", **self.r_params)
 
 class AddUserSetHandler(BaseHandler):

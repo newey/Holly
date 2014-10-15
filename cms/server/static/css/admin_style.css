@@ -2,6 +2,32 @@
   border-radius: 0 !important;
 }
 
+.btn-xs {
+  padding: 4px 5px;
+}
+
+.pagination>li>a {
+  padding: 4px 10px;
+}
+
+.pagination>.next>a {
+  padding: 4px 6px;
+}
+
+.pagination>li.previous>a {
+  padding: 4px 6px;
+}
+
+.dataTables_wrapper .row {
+  margin: 0px 0px 0px 0px;
+  padding-bottom: 5px;
+}
+
+.dataTables_wrapper .row:first-child {
+  margin: 15px 0px 0px 0px;
+  padding-bottom: 0px;
+}
+
 .panel {
   border: none !important;
 }
