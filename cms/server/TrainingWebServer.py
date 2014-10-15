@@ -66,6 +66,16 @@ from cmscommon.datetime import make_datetime, make_timestamp
 
 logger = logging.getLogger(__name__)
 
+def admin_authenticated(foo):
+    def func(self, *args, **kwargs):
+        print('self is %s' % self)
+        if self.current_user.item.is_admin == False:
+            self.redirect("/")
+        else:
+            return foo(self, *args, **kwargs)
+    return func
+
+
 def xstr(src):
     if src:
         return str(src)
@@ -75,7 +85,7 @@ def xstr(src):
 def create_training_contest():
     attrs = dict()
     attrs["name"] = "TrainingWebServer"
-    attrs["description"] = "A speciskalized 'contest' for the training web server"
+    attrs["description"] = "A specialized 'contest' for the training web server"
     attrs["allowed_localizations"] = []
     attrs["languages"] = DEFAULT_LANGUAGES
 
@@ -133,7 +143,6 @@ class BaseHandler(CommonRequestHandler):
         assert individualSets.count() <= 1
         if individualSets.count() == 0:
             attrs = {
-                'contest': self.contest,
                 'name': user.username,
                 'title': xstr(user.first_name) + " " + xstr(user.last_name),
                 'setType': 1
@@ -156,7 +165,6 @@ class BaseHandler(CommonRequestHandler):
             attrs = {
                 'name': "AllUsers",
                 'title': "All Users",
-                'contest': self.contest,
                 'setType': 2
             }
             allUsersSet = UserSet(**attrs)
@@ -164,7 +172,7 @@ class BaseHandler(CommonRequestHandler):
 
             # Ensure that each user has their own userset and is in the all users set
             for user in self.contest.users:
-                self.createIndividualUserSet(user)
+                # self.createIndividualUserSet(user)
 
                 allUsersMemberships = self.sql_session.query(UserSetItem).\
                                            filter(UserSetItem.user==user,
@@ -172,14 +180,53 @@ class BaseHandler(CommonRequestHandler):
 
                 assert allUsersMemberships.count() <= 1
                 if allUsersMemberships.count() == 0:
-                    attrs = {
-                        'user': user,
-                        'userSet': allUsersSet
-                    }
-                    self.sql_session.add(UserSetItem(**attrs))
+                    allUsersSet.items.append(user.item)
 
             self.sql_session.commit()
 
+    def create_admin(self):
+        num_admin = self.sql_session.query(User).\
+                    filter(User.contest == self.contest).\
+                    filter(User.username == 'admin').count()
+
+        if num_admin == 1:
+            return
+
+        attrs = {
+            'first_name' : 'admin',
+            'last_name'  : 'adminson',
+            'username'   : 'admin',
+            'password'   : 'password',
+            'contest'    : self.contest
+        } 
+
+       
+        # Create the admin.
+        admin = User(**attrs)
+        self.sql_session.add(admin)
+
+        # Add the user to the all users group
+        attrs = {
+            'user': admin,
+            'is_admin' : True,
+        }
+        setitem = UserSetItem(**attrs) 
+        self.sql_session.add(setitem)
+        self.all_users.items.append(setitem)            
+
+
+        # Add the user to its own unique userset
+        attrs = {
+            'name': admin.username,
+            'title': xstr(admin.first_name) + " " + xstr(admin.last_name),
+            'setType': 1
+        }
+        individualSet = UserSet(**attrs)
+        self.sql_session.add(individualSet)
+        individualSet.items.append(setitem)
+
+        self.sql_session.commit()
+        
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -212,6 +259,8 @@ class BaseHandler(CommonRequestHandler):
         self.createSpecialUserSets()
 
         self.all_users = self.sql_session.query(UserSet).filter(UserSet.setType==2).one()
+
+        self.create_admin()
 
         if config.installed:
             localization_dir = os.path.join("/", "usr", "local", "share",
@@ -521,27 +570,22 @@ class SignupHandler(BaseHandler):
 
             # Add the user to the all users group
             attrs = {
-                'userSet': self.all_users,
                 'user': user
             }
-            print(self.current_user)
-            self.sql_session.add(UserSetItem(**attrs))
+            setitem = UserSetItem(**attrs) 
+            self.sql_session.add(setitem)
+            self.all_users.items.append(setitem)            
+
 
             # Add the user to its own unique userset
             attrs = {
                 'name': user.username,
                 'title': xstr(user.first_name) + " " + xstr(user.last_name),
-                'setType': 1,
-                'contest': self.contest
+                'setType': 1
             }
             individualSet = UserSet(**attrs)
             self.sql_session.add(individualSet)
-
-            attrs = {
-                'userSet': individualSet,
-                'user': user
-            }
-            self.sql_session.add(UserSetItem(**attrs))
+            individualSet.items.append(setitem)
 
             self.sql_session.commit()
 
@@ -565,6 +609,7 @@ class AdminMainHandler(BaseHandler):
     
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
@@ -576,10 +621,12 @@ class AddProblemHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.render("add_task.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self):
         try:
             attrs = dict()
@@ -655,6 +702,7 @@ class AdminProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -670,6 +718,7 @@ class DeleteProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -687,6 +736,7 @@ class EditProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -697,6 +747,7 @@ class EditProblemHandler(BaseHandler):
                     task=task, **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
@@ -743,6 +794,7 @@ class TestProblemHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, task_id):
         task = self.get_task_by_id(task_id)
         dataset = task.active_dataset
@@ -753,6 +805,7 @@ class TestProblemHandler(BaseHandler):
         self.render("add_testcase.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, task_id):
         task = self.get_task_by_id(task_id)
         dataset = task.active_dataset
@@ -1000,12 +1053,14 @@ class AddProblemSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         tasks = self.sql_session.query(Task.id, Task.title).all()
         self.r_params['taskdata'] = tasks
         self.render("add_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self):
         try:
             attrs = dict()
@@ -1055,6 +1110,7 @@ class DeleteProblemSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, set_id):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
@@ -1070,6 +1126,7 @@ class EditProblemSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
         selectedids = set([x.task_id for x in problemSet.items])
@@ -1086,6 +1143,7 @@ class EditProblemSetHandler(BaseHandler):
         self.render("edit_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, set_id):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
@@ -1230,6 +1288,7 @@ class ViewUserSetsHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         # TODO: query UserSet instead
         self.r_params["sets"] = self.sql_session.query(UserSet)
@@ -1240,12 +1299,14 @@ class AddUserSetHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.r_params["users"] = self.sql_session.query(User)
         self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
         self.render("add_userset.html", **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self):
         try:
             attrs = dict()
@@ -1253,7 +1314,6 @@ class AddUserSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             assert attrs.get("name") is not None, "No set name specified."
             self.get_string(attrs, "title")
-            attrs["contest"] = self.contest
 
             userset = UserSet(**attrs)
             self.sql_session.add(userset)
@@ -1263,20 +1323,20 @@ class AddUserSetHandler(BaseHandler):
 
             # create userSetItems for each user
             for username in users:
-                user = self.sql_session.query(User).filter(User.username==username).one()
-                attrs = {"user":user, "userSet":userset}
-                userSetItem = UserSetItem(**attrs)
-                self.sql_session.add(userSetItem)
+                user = self.sql_session.query(User).\
+                       filter(Contest.id == self.contest.id).\
+                       filter(User.username==username).one()
+                userset.items.append(user.item) 
 
             # get list of problem set checked boxs
-            problemsets = self.request.arguments['add_problem_sets']
+            #problemsets = self.request.arguments['add_problem_sets']
 
             # at the moment, this says each problemset can only be set to ONE userset
             # TODO: change problemset table to allow many to many relationship equivalent
-            for problemsetname in problemsets:
+            #for problemsetname in problemsets:
                 # print("problemsetname <"+problemsetname+">")
-                problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
-                problemset.userset = userset
+                #problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
+                #problemset.userset = userset
 
             self.sql_session.commit()
 
@@ -1286,6 +1346,34 @@ class AddUserSetHandler(BaseHandler):
             return
 
         self.redirect("/admin/usersets")
+
+class AddAdminHandler(BaseHandler):
+    """Adds a new admin.
+
+    """
+
+    #TODO: make this doable on the user edit page.
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self, user_id):
+        user = self.sql_session.query(User).\
+            filter(Contest.id == self.contest.id).\
+            filter(User.id==user_id).one()
+
+        user.item.is_admin = True
+        self.sql_session.commit()
+    
+   #TODO: make this doable on the user edit page.
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self, user_id):
+        user = self.sql_session.query(User).\
+            filter(Contest.id == self.contest.id).\
+            filter(User.id==user_id).one()
+
+        user.item.is_admin = True
+        self.sql_session.commit()
+        
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -1313,4 +1401,5 @@ _tws_handlers = [
     (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
+    (r"/admin/new/([0-9]+)", AddAdminHandler),
 ]
