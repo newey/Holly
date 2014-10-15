@@ -570,7 +570,7 @@ class LoginHandler(BaseHandler):
             .filter(User.username == username).first()
 
         if user is None:
-            self.redirect("/login?error=Invalid Username%next=%s" % next_page)
+            self.redirect("/login?error=Invalid Username&ext=%s" % next_page)
             return
 
         if user.password != password:
