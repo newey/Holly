@@ -3,31 +3,35 @@
 {% block core %}
 <ol class="breadcrumb">
   <li><a href="/">Home</a></li>
-  <li class="active">{{ user.username }}</li>
+  <li class="active">{{ usersetitem.user.username }}</li>
 </ol>
 
-<h1>{{ user.username }}</h1>
+<h1>{{ usersetitem.user.username }}</h1>
 
 <table class="table">
   <tr>
     <td>First Name</td>
-    <td>{{ user.first_name }}</td>
+    <td>{{ usersetitem.user.first_name }}</td>
   </tr>
   <tr>
     <td>Last Name</td>
-    <td>{{ user.last_name }}</td>
+    <td>{{ usersetitem.user.last_name }}</td>
   </tr>
   <tr>
     <td>Username</td>
-    <td>{{ user.username }}</td>
+    <td>{{ usersetitem.user.username }}</td>
   </tr>
   <tr>
     <td>Password</td>
-    <td>{{ user.password }}</td>
+    <td>{{ usersetitem.user.password }}</td>
   </tr>
   <tr>
     <td>Email</td>
-    <td>{{ user.email }}</td>
+    <td>{{ usersetitem.user.email }}</td>
+  </tr>
+  <tr>
+    <td>Admin</td>
+    <td>{{ usersetitem.is_admin }}</td>
   </tr>
 </table>
 

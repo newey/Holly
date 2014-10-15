@@ -1191,6 +1191,7 @@ class AdminUserHandler(BaseHandler):
     
     """
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
         self.r_params["users"] = self.sql_session.query(User)
@@ -1202,36 +1203,41 @@ class UserHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, user_id):
         try:
-            user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
         self.render("user_description.html",
-                    user=user, **self.r_params)
+                    usersetitem=usersetitem, **self.r_params)
 
 class EditUserHandler(BaseHandler):
     """Edits a task.
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def get(self, user_id):
         try:
-            user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
         self.render("edit_user.html", 
-                    user=user, **self.r_params)
+                    usersetitem=usersetitem, **self.r_params)
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, user_id):
         try:
             user = self.sql_session.query(User)\
             .filter(User.id==user_id).one()
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1244,6 +1250,7 @@ class EditUserHandler(BaseHandler):
             self.get_string(attrs, "username", empty=None)
             self.get_string(attrs, "password", empty=None)
             self.get_string(attrs, "email")
+            is_admin_choice = self.get_argument("is_admin")
 
             self.check_signup_valid_input(attrs)
 
@@ -1253,11 +1260,13 @@ class EditUserHandler(BaseHandler):
             user.username = attrs.get("username")
             user.password = attrs.get("password")
             user.email = attrs.get("email")
+            # save input to usersetitem
+            usersetitem.is_admin = is_admin_choice
 
             self.sql_session.commit()
 
         except Exception as error:
-            self.redirect("/admin/user/%s/edit" % task_id)
+            self.redirect("/admin/user/%s/edit" % user_id)
             print(error)
             return
 
@@ -1270,14 +1279,17 @@ class DeleteUserHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
+    @admin_authenticated
     def post(self, user_id):
         try:
-            print("user_id <"+user_id+">")
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
             user = self.sql_session.query(User)\
             .filter(User.id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.sql_session.delete(usersetitem)
         self.sql_session.delete(user)
         self.sql_session.commit()
 
