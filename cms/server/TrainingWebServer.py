@@ -420,6 +420,11 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type"] = name
         dest["score_type_parameters"] = params
 
+    def check_signup_valid_input(self, attrs):
+        assert attrs.get("username") is not None, \
+                "No username specified."
+        assert attrs.get("password") is not None, \
+                "No password specified."
 
 class TrainingWebServer(WebService):
     """Service that runs the web server serving the managers.
@@ -496,7 +501,6 @@ class LoginHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
-
 class SignupHandler(BaseHandler):
     def post(self):
         try:
@@ -505,11 +509,10 @@ class SignupHandler(BaseHandler):
             self.get_string(attrs, "first_name")
             self.get_string(attrs, "last_name")
             self.get_string(attrs, "username", empty=None)
-            self.get_string(attrs, "password")
+            self.get_string(attrs, "password", empty=None)
             self.get_string(attrs, "email")
 
-            assert attrs.get("username") is not None, \
-                "No username specified."
+            self.check_signup_valid_input(attrs)
 
             # Create the user.
             attrs["contest"] = self.contest
@@ -1151,7 +1154,7 @@ class UserHandler(BaseHandler):
         self.render("user_description.html",
                     user=user, **self.r_params)
 
-class EditProblemHandler(BaseHandler):
+class EditUserHandler(BaseHandler):
     """Edits a task.
     """
 
@@ -1176,6 +1179,25 @@ class EditProblemHandler(BaseHandler):
 
         try:
             attrs = dict()
+
+            # get input
+            self.get_string(attrs, "first_name")
+            self.get_string(attrs, "last_name")
+            self.get_string(attrs, "username", empty=None)
+            self.get_string(attrs, "password", empty=None)
+            self.get_string(attrs, "email")
+
+            self.check_signup_valid_input(attrs)
+
+            # save input to user
+            user.first_name = attrs.get("first_name")
+            user.last_name = attrs.get("last_name")
+            user.username = attrs.get("username")
+            user.password = attrs.get("password")
+            user.email = attrs.get("email")
+
+            self.sql_session.commit()
+
         except Exception as error:
             self.redirect("/admin/user/%s/edit" % task_id)
             print(error)
@@ -1287,7 +1309,7 @@ _tws_handlers = [
     (r"/admin/problemset/([0-9]+)/edit", EditProblemSetHandler),
     (r"/admin/users", AdminUserHandler),
     (r"/admin/user/([0-9]+)", UserHandler),
-    # (r"/admin/user/([0-9]+)/edit", EditUserHandler),
+    (r"/admin/user/([0-9]+)/edit", EditUserHandler),
     (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
