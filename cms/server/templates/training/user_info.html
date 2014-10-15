@@ -11,37 +11,33 @@
 <legend>Edit Account</legend>
 
 <div class="control-group">
-  <label class="control-label" for="textinput-2">First Name</label>
+  <label class="control-label" for="first_name">First Name</label>
   <div class="controls">
-    <input id="textinput-2" name="first_name" type="text" placeholder="{{ user.first_name }}" class="input-xlarge" required="">
+    <input name="first_name" type="text" value="{{ current_user.first_name }}" class="input-xlarge">
     
   </div>
 </div>
 
-<!-- Text input-->
 <div class="control-group">
-  <label class="control-label" for="textinput-1">Last Name</label>
+  <label class="control-label" for="last_name">Last Name</label>
   <div class="controls">
-    <input id="textinput-1" name="last_name" type="text" placeholder="{{ user.last_name }}" class="input-xlarge" required="">
+    <input name="last_name" type="text" value="{{ current_user.last_name }}" class="input-xlarge">
     
   </div>
 </div>
 
-<!-- Text input-->
 <div class="control-group">
-  <label class="control-label" for="textinput-0">Email</label>
+  <label class="control-label" for="email">Email</label>
   <div class="controls">
-    <input id="textinput-0" name="email" type="text" placeholder="{{ user.email }}" class="input-xlarge">
+    <input name="email" type="text" value="{% if current_user.email is not None %}{{ current_user.email }}{% end %}" class="input-xlarge">
     
   </div>
 </div>
 
-<!-- Password input-->
 <div class="control-group">
-  <label class="control-label" for="passwordinput-0">Password</label>
+  <label class="control-label" for="password">Password</label>
   <div class="controls">
-    <input id="passwordinput-0" name="password" type="password" placeholder="" class="input-xlarge">
-    
+    <input name="password" type="text" value="" class="input-xlarge">
   </div>
 </div>
 

@@ -1281,6 +1281,7 @@ class UserInfoHandler(BaseHandler):
 
     @tornado.web.authenticated
     def get(self):
+        self.r_params["active_sidebar_item"] = ""
         self.render("user_info.html", **self.r_params)
 
     @tornado.web.authenticated
