@@ -789,7 +789,7 @@ class EditProblemHandler(BaseHandler):
 
         self.redirect("/")
 
-class TestProblemHandler(BaseHandler):
+class AddTestHandler(BaseHandler):
     """Add a testcase to a dataset.
 
     """
@@ -841,6 +841,25 @@ class TestProblemHandler(BaseHandler):
             return
 
         self.redirect("/admin/problem/%s" % task.id)
+
+class DeleteTestHandler(BaseHandler):
+    """Delete a testcase.
+
+    """
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self, task_id, test_id):
+        test = self.sql_session.query(Testcase).
+               filter(Testcase.id == test_id).one()
+        try:
+            self.sql_session.delete(test)
+            self.sql_session.commit()
+        except Exception as error:
+            print(error)
+            self.redirect("/admin/problem/%s" % task_id)
+            return
+
+        self.redirect("/admin/problem/%s" % task_id)
 
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
@@ -1272,8 +1291,8 @@ class EditUserHandler(BaseHandler):
 
         self.redirect("/admin/users")
 
-class DeleteUserHandler(BaseHandler):
-    """Deletes a user.
+class DeleteAccountHandler(BaseHandler):
+    """Deletes the current user's account.
 
     """
 
@@ -1431,7 +1450,8 @@ _tws_handlers = [
     (r"/admin/problem/add", AddProblemHandler),
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
-    (r"/admin/problem/([0-9]+)/test", TestProblemHandler),
+    (r"/admin/problem/([0-9]+)/test/add", AddTestHandler),
+    (r"/admin/problem/([0-9]+)/test/delete", DeleteTestHandler),
     #(r"/admin/problemset/([0-9]+)", AdminProblemSetHandler),
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
