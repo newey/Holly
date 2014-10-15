@@ -542,7 +542,7 @@ class LoginHandler(BaseHandler):
             .filter(User.contest == self.contest)\
             .filter(User.username == username).first()
 
-        if user is None user.password != password:
+        if user is None:
             self.redirect("/login?error=Invalid Username")
             return
 
