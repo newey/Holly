@@ -1272,6 +1272,21 @@ class EditUserHandler(BaseHandler):
 
         self.redirect("/admin/users")
 
+class DeleteUserHandler(BaseHandler):
+    """Deletes a user.
+
+    """
+
+    @tornado.web.authenticated
+    def post(self):
+        usersetitem = self.sql_session.query(UserSetItem)\
+                     .filter(UserSetItem.user==self.current_user).one()
+
+        self.sql_session.delete(usersetitem)
+        self.sql_session.delete(self.current_user)
+        self.sql_session.commit()
+
+        self.redirect("/login")
 
 class DeleteUserHandler(BaseHandler):
     """Deletes a user.
@@ -1359,33 +1374,6 @@ class AddUserSetHandler(BaseHandler):
 
         self.redirect("/admin/usersets")
 
-class AddAdminHandler(BaseHandler):
-    """Adds a new admin.
-
-    """
-
-    #TODO: make this doable on the user edit page.
-    @tornado.web.authenticated
-    @admin_authenticated
-    def get(self, user_id):
-        user = self.sql_session.query(User).\
-            filter(Contest.id == self.contest.id).\
-            filter(User.id==user_id).one()
-
-        user.item.is_admin = True
-        self.sql_session.commit()
-    
-   #TODO: make this doable on the user edit page.
-    @tornado.web.authenticated
-    @admin_authenticated
-    def post(self, user_id):
-        user = self.sql_session.query(User).\
-            filter(Contest.id == self.contest.id).\
-            filter(User.id==user_id).one()
-
-        user.item.is_admin = True
-        self.sql_session.commit()
-        
 class UserInfoHandler(BaseHandler):
     """Info about the current user.
        User can edit their own info.
@@ -1437,6 +1425,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
+    (r"/user/delete", DeleteAccountHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),
@@ -1453,5 +1442,4 @@ _tws_handlers = [
     (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
-    (r"/admin/new/([0-9]+)", AddAdminHandler),
 ]
