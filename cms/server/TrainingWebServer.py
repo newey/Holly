@@ -511,7 +511,9 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
-        self.r_params["sets"] = [self.sql_session.query(ProblemSet).filter(ProblemSet.id==pin.problemSet_id).one() for pin in self.current_user.pins]
+        self.r_params["sets"] = [self.sql_session.query(ProblemSet).
+                                 filter(ProblemSet.id==pin.problemSet_id).one() 
+                                 for pin in self.current_user.pins]
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -530,6 +532,7 @@ class LoginHandler(BaseHandler):
 
     """
     def get(self):
+        self.get_string(self.r_params, "error")
         self.render("login.html", **self.r_params)
 
     def post(self):
@@ -539,8 +542,12 @@ class LoginHandler(BaseHandler):
             .filter(User.contest == self.contest)\
             .filter(User.username == username).first()
 
-        if user is None or user.password != password:
-            self.redirect("/login")
+        if user is None user.password != password:
+            self.redirect("/login?error=Invalid Username")
+            return
+
+        if user.password != password:
+            self.redirect("login?error=Invalid Password")
             return
 
         self.set_secure_cookie("login",
