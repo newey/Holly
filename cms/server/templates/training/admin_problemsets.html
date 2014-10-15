@@ -5,10 +5,10 @@
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title">Individual Problems</h3>
+    <h3 class="panel-title">Problem Sets</h3>
   </div>
   <div class="table-responsive">
-    <table class="table table-striped" id="problems">
+    <table class="table table-striped" id="problemsets">
       <col>
       <col>
       <col width="60">
@@ -24,22 +24,22 @@
         </tr>
       </thead>
       <tbody>
-      {% for task in tasks %}
+      {% for set in sets %}
         <tr>
-          <td>{{ task.id }}</td>
-          <td><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></td>
+          <td>{{ set.id }}</td>
+          <td>{{ set.name }}</td>
           <td style="text-align: center;">
-            <a href="/admin/problem/{{ task.id }}/edit">
+            <a href="/admin/problemset/{{ set.id }}/edit">
               <button class="btn btn-success btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" data-placement="top" rel="tooltip"><i class="fa fa-edit fa-fw"></i></button>
             </a>
           </td>
           <td style="text-align: center;">
-            <a href="/admin/problem/{{ task.id }}">
+            <a href="/admin/problemset/{{ set.id }}/edit">
               <button class="btn btn-primary btn-xs" data-title="Stat" data-toggle="modal" data-target="#stat" data-placement="top" rel="tooltip"><i class="fa fa-bar-chart fa-fw"></i></button>
-            </a>
+            </a>  
           </td>
           <td style="text-align: center;">
-            <form action="/admin/problem/{{ task.id }}/delete" method="post">
+            <form action="/admin/problemset/{{ set.id }}/delete" method="post">
               <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-trash fa-fw"></i></button>
             </form>
           </td>

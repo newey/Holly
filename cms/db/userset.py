@@ -32,7 +32,7 @@ from __future__ import unicode_literals
 from datetime import timedelta
 
 from sqlalchemy.schema import Column, ForeignKey, CheckConstraint, \
-    UniqueConstraint, ForeignKeyConstraint
+    UniqueConstraint, ForeignKeyConstraint, Table
 from sqlalchemy.types import Boolean, Integer, Float, String, Unicode, \
     Interval, Enum
 from sqlalchemy.orm import relationship, backref
@@ -40,6 +40,12 @@ from sqlalchemy.ext.orderinglist import ordering_list
 
 from . import Base, Contest, User
 from .smartmappedcollection import smart_mapped_collection
+
+association_table = Table('association', Base.metadata,
+                          Column('usersets.id', Integer, ForeignKey('usersets.id')),
+                          Column('usersetitem.id', Integer, ForeignKey('usersetitem.id'))
+                         ) 
+                          
 
 class UserSet(Base):
     """ Class to store a user set for training purposes
@@ -58,20 +64,6 @@ class UserSet(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # Contest (id and object) owning the user set.
-    contest_id = Column(
-        Integer,
-        ForeignKey(Contest.id,
-                   onupdate="CASCADE", ondelete="CASCADE"),
-                   nullable=False,
-                   index=True)
-    contest = relationship(
-        Contest,
-        backref=backref('usersets',
-                        cascade="all, delete-orphan",
-                        passive_deletes=True))
-
-
     # Short name and long human readable title of the user set.
     name = Column(
         Unicode,
@@ -89,6 +81,10 @@ class UserSet(Base):
         nullable=False,
         default=0,
         index=True)
+
+    items = relationship("UserSetItem",
+        secondary=association_table,
+        backref="sets")
 
     # We could add the other parameters from Task here and combine
     # the rules here with the rules for each task, but it doesn't
@@ -109,20 +105,6 @@ class UserSetItem(Base):
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
 
-    # UserSet (id and object) that the item is a member of
-    userSet_id = Column(
-        Integer,
-        ForeignKey(UserSet.id, onupdate="CASCADE", ondelete="CASCADE"),
-        nullable=False,
-        index=True)
-    userSet = relationship(
-        UserSet,
-        backref=backref(
-            'memberships',
-            cascade="all, delete-orphan",
-            passive_deletes=True)
-        )
-
     # The User has all memberships to usersets
     user_id = Column(
         Integer,
@@ -133,9 +115,14 @@ class UserSetItem(Base):
     user = relationship(
         User,
         backref=backref(
-            'memberships',
+            'item',
             cascade="all, delete-orphan",
-            passive_deletes=True)
+            passive_deletes=True,
+            uselist=False)
         )
 
+    is_admin = Column(
+        Boolean,
+        nullable=False,
+        default=False)
     # TODO: list of user sets
