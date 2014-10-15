@@ -1,41 +1,77 @@
 {% extends admin_base.html %}
 
-{% block headextension %}
-<link href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.css" rel="stylesheet">
-{% end %}
-
 {% block scripts %}
 <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
 <script type="text/javascript">
+
 $(document).ready(function() {
-    var unseltable = $('#unselectedproblems').DataTable();
-    var seltable = $('#selectedproblems').DataTable();
+    var unselectedTable = $('#unselectedproblems').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
 
-    $('.problemsseln tbody').on( 'click', 'tr', function () {
-        if ( $(this).hasClass('selected') ) {
-            $(this).removeClass('selected');
-        }
-        else {
-            unseltable.$('tr.selected').removeClass('selected');
-            seltable.$('tr.selected').removeClass('selected');
-            $(this).addClass('selected');
-        }
-    } );
+    var selectedTable = $('#selectedproblems').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
 
-    $('#button').click( function () {
-        if (unseltable.row('.selected').length > 0) {
-            seltable.row.add(unseltable.row('.selected').data()).draw(false);
-            unseltable.row('.selected').remove().draw( false );
-        } else if (seltable.row('.selected').length > 0) {
-            unseltable.row.add(seltable.row('.selected').data()).draw(false);
-            seltable.row('.selected').remove().draw( false );
-        }
-        $("#problemids").val(seltable.column(0).data().reduce(function (a,b) {
+    function updateIds() {
+      $("#problemids").val(selectedTable.column(0).data().reduce(function (a,b) {
+        return a.concat(" ").concat(b);
+      }), "");
+    }
+    updateIds();
+
+    function addProblem () {
+      $(this).parents("tr").addClass('move');
+      var items = unselectedTable.row('.move').data();
+      items[2] = '<button class="btn btn-success btn-xs add-problem" type="button" style="display: none"><i class="fa fa-plus fa-fw"></i></button><button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>';
+      selectedTable.row.add(items).draw(false);
+      unselectedTable.row('.move').remove().draw( false );
+
+      $("#problemids").val(selectedTable.column(0).data().reduce(function (a,b) {
             return a.concat(" ").concat(b);
         }), "");
-    } );
-} );
+      $('.remove-problem').click(removeProblem);
+    }
+
+    function removeProblem () {
+      $(this).parents("tr").addClass('move');
+      var items = selectedTable.row('.move').data();
+      items[2] = '<button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button><button class="btn btn-danger btn-xs remove-problem" type="button" style="display: none"><i class="fa fa-close fa-fw"></i></button>';
+      unselectedTable.row.add(items).draw(false);
+      selectedTable.row('.move').remove().draw( false );
+
+      
+      $('.add-problem').click(addProblem);
+    }
+
+    $('.add-problem').click(addProblem);
+    $('.remove-problem').click(removeProblem);
+
+    $('#unselectedproblems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+    $('#selectedproblems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+
+    $('#unselectedproblems_length').find("label").empty().append('<label><select name="unselectedproblems_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+    $('#selectedproblems_length').find("label").empty().append('<label><select name="selectedproblems_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+});
 </script>
 {% end %}
 
@@ -47,73 +83,101 @@ $(document).ready(function() {
   <li class="active">Edit Problem Set</li>
 </ol>
 
-<form class="form-horizontal" role="form" method="post">
-  <div class="form-group">
-    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="name" name="name" placeholder="{{ problemset.name }}">
+<div class="panel panel-default">
+    <div class="panel-body">
+        <form class="form-horizontal" role="form" method="post">
+          <div class="form-group">
+            <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
+            <div class="col-sm-7">
+              <input type="text" class="form-control" id="name" name="name" value="{{ problemset.name }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
+            <div class="col-sm-7">
+              <input type="text" class="form-control" id="title" name="title" value="{{ problemset.title }}">
+            </div>
+          </div>
+
+          <input type="hidden" id="problemids" name="problemids">
+
+          <div class="form-group">
+            <label class="col-md-2 control-label" for="submit"></label>
+            <div class="col-md-7">
+              <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+            </div>
+          </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+<div class="col-md-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Selected Problems</h3>
+    </div>
+    <div class="table-responsive">
+      <table id="selectedproblems" class="table table-striped">
+        <col>
+        <col>
+        <col width="60">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for id, name in seltaskdata %}
+          <tr>
+            <td>{{ id }}</td>
+            <td>{{ name }}</td>
+            <td style="text-align: center">
+              <button class="btn btn-success btn-xs add-problem" type="button" style="display: none"><i class="fa fa-plus fa-fw"></i></button>
+              <button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>
+            </td>
+          </tr>
+          {% end %}
+        </tbody>
+      </table>
     </div>
   </div>
-
-  <div class="form-group">
-    <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="title" name="title" placeholder="{{ problemset.title }}">
+</div>
+<div class="col-md-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Unselected Problems</h3>
+    </div>
+    <div class="table-responsive">
+      <table id="unselectedproblems" class="table table-striped">
+        <col>
+        <col>
+        <col width="60">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for id, name in unseltaskdata %}
+          <tr>
+            <td>{{ id }}</td>
+            <td>{{ name }}</td>
+            <td style="text-align: center">
+              <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+              <button class="btn btn-danger btn-xs remove-problem" type="button"  style="display: none"><i class="fa fa-close fa-fw"></i></button>
+            </td>
+          </tr>
+          {% end %}
+        </tbody>
+      </table>
     </div>
   </div>
-
-  <input type="hidden" id="problemids" name="problemids">
-
-  <div class="form-group">
-    <label class="col-md-2 control-label" for="submit"></label>
-    <div class="col-md-7">
-      <input id="submit" type="submit" value="Submit" class="btn btn-primary">
-    </div>
-  </div>
-</form>
-
-
-  <div class="row">
-        <button id="button">Switch selected</button>
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-        <label for="name" class="col-sm-6 control-label" style="text-align:left;">Unselected Problems</label>
-        <table id="unselectedproblems" class="problemsseln" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for id, name in unseltaskdata %}
-                <tr>
-                    <td>{{ id }}</td>
-                    <td>{{ name }}</td>
-                </tr>
-                {% end %}
-            </tbody>
-        </table>
-    </div>
-    <div class="col-md-6">
-        <label for="name" class="col-sm-6 control-label" style="text-align:left;">Selected Problems</label>
-        <table id="selectedproblems" class="problemsseln" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for id, name in seltaskdata %}
-                <tr>
-                    <td>{{ id }}</td>
-                    <td>{{ name }}</td>
-                </tr>
-                {% end %}
-            </tbody>
-        </table>
-    </div>
+</div>
 </div>
 {% end %}

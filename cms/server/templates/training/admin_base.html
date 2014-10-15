@@ -8,12 +8,14 @@
 <link href="/static/css/plugins/dataTables.bootstrap.css" rel="stylesheet">
 <link href="/static/css/sb-admin-2.css" rel="stylesheet">
 <link href="/static/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/static/css/admin_style.css" rel="stylesheet">
 <style>
   .page-header {
     margin-bottom: 0px;
   }
 </style>
 {% block headextension %} {% end %}
+
 {% end %}
 
 {% block body %}
@@ -61,18 +63,13 @@
             <a href="/admin"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
           </li>
           <li>
-            <a class="active" href="/admin/problems"><i class="fa fa-edit fa-fw"></i> Problems<span class="fa arrow"></span></a>
-            <ul class="nav nav-second-level">
-              <li>
-                <a href="/admin/problems#problems">Individual Problems</a>
-              </li>
-              <li>
-                <a href="/admin/problems#problemsets">Problem Sets</a>
-              </li>
-            </ul>
+            <a href="/admin/problems"><i class="fa fa-tasks fa-fw"></i> Problems</a>
           </li>
           <li>
-            <a href="#"><i class="fa fa-users fa-fw"></i> Users</a>
+            <a href="/admin/problemsets"><i class="fa fa-th fa-fw"></i> Problem Sets</a>
+          </li>
+          <li>
+            <a href="/admin/users"><i class="fa fa-users fa-fw"></i> Users</a>
           </li>
           <li>
             <a href="#"><i class="fa fa-calendar fa-fw"></i> Contests</a>
@@ -85,7 +82,7 @@
   </nav>
 
   <div id="page-wrapper">
-      {% block core %}{% end %}
+    {% block core %}{% end %}
   </div>
   <!-- /#page-wrapper -->
 

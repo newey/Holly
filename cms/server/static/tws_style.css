@@ -1,10 +1,5 @@
-.form-group.required .control-label:after {
-  content:"*";
-  color:red;
-}
-
 .page-header {
-  margin-top: 0px;
+  padding-bottom: 0px;
 }
 
 /* Problems table
