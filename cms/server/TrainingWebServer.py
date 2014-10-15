@@ -1079,6 +1079,7 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
         self.r_params["task"] = task
+        self.r_params["active_sidebar_item"] = "problems"
 
         self.render("task_submissions.html", **self.r_params)
 
