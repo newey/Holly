@@ -8,7 +8,7 @@
 # Copyright © 2014 Artem Iglikov <artem.iglikov@gmail.com>
 # Copyright © 2014 Fabian Gundlach <320pointsguy@gmail.com>
 #
-# This program is free software: you can redistribute it and/or modify
+# This program is free software: you can eedistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
@@ -42,6 +42,7 @@ import zipfile
 import pickle
 import io
 import random
+import email.utils
 
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
@@ -470,10 +471,29 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type_parameters"] = params
 
     def check_signup_valid_input(self, attrs):
-        assert attrs.get("username") is not None, \
-                "No username specified."
-        assert attrs.get("password") is not None, \
-                "No password specified."
+        assert attrs.get("username") is not None, 
+            "No username specified."
+        name_len = len(attrs["username"])
+        assert name_len >= 4 and name_len <= 24, \
+            "Username must be between 4 and 24 chars."
+        assert re.match(r'^[\w-]+$', attrs["username"]),
+            "Username can only contain alphanumeric characters and dashes."
+
+        assert attrs.get("password") is not None, 
+            "No password specified."
+        pass_len = len(attrs["password"])
+        assert pass_len >= 8 and pass_len <= 64,
+            "Password must be between 8 and 64 chars."
+        
+        result = email.utils.parseaddr(attrs["email"])
+        assert result[0] != "" or result[1] != "",
+            "Invalid email."        
+
+        assert re.match(r'^[\w-]+$', attrs["first_name"]),
+            "First name can only contain alphanumeric characters and dashes."
+
+        assert re.match(r'^[\w-]+$', attrs["last_name"]),
+            "Last name can only contain alphanumeric characters and dashes."
 
 class TrainingWebServer(WebService):
     """Service that runs the web server serving the managers.
