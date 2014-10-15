@@ -547,7 +547,7 @@ class LoginHandler(BaseHandler):
             return
 
         if user.password != password:
-            self.redirect("login?error=Invalid Password")
+            self.redirect("/login?error=Invalid Password")
             return
 
         self.set_secure_cookie("login",
@@ -598,7 +598,7 @@ class SignupHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/signup")
+            self.redirect("/login?error=%s" % error)
             return
 
         self.redirect("/")
@@ -856,7 +856,7 @@ class DeleteTestHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def post(self, task_id, test_id):
-        test = self.sql_session.query(Testcase).
+        test = self.sql_session.query(Testcase).\
                filter(Testcase.id == test_id).one()
         try:
             self.sql_session.delete(test)
