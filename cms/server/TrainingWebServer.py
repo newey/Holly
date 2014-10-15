@@ -1274,6 +1274,44 @@ class AddAdminHandler(BaseHandler):
         user.item.is_admin = True
         self.sql_session.commit()
         
+class UserInfoHandler(BaseHandler):
+    """Info about the current user.
+       User can edit their own info.
+    """
+
+    @tornado.web.authenticated
+    def get(self):
+        self.render("user_info.html", **self.r_params)
+
+    @tornado.web.authenticated
+    def post(self):
+        try:
+            attrs = dict()
+
+            user = self.current_user
+
+            user.first_name = self.get_argument("first_name", "")
+            user.last_name = self.get_argument("last_name", "")
+            user.email = self.get_argument("email", "")
+
+            if self.get_argument("password", "") != "":
+                user.password = self.get_argument("password", "")
+
+            userset = self.sql_session.query(UserSet).\
+                      filter(UserSet.setType == 1).\
+                      filter(UserSet.name == user.username).one()
+
+            userset.title = xstr(user.first_name) + " " + xstr(user.last_name)
+
+            self.sql_session.commit()
+
+        except Exception as error:
+            print(error)
+            self.redirect("/user")
+            return
+
+        self.redirect("/user")
+        
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -1285,6 +1323,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
+    (r"/user", UserInfoHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),
