@@ -1,7 +1,7 @@
 {% extends admin_base.html %}
 
 {% block core %}
-<h1 class="page-header" style="margin-bottom: 20px"><i class="fa fa-th fa-fw"></i> Problems</h1>
+<h1 class="page-header" style="margin-bottom: 20px"><i class="fa fa-tasks fa-fw"></i> Problems</h1>
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -11,16 +11,12 @@
     <table class="table table-striped" id="problems">
       <col>
       <col>
-      <col width="60">
-      <col width="60">
-      <col width="60">
+      <col width="120">
       <thead>
         <tr>
           <th>ID</th>
           <th>Name</th>
-          <th>Edit</th>
-          <th>Stats</th>
-          <th>Remove</th>
+          <th>Options</th>
         </tr>
       </thead>
       <tbody>
@@ -29,17 +25,13 @@
           <td>{{ task.id }}</td>
           <td><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></td>
           <td style="text-align: center;">
-            <a href="/admin/problem/{{ task.id }}/edit">
-              <button class="btn btn-success btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" data-placement="top" rel="tooltip"><i class="fa fa-edit fa-fw"></i></button>
-            </a>
-          </td>
-          <td style="text-align: center;">
-            <a href="/admin/problem/{{ task.id }}">
-              <button class="btn btn-primary btn-xs" data-title="Stat" data-toggle="modal" data-target="#stat" data-placement="top" rel="tooltip"><i class="fa fa-bar-chart fa-fw"></i></button>
-            </a>
-          </td>
-          <td style="text-align: center;">
-            <form action="/admin/problem/{{ task.id }}/delete" method="post">
+            <form action="/admin/problem/{{ task.id }}" method="get" style="display: inline;">
+              <button class="btn btn-primary btn-xs" type="submit" value="Stats"><i class="fa fa-bar-chart fa-fw"></i></button>
+            </form>
+            <form action="/admin/problem/{{ task.id }}/edit" method="get" style="display: inline;">
+              <button class="btn btn-success btn-xs" type="submit" value="Edit"><i class="fa fa-edit fa-fw"></i></button>
+            </form>
+            <form action="/admin/problem/{{ task.id }}/delete" method="post" style="display: inline;">
               <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-trash fa-fw"></i></button>
             </form>
           </td>
@@ -57,34 +49,20 @@
 <script>
   $(document).ready(function() {
     $('#problems').dataTable({
-      "fnDrawCallback":function(){
-          if($("#problems").find("tr:not(.ui-widget-header)").length<=5){
-              $('#problems_paginate')[0].style.display = "none";
-          } else {
-              $('#problems_paginate')[0].style.display = "block";
-          }
-      },
       "aoColumnDefs": [
-          { 'bSortable': false, 'aTargets': [ 2,3,4 ] }
-       ]
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+      }
     });
 
-    $('#problems_filter').find("label").append('<a href="/admin/problem/add"><button type="button" class="btn btn-success" style="margin-left: 20px;">Add <i class="fa fa-plus fa-fw"></i></button></a>')
-
-    $('#problemsets').dataTable({
-      "fnDrawCallback":function(){
-          if($("#problemsets").find("tr:not(.ui-widget-header)").length<=5){
-              $('#problemsets_paginate')[0].style.display = "none";
-          } else {
-              $('#problemsets_paginate')[0].style.display = "block";
-          }
-      },
-      "aoColumnDefs": [
-          { 'bSortable': false, 'aTargets': [ 2,3,4 ] }
-       ]
-    });
-
-    $('#problemsets_filter').find("label").append('<a href="/admin/problemset/add"><button type="button" class="btn btn-success" style="margin-left: 20px;">Add <i class="fa fa-plus fa-fw"></i></button></a>');
+    $('#problems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="problems"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div><a href="/admin/problem/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
+    $('#problems_length').find("label").empty().append('<label><select name="problems_length" aria-controls="problems" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
   });
 </script>
 {% end %}

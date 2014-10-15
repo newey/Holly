@@ -146,10 +146,9 @@ $("#group-select").change(filterByGroup);
           "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
           "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
         },
-        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
-       }
+      "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+      }
     });
-
     $('#users_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div><a href="/admin/user/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
     $('#users_length').find("label").empty().append('<label><select name="users_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
   });
