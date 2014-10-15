@@ -910,8 +910,8 @@ class SubmitHandler(BaseHandler):
         # Ensure that the user did not submit multiple files with the
         # same name.
         if any(len(filename) != 1 for filename in self.request.files.values()):
-            print("Multiple files with the same name")
-            self.redirect("/problem/%s" % task.id)
+            error = "Multiple files with the same name"
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # This ensure that the user sent one file for every name in
@@ -922,8 +922,8 @@ class SubmitHandler(BaseHandler):
         provided = set(self.request.files.keys())
         if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
                                          and required.issuperset(provided))):
-            print("More than one file for every name.")
-            self.redirect("/problem/%s" % task.id)
+            error = "More than one file for every name."
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # Add submitted files. After this, files is a dictionary indexed
@@ -993,15 +993,15 @@ class SubmitHandler(BaseHandler):
                 else:
                     submission_lang = lang
         if error is not None:
-            print("Incorrect language extension")
-            self.redirect("/problem/%s" % task.id)
+            error = "Incorrect language extension"
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # Check if submitted files are small enough.
         if any([len(f[1]) > config.max_submission_length
                 for f in files.values()]):
-            print("Files are too big")
-            self.redirect("/problem/%s" % task.id)
+            error = "Files are too big"
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # All checks done, submission accepted.
@@ -1042,8 +1042,7 @@ class SubmitHandler(BaseHandler):
 
         # In case of error, the server aborts the submission
         except Exception as error:
-            print(error)
-            self.redirect("/problem/%s" % task.id)
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         submission = Submission(self.timestamp,
