@@ -8,7 +8,7 @@
 # Copyright © 2014 Artem Iglikov <artem.iglikov@gmail.com>
 # Copyright © 2014 Fabian Gundlach <320pointsguy@gmail.com>
 #
-# This program is free software: you can redistribute it and/or modify
+# This program is free software: you can eedistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
@@ -42,6 +42,7 @@ import zipfile
 import pickle
 import io
 import random
+import email.utils
 
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
@@ -470,10 +471,35 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type_parameters"] = params
 
     def check_signup_valid_input(self, attrs):
-        assert attrs.get("username") is not None, \
-                "No username specified."
-        assert attrs.get("password") is not None, \
-                "No password specified."
+        assert attrs.get("username") is not None,\
+            "No username specified."
+        name_len = len(attrs["username"])
+        assert name_len >= 4 and name_len <= 24,\
+            "Username must be between 4 and 24 chars."
+        assert re.match(r'^[\w-]+$', attrs["username"]),\
+            "Username can only contain alphanumeric characters and dashes."
+
+        assert attrs.get("password") is not None,\
+            "No password specified."
+        pass_len = len(attrs["password"])
+        assert pass_len >= 8 and pass_len <= 64,\
+            "Password must be between 8 and 64 chars."
+        
+        result = email.utils.parseaddr(attrs["email"])
+        assert result[0] != "" or result[1] != "",\
+            "Invalid email."        
+
+        assert re.match(r'^[\w-]*$', attrs["first_name"]),\
+            "First name can only contain alphanumeric characters and dashes."
+
+        assert re.match(r'^[\w-]*$', attrs["last_name"]),\
+            "Last name can only contain alphanumeric characters and dashes."
+
+        num_users = self.sql_session.query(User).\
+                    filter(User.username == attrs["username"]).\
+                    filter(User.contest == self.contest).count()
+        assert num_users < 1,\
+            "Username already exists."
 
 class TrainingWebServer(WebService):
     """Service that runs the web server serving the managers.
@@ -511,7 +537,9 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
-        self.r_params["sets"] = [self.sql_session.query(ProblemSet).filter(ProblemSet.id==pin.problemSet_id).one() for pin in self.current_user.pins]
+        self.r_params["sets"] = [self.sql_session.query(ProblemSet).
+                                 filter(ProblemSet.id==pin.problemSet_id).one() 
+                                 for pin in self.current_user.pins]
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -530,17 +558,23 @@ class LoginHandler(BaseHandler):
 
     """
     def get(self):
+        self.get_string(self.r_params, "error")
         self.render("login.html", **self.r_params)
 
     def post(self):
         username = self.get_argument("username", "")
         password = self.get_argument("password", "")
+        next_page = self.get_argument("next", "/")
         user = self.sql_session.query(User)\
             .filter(User.contest == self.contest)\
             .filter(User.username == username).first()
 
-        if user is None or user.password != password:
-            self.redirect("/login")
+        if user is None:
+            self.redirect("/login?error=Invalid Username%next=%s" % next_page)
+            return
+
+        if user.password != password:
+            self.redirect("/login?error=Invalid Password&next=%s" % next_page)
             return
 
         self.set_secure_cookie("login",
@@ -548,7 +582,7 @@ class LoginHandler(BaseHandler):
                                              user.password,
                                              make_timestamp())),
                                expires_days=None)
-        self.redirect("/")
+        self.redirect(next_page)
 
 class SignupHandler(BaseHandler):
     def post(self):
@@ -591,7 +625,7 @@ class SignupHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/signup")
+            self.redirect("/login?error=%s&signup=T" % error)
             return
 
         self.redirect("/")
@@ -691,8 +725,7 @@ class ProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        # TODO: We can support multiple languages here.
-        # see ContestWebServer
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("task_description.html",
                     task=task, **self.r_params)
 
@@ -789,7 +822,7 @@ class EditProblemHandler(BaseHandler):
 
         self.redirect("/")
 
-class TestProblemHandler(BaseHandler):
+class AddTestHandler(BaseHandler):
     """Add a testcase to a dataset.
 
     """
@@ -842,6 +875,25 @@ class TestProblemHandler(BaseHandler):
 
         self.redirect("/admin/problem/%s" % task.id)
 
+class DeleteTestHandler(BaseHandler):
+    """Delete a testcase.
+
+    """
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self, task_id, test_id):
+        test = self.sql_session.query(Testcase).\
+               filter(Testcase.id == test_id).one()
+        try:
+            self.sql_session.delete(test)
+            self.sql_session.commit()
+        except Exception as error:
+            print(error)
+            self.redirect("/admin/problem/%s" % task_id)
+            return
+
+        self.redirect("/admin/problem/%s" % task_id)
+
 class SubmitHandler(BaseHandler):
     """Handles the received submissions.
 
@@ -864,8 +916,8 @@ class SubmitHandler(BaseHandler):
         # Ensure that the user did not submit multiple files with the
         # same name.
         if any(len(filename) != 1 for filename in self.request.files.values()):
-            print("Multiple files with the same name")
-            self.redirect("/problem/%s" % task.id)
+            error = "Multiple files with the same name"
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # This ensure that the user sent one file for every name in
@@ -876,8 +928,8 @@ class SubmitHandler(BaseHandler):
         provided = set(self.request.files.keys())
         if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
                                          and required.issuperset(provided))):
-            print("More than one file for every name.")
-            self.redirect("/problem/%s" % task.id)
+            error = "More than one file for every name."
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # Add submitted files. After this, files is a dictionary indexed
@@ -947,15 +999,15 @@ class SubmitHandler(BaseHandler):
                 else:
                     submission_lang = lang
         if error is not None:
-            print("Incorrect language extension")
-            self.redirect("/problem/%s" % task.id)
+            error = "Incorrect language extension"
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # Check if submitted files are small enough.
         if any([len(f[1]) > config.max_submission_length
                 for f in files.values()]):
-            print("Files are too big")
-            self.redirect("/problem/%s" % task.id)
+            error = "Files are too big"
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         # All checks done, submission accepted.
@@ -996,8 +1048,7 @@ class SubmitHandler(BaseHandler):
 
         # In case of error, the server aborts the submission
         except Exception as error:
-            print(error)
-            self.redirect("/problem/%s" % task.id)
+            self.redirect("/problem/%s?error=%s" % (task.id, error))
             return
 
         submission = Submission(self.timestamp,
@@ -1028,6 +1079,7 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
         self.r_params["task"] = task
+        self.r_params["active_sidebar_item"] = "problems"
 
         self.render("task_submissions.html", **self.r_params)
 
@@ -1272,6 +1324,21 @@ class EditUserHandler(BaseHandler):
 
         self.redirect("/admin/users")
 
+class DeleteAccountHandler(BaseHandler):
+    """Deletes the current user's account.
+
+    """
+
+    @tornado.web.authenticated
+    def post(self):
+        usersetitem = self.sql_session.query(UserSetItem)\
+                     .filter(UserSetItem.user==self.current_user).one()
+
+        self.sql_session.delete(usersetitem)
+        self.sql_session.delete(self.current_user)
+        self.sql_session.commit()
+
+        self.redirect("/login")
 
 class DeleteUserHandler(BaseHandler):
     """Deletes a user.
@@ -1359,33 +1426,6 @@ class AddUserSetHandler(BaseHandler):
 
         self.redirect("/admin/usersets")
 
-class AddAdminHandler(BaseHandler):
-    """Adds a new admin.
-
-    """
-
-    #TODO: make this doable on the user edit page.
-    @tornado.web.authenticated
-    @admin_authenticated
-    def get(self, user_id):
-        user = self.sql_session.query(User).\
-            filter(Contest.id == self.contest.id).\
-            filter(User.id==user_id).one()
-
-        user.item.is_admin = True
-        self.sql_session.commit()
-    
-   #TODO: make this doable on the user edit page.
-    @tornado.web.authenticated
-    @admin_authenticated
-    def post(self, user_id):
-        user = self.sql_session.query(User).\
-            filter(Contest.id == self.contest.id).\
-            filter(User.id==user_id).one()
-
-        user.item.is_admin = True
-        self.sql_session.commit()
-        
 class UserInfoHandler(BaseHandler):
     """Info about the current user.
        User can edit their own info.
@@ -1437,12 +1477,14 @@ _tws_handlers = [
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
+    (r"/user/delete", DeleteAccountHandler),
     (r"/admin/problems", AdminMainHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
-    (r"/admin/problem/([0-9]+)/test", TestProblemHandler),
+    (r"/admin/problem/([0-9]+)/test/add", AddTestHandler),
+    (r"/admin/problem/([0-9]+)/test/delete", DeleteTestHandler),
     #(r"/admin/problemset/([0-9]+)", AdminProblemSetHandler),
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
@@ -1453,5 +1495,4 @@ _tws_handlers = [
     (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
-    (r"/admin/new/([0-9]+)", AddAdminHandler),
 ]
