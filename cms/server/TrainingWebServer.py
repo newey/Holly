@@ -469,6 +469,11 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type"] = name
         dest["score_type_parameters"] = params
 
+    def check_signup_valid_input(self, attrs):
+        assert attrs.get("username") is not None, \
+                "No username specified."
+        assert attrs.get("password") is not None, \
+                "No password specified."
 
 class TrainingWebServer(WebService):
     """Service that runs the web server serving the managers.
@@ -545,7 +550,6 @@ class LoginHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
-
 class SignupHandler(BaseHandler):
     def post(self):
         try:
@@ -554,11 +558,10 @@ class SignupHandler(BaseHandler):
             self.get_string(attrs, "first_name")
             self.get_string(attrs, "last_name")
             self.get_string(attrs, "username", empty=None)
-            self.get_string(attrs, "password")
+            self.get_string(attrs, "password", empty=None)
             self.get_string(attrs, "email")
 
-            assert attrs.get("username") is not None, \
-                "No username specified."
+            self.check_signup_valid_input(attrs)
 
             # Create the user.
             attrs["contest"] = self.contest
@@ -1183,6 +1186,115 @@ class EditProblemSetHandler(BaseHandler):
 
         self.redirect("/admin/problems")
 
+class AdminUserHandler(BaseHandler):
+    """Admin Users page handler
+    
+    """
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self):
+        self.r_params = self.render_params()
+        self.r_params["users"] = self.sql_session.query(User)
+        self.render("admin_users.html", **self.r_params)
+
+class UserHandler(BaseHandler):
+    """Shows the data of a user.
+
+    """
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self, user_id):
+        try:
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.render("user_description.html",
+                    usersetitem=usersetitem, **self.r_params)
+
+class EditUserHandler(BaseHandler):
+    """Edits a task.
+    """
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self, user_id):
+        try:
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.render("edit_user.html", 
+                    usersetitem=usersetitem, **self.r_params)
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self, user_id):
+        try:
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        try:
+            attrs = dict()
+
+            # get input
+            self.get_string(attrs, "first_name")
+            self.get_string(attrs, "last_name")
+            self.get_string(attrs, "username", empty=None)
+            self.get_string(attrs, "password", empty=None)
+            self.get_string(attrs, "email")
+            is_admin_choice = self.get_argument("is_admin")
+
+            self.check_signup_valid_input(attrs)
+
+            # save input to user
+            user.first_name = attrs.get("first_name")
+            user.last_name = attrs.get("last_name")
+            user.username = attrs.get("username")
+            user.password = attrs.get("password")
+            user.email = attrs.get("email")
+            # save input to usersetitem
+            usersetitem.is_admin = is_admin_choice
+
+            self.sql_session.commit()
+
+        except Exception as error:
+            self.redirect("/admin/user/%s/edit" % user_id)
+            print(error)
+            return
+
+        self.redirect("/admin/users")
+
+
+class DeleteUserHandler(BaseHandler):
+    """Deletes a user.
+
+    """
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self, user_id):
+        try:
+            usersetitem = self.sql_session.query(UserSetItem)\
+            .filter(UserSetItem.user_id==user_id).one()
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        self.sql_session.delete(usersetitem)
+        self.sql_session.delete(user)
+        self.sql_session.commit()
+
+        self.redirect("/admin/users")
+
 class ViewUserSetsHandler(BaseHandler):
     """View all user sets.
 
@@ -1295,6 +1407,10 @@ _tws_handlers = [
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/edit", EditProblemSetHandler),
+    (r"/admin/users", AdminUserHandler),
+    (r"/admin/user/([0-9]+)", UserHandler),
+    (r"/admin/user/([0-9]+)/edit", EditUserHandler),
+    (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
     (r"/admin/usersets", ViewUserSetsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
     (r"/admin/new/([0-9]+)", AddAdminHandler),

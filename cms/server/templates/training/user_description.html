@@ -1,0 +1,39 @@
+{% extends admin_base.html %}
+
+{% block core %}
+<ol class="breadcrumb">
+  <li><a href="/">Home</a></li>
+  <li class="active">{{ usersetitem.user.username }}</li>
+</ol>
+
+<h1>{{ usersetitem.user.username }}</h1>
+
+<table class="table">
+  <tr>
+    <td>First Name</td>
+    <td>{{ usersetitem.user.first_name }}</td>
+  </tr>
+  <tr>
+    <td>Last Name</td>
+    <td>{{ usersetitem.user.last_name }}</td>
+  </tr>
+  <tr>
+    <td>Username</td>
+    <td>{{ usersetitem.user.username }}</td>
+  </tr>
+  <tr>
+    <td>Password</td>
+    <td>{{ usersetitem.user.password }}</td>
+  </tr>
+  <tr>
+    <td>Email</td>
+    <td>{{ usersetitem.user.email }}</td>
+  </tr>
+  <tr>
+    <td>Admin</td>
+    <td>{{ usersetitem.is_admin }}</td>
+  </tr>
+</table>
+
+
+{% end %}
