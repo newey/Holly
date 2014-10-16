@@ -44,8 +44,15 @@ from .smartmappedcollection import smart_mapped_collection
 users_to_usersets = Table(
     'users_to_usersets',
     Base.metadata,
-    Column('userset_id', Integer, ForeignKey('usersets.id')),
-    Column('user_id', Integer, ForeignKey('users.id')))
+    Column('userset_id',
+           Integer,
+           ForeignKey('usersets.id', onupdate="CASCADE", ondelete="CASCADE")
+           ),
+    Column('user_id',
+           Integer,
+           ForeignKey('users.id', onupdate="CASCADE", ondelete="CASCADE")
+           )
+    )
                           
 
 class UserSet(Base):

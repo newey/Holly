@@ -44,20 +44,41 @@ from .smartmappedcollection import smart_mapped_collection
 accessible_problemsets = Table(
     'accessible_problemsets',
     Base.metadata,
-    Column('userset_id', Integer, ForeignKey('usersets.id')),
-    Column('problemset_id', Integer, ForeignKey('problemsets.id')))
+    Column('userset_id',
+           Integer,
+           ForeignKey('usersets.id', onupdate="CASCADE", ondelete="CASCADE")
+           ),
+    Column('problemset_id',
+           Integer,
+           ForeignKey('problemsets.id', onupdate="CASCADE", ondelete="CASCADE")
+           )
+    )
 
 pinned_problemsets = Table(
     'pinned_problemsets',
     Base.metadata,
-    Column('problemset_id', Integer, ForeignKey('problemsets.id')),
-    Column('user_id', Integer, ForeignKey('users.id')))
+    Column('problemset_id',
+           Integer,
+           ForeignKey('problemsets.id', onupdate="CASCADE", ondelete="CASCADE")
+           ),
+    Column('user_id',
+           Integer,
+           ForeignKey('users.id', onupdate="CASCADE", ondelete="CASCADE")
+           )
+    )
 
 problemsets_contents = Table(
     'problemsets_contents',
     Base.metadata,
-    Column('problemset_id', Integer, ForeignKey('problemsets.id')),
-    Column('task_id', Integer, ForeignKey('tasks.id')))
+    Column('problemset_id',
+           Integer,
+           ForeignKey('problemsets.id', onupdate="CASCADE", ondelete="CASCADE")
+           ),
+    Column('task_id',
+           Integer,
+           ForeignKey('tasks.id', onupdate="CASCADE", ondelete="CASCADE")
+           )
+    )
 
 class ProblemSet(Base):
     """ Class to store a problem set for training purposes
