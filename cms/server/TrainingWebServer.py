@@ -687,8 +687,9 @@ class AddProblemHandler(BaseHandler):
             attrs["token_mode"] = "disabled"
             attrs["score_precision"] = 0
 
-            # Create the task.
-            attrs["num"] = len(self.contest.tasks)
+            #TODO: CHANGE AFTER DEMO
+            random.seed()
+            attrs["num"] = random.randint(1,1000000000)
             attrs["contest"] = self.contest
             task = Task(**attrs)
             self.sql_session.add(task)
@@ -1137,7 +1138,7 @@ class AddProblemSetHandler(BaseHandler):
             #attrs["contest_id"] = self.contest.id
             #TODO: CHANGE AFTER DEMO
             random.seed()
-            attrs["num"] = random.randint(1,100000)
+            attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
             print(attrs["num"])
