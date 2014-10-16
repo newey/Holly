@@ -531,7 +531,12 @@ class ProblemListHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
-        self.r_params["sets"] = self.sql_session.query(ProblemSet)
+        accessibleSets = set()
+        for userset in self.current_user.userSets:
+            for problemset in userset.problemSets:
+                accessibleSets.add(problemset)
+
+        self.r_params["sets"] = accessibleSets
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -1371,7 +1376,6 @@ class AddUserSetHandler(BaseHandler):
             # get list of problem set checked boxs
             problemsets = self.request.arguments['add_problem_sets']
 
-            # TODO These aren't working, not sure why, maybe client side
             for problemsetname in problemsets:
                 print("problemsetname <"+problemsetname+">")
                 problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
