@@ -136,26 +136,20 @@ class BaseHandler(CommonRequestHandler):
     refresh_cookie = True
 
     def createIndividualUserSet(self, user):
-        individualSets = self.sql_session.query(UserSetItem).\
-                             filter(UserSetItem.user==user,
-                                    UserSetItem.userSet.has(UserSet.setType==1))
+        individualSets = self.sql_session.query(UserSet).\
+                             filter(UserSet.setType==1,
+                                    UserSet.users.contains(user))
 
         assert individualSets.count() <= 1
         if individualSets.count() == 0:
             attrs = {
                 'name': user.username,
                 'title': xstr(user.first_name) + " " + xstr(user.last_name),
-                'setType': 1
+                'setType': 1,
+                'users': [user]
             }
             individualSet = UserSet(**attrs)
             self.sql_session.add(individualSet)
-
-            attrs = {
-                'user': user,
-                'userSet': individualSet
-            }
-            membership = UserSetItem(**attrs)
-            self.sql_session.add(membership)
 
     def createSpecialUserSets(self):
         # Ensure the all users group exists
@@ -172,7 +166,7 @@ class BaseHandler(CommonRequestHandler):
 
             # Ensure that each user has their own userset and is in the all users set
             for user in self.contest.users:
-                # self.createIndividualUserSet(user)
+                self.createIndividualUserSet(user)
 
                 if user not in allUsersSet.users:
                     allUsersSet.users.append(user)
