@@ -134,11 +134,11 @@ $(document).ready(function() {
           </tr>
         </thead>
         <tbody>
-          {% for id, name in seltaskdata %}
+          {% for task in selected_tasks %}
           <tr>
-            <td>{{ id }}</td>
-            <td>{{ name }}</td>
-            <td>
+            <td>{{ task.id }}</td>
+            <td>{{ task.name }}</td>
+            <td style="text-align: center">
               <div style="width: 100%;text-align: center;">
                 <button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>
               </div>
@@ -168,11 +168,11 @@ $(document).ready(function() {
           </tr>
         </thead>
         <tbody>
-          {% for id, name in unseltaskdata %}
+          {% for task in unselected_tasks %}
           <tr>
-            <td>{{ id }}</td>
-            <td>{{ name }}</td>
-            <td>
+            <td>{{ task.id }}</td>
+            <td>{{ task.name }}</td>
+            <td style="text-align: center">
               <div style="width: 100%;text-align: center;">
                 <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
               </div>

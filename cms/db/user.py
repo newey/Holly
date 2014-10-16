@@ -157,6 +157,16 @@ class User(Base):
     # Moreover, we have the following methods.
     # get_tokens (defined in __init__.py)
 
+    # # # #
+    # Data specific to the training webserver
+    # # # #
+
+    # Flag showing whether this user is an administrator of the training
+    # webserver
+    is_training_admin = Column(
+        Boolean,
+        default=False)
+
 
 class Message(Base):
     """Class to store a private message from the managers to the
