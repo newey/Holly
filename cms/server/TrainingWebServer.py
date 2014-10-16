@@ -454,7 +454,7 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type"] = name
         dest["score_type_parameters"] = params
 
-    def check_signup_valid_input(self, attrs):
+    def check_edit_user_valid_input(self, attrs):
         assert attrs.get("username") is not None,\
             "No username specified."
         name_len = len(attrs["username"])
@@ -478,6 +478,9 @@ class BaseHandler(CommonRequestHandler):
 
         assert re.match(r'^[\w-]*$', attrs["last_name"]),\
             "Last name can only contain alphanumeric characters and dashes."
+
+    def check_signup_valid_input(self, attrs):
+        self.check_edit_user_valid_input(attrs)
 
         num_users = self.sql_session.query(User).\
                     filter(User.username == attrs["username"]).\
@@ -627,6 +630,7 @@ class AdminProblemsHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
+        self.r_params["active_sidebar_item"] = "problems"
         self.r_params["tasks"] = self.contest.tasks
         self.render("admin_problems.html", **self.r_params)
 
@@ -638,6 +642,7 @@ class AdminProblemSetsHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
+        self.r_params["active_sidebar_item"] = "problemsets"
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.render("admin_problemsets.html", **self.r_params)
 
@@ -649,6 +654,7 @@ class AddProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("add_task.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -734,6 +740,7 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("admin_problem.html",
                     task=task, **self.r_params)
 
@@ -768,6 +775,7 @@ class EditProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("edit_task.html", 
                     task=task, **self.r_params)
 
@@ -827,6 +835,7 @@ class AddTestHandler(BaseHandler):
         self.r_params = self.render_params()
         self.r_params["task"] = task
         self.r_params["dataset"] = dataset
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("add_testcase.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1077,6 +1086,15 @@ class SubmissionsHandler(BaseHandler):
 
         self.render("task_submissions.html", **self.r_params)
 
+class ProblemSetHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self, set_id):
+        problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        self.r_params = self.render_params()
+        self.r_params["problemset"] = problemset
+        self.r_params["active_sidebar_item"] = "problems"
+        self.render("problemset.html", **self.r_params)
+
 class ProblemSetPinHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self, set_id, action, unused):
@@ -1099,6 +1117,7 @@ class AddProblemSetHandler(BaseHandler):
     def get(self):
         tasks = self.sql_session.query(Task.id, Task.title).all()
         self.r_params['taskdata'] = tasks
+        self.r_params["active_sidebar_item"] = "problemsets"
         self.render("add_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1176,6 +1195,7 @@ class EditProblemSetHandler(BaseHandler):
         self.r_params["problemset"] = problemSet
         self.r_params["selected_tasks"] = problemSet.tasks
         self.r_params["unselected_tasks"] = unselected_tasks
+        self.r_params["active_sidebar_item"] = "problemsets"
 
         self.render("edit_problemset.html", **self.r_params)
 
@@ -1231,6 +1251,7 @@ class AdminUserHandler(BaseHandler):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType==0)
         self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["active_sidebar_item"] = "users"
         self.render("admin_users.html", **self.r_params)
 
 class UserHandler(BaseHandler):
@@ -1247,6 +1268,7 @@ class UserHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "users"
         self.render("user_description.html",
                     user=user, **self.r_params)
 
@@ -1263,6 +1285,7 @@ class EditUserHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "users"
         self.render("edit_user.html", 
                     user=user, **self.r_params)
 
@@ -1286,7 +1309,7 @@ class EditUserHandler(BaseHandler):
             self.get_string(attrs, "email")
             is_admin_choice = self.get_argument("is_admin")
 
-            self.check_signup_valid_input(attrs)
+            self.check_edit_user_valid_input(attrs)
 
             # save input to user
             user.first_name = attrs.get("first_name")
@@ -1294,7 +1317,6 @@ class EditUserHandler(BaseHandler):
             user.username = attrs.get("username")
             user.password = attrs.get("password")
             user.email = attrs.get("email")
-            # save input to usersetitem
             user.is_training_admin = is_admin_choice
 
             self.sql_session.commit()
@@ -1346,6 +1368,7 @@ class AddUserSetHandler(BaseHandler):
     def get(self):
         self.r_params["users"] = self.sql_session.query(User)
         self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
+        self.r_params["active_sidebar_item"] = "users"
         self.render("add_userset.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1439,6 +1462,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problemset/([0-9]+)", ProblemSetHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),

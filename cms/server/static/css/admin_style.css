@@ -6,6 +6,8 @@
   padding: 4px 5px;
 }
 
+
+
 .pagination>li>a {
   padding: 4px 10px;
 }
@@ -71,4 +73,9 @@ h1 {
 
 #page-wrapper {
   padding: 20px;
-} 
+}
+
+.sidebar ul li a.active {
+    background-color: #ddd;
+    color: #2a6496;
+}

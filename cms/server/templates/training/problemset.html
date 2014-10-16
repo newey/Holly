@@ -1,0 +1,55 @@
+{% extends contestant_base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block core %}
+  <ol class="breadcrumb page-breadcrumb">
+    <li><a href="/problems">Problems</a></li>
+    <li>{{ problemset.title }}</li>
+  </ol>
+
+  <h1 class="page-header">{{ problemset.title }}</h1>
+
+  <p>Some kind of longer description probably goes here.</p>
+  <p>Maybe it could motivate the user to do the problem sets by explaining what the theme of the set is</p>
+
+  <p></p>
+
+  <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><span>Problems</span></div>
+    <table id="problem-table" class="table table-hover">
+      <col width="100">
+      <col>
+      <col>
+      <col width="60">
+      <tbody>
+
+        <!-- Status Minus
+          <td class="status"><span class="glyphicon glyphicon-minus text-primary"><span></td>
+        -->
+
+        <!-- Status ok
+          <td class="status"><span class="glyphicon glyphicon-ok text-success"><span></td>
+        -->
+
+        <!-- Partial Completion
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="40" style="width: [[percent]]%;">
+              <span class="sr-only">[[percent]]% Complete</span>
+            </div>
+          </div>
+        -->
+
+        {% for task in problemset.tasks %}
+        <tr>
+          <td class="status"><span class="glyphicon {% if True %}glyphicon-ok text-success{% else %}glyphicon-minus text-primary{% end %}"></span></td> <!-- TODO check if user has done it -->
+          <td><a href="/problem/{{ task.id }}">{{ task.title }}</a></td>
+          <td></td>
+          <td></td>
+        </tr>
+        {% end %}
+      </tbody>
+    </table>
+  </div>
+{% end %}
