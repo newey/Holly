@@ -116,10 +116,6 @@ from .util import test_db_connection, get_contest_list, is_contest_id, \
 
 from .userset import UserSet
 from .problemset import ProblemSet
-from .userset import UserSetItem
-from .problemset import ProblemSetItem
-from .problemset import ProblemSetToUserSet
-from .problemset import ProblemSetPin
 
 configure_mappers()
 

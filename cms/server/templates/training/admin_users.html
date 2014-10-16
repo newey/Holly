@@ -64,8 +64,8 @@ $("#group-select").change(filterByGroup);
         <h3 class="panel-title">{{ userset.name }}</h3>
       </div>
       <div class="panel-body">
-        {% for item in userset.items %}
-          {{ item.user.username }}<br>
+        {% for user in userset.users %}
+          {{ user.username }}<br>
         {% end %}
 
         <form action="/admin/userset/{{ userset.id }}" method="post" style="display: inline;">
@@ -119,8 +119,11 @@ $("#group-select").change(filterByGroup);
                 </form>
               </td>
               <td style="display: none;">
-=                {% for set in user.item.sets %}{{ set.name }} {% end %}
-                }
+=               {% for group in user.userSets %}
+                  {% for set in group.problemSets %}
+                    {{ set.name }}
+                  {% end %}
+                {% end %}
               </td>
             </tr>
           {% end %}

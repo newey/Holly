@@ -54,8 +54,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, ProblemSetItem, UserSet, \
-    UserSetItem, ProblemSetPin, ProblemSetToUserSet
+    Testcase, Submission, User, File, ProblemSet, UserSet
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -70,7 +69,7 @@ logger = logging.getLogger(__name__)
 def admin_authenticated(foo):
     def func(self, *args, **kwargs):
         print('self is %s' % self)
-        if self.current_user.item.is_admin == False:
+        if not self.current_user.is_training_admin:
             self.redirect("/")
         else:
             return foo(self, *args, **kwargs)
@@ -175,30 +174,27 @@ class BaseHandler(CommonRequestHandler):
             for user in self.contest.users:
                 # self.createIndividualUserSet(user)
 
-                allUsersMemberships = self.sql_session.query(UserSetItem).\
-                                           filter(UserSetItem.user==user,
-                                                  UserSetItem.userSet==allUsersSet)
-
-                assert allUsersMemberships.count() <= 1
-                if allUsersMemberships.count() == 0:
-                    allUsersSet.items.append(user.item)
+                if user not in allUsersSet.users:
+                    allUsersSet.users.append(user)
 
             self.sql_session.commit()
 
     def create_admin(self):
         num_admin = self.sql_session.query(User).\
-                    filter(User.contest == self.contest).\
-                    filter(User.username == 'admin').count()
+                    filter(User.contest == self.contest,
+                           User.username == 'admin',
+                           User.is_training_admin == True).count()
 
         if num_admin == 1:
             return
 
         attrs = {
-            'first_name' : 'admin',
-            'last_name'  : 'adminson',
-            'username'   : 'admin',
-            'password'   : 'password',
-            'contest'    : self.contest
+            'first_name'       : 'admin',
+            'last_name'        : 'adminson',
+            'username'         : 'admin',
+            'password'         : 'password',
+            'is_training_admin': True,
+            'contest'          : self.contest
         } 
 
        
@@ -207,24 +203,18 @@ class BaseHandler(CommonRequestHandler):
         self.sql_session.add(admin)
 
         # Add the user to the all users group
-        attrs = {
-            'user': admin,
-            'is_admin' : True,
-        }
-        setitem = UserSetItem(**attrs) 
-        self.sql_session.add(setitem)
-        self.all_users.items.append(setitem)            
+        self.all_users.users.append(admin)
 
 
         # Add the user to its own unique userset
         attrs = {
             'name': admin.username,
             'title': xstr(admin.first_name) + " " + xstr(admin.last_name),
-            'setType': 1
+            'setType': 1,
+            'users': [admin]
         }
         individualSet = UserSet(**attrs)
         self.sql_session.add(individualSet)
-        individualSet.items.append(setitem)
 
         self.sql_session.commit()
         
@@ -537,9 +527,7 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
-        self.r_params["sets"] = [self.sql_session.query(ProblemSet).
-                                 filter(ProblemSet.id==pin.problemSet_id).one() 
-                                 for pin in self.current_user.pins]
+        self.r_params["sets"] = self.current_user.pinnedSets
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -1157,9 +1145,7 @@ class AddProblemSetHandler(BaseHandler):
 
             for index, problemid in enumerate(problemids):
                 task = self.sql_session.query(Task).filter(Task.id==problemid).one()
-                attrs = {"num":index, "problemSet":problemset, "task":task}
-                problemsetitem = ProblemSetItem(**attrs)
-                self.sql_session.add(problemsetitem)
+                problemset.tasks.append(task)
 
             self.sql_session.commit()
 
@@ -1194,16 +1180,13 @@ class EditProblemSetHandler(BaseHandler):
     @admin_authenticated
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
-        selectedids = set([x.task_id for x in problemSet.items])
 
         tasks = self.sql_session.query(Task.id, Task.name).all()
-
-        seltasks = filter(lambda x: x[0] in selectedids, tasks)
-        unseltasks = filter(lambda x: x[0] not in selectedids, tasks)
+        unselected_tasks = filter(lambda x: x[0] not in problemSet.tasks, tasks)
 
         self.r_params["problemset"] = problemSet
-        self.r_params["seltaskdata"] = seltasks
-        self.r_params["unseltaskdata"] = unseltasks
+        self.r_params["selected_tasks"] = problemSet.tasks
+        self.r_params["unselected_tasks"] = unselected_tasks
 
         self.render("edit_problemset.html", **self.r_params)
 
