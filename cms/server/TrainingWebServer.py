@@ -772,7 +772,7 @@ class DeleteProblemHandler(BaseHandler):
         self.sql_session.delete(task)
         self.sql_session.commit()
 
-        self.redirect("/")
+        self.redirect("/admin/problems")
 
 # Does not edit or load the submission format choice
 class EditProblemHandler(BaseHandler):
@@ -831,7 +831,7 @@ class EditProblemHandler(BaseHandler):
             print(error)
             return
 
-        self.redirect("/")
+        self.redirect("/admin/problem/%s" % task_id)
 
 class AddTestHandler(BaseHandler):
     """Add a testcase to a dataset.
@@ -1168,7 +1168,7 @@ class AddProblemSetHandler(BaseHandler):
             print(error)
             return
 
-        self.redirect("/admin/problems")
+        self.redirect("/admin/problemsets")
 
 class DeleteProblemSetHandler(BaseHandler):
     """Deletes a problem set.
@@ -1184,7 +1184,7 @@ class DeleteProblemSetHandler(BaseHandler):
             self.sql_session.commit()
         except Exception as error:
             print(error)
-        self.redirect("/admin/problems")
+        self.redirect("/admin/problemsets")
 
 class EditProblemSetHandler(BaseHandler):
     """Edits a problem set.
@@ -1228,10 +1228,9 @@ class EditProblemSetHandler(BaseHandler):
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
 
-            if attrs["problemids"] is not None:
-                for item in problemset.items:
+            for item in problemset.items:
                     self.sql_session.delete(item)
-
+            if attrs["problemids"] is not None:
                 problemids = attrs["problemids"].strip().split()
 
                 assert reduce(lambda x, y: x and y.isdigit(), problemids, True), "Not all problem ids are integers"
@@ -1249,7 +1248,7 @@ class EditProblemSetHandler(BaseHandler):
             print(error)
             self.redirect("/admin/problemset/%d/edit" % set_id)
 
-        self.redirect("/admin/problems")
+        self.redirect("/admin/problemsets")
 
 class AdminUserHandler(BaseHandler):
     """Admin Users page handler
@@ -1487,7 +1486,7 @@ _tws_handlers = [
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
     (r"/admin/problem/([0-9]+)/test/add", AddTestHandler),
-    (r"/admin/problem/([0-9]+)/test/delete", DeleteTestHandler),
+    (r"/admin/problem/([0-9]+)/test/([0-9]+)/delete", DeleteTestHandler),
     #(r"/admin/problemset/([0-9]+)", AdminProblemSetHandler),
     (r"/admin/problemsets", AdminProblemSetsHandler),
     (r"/admin/problemset/add", AddProblemSetHandler),

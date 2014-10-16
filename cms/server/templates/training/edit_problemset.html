@@ -33,34 +33,36 @@ $(document).ready(function() {
     });
 
     function updateIds() {
-      $("#problemids").val(selectedTable.column(0).data().reduce(function (a,b) {
-        return a.concat(" ").concat(b);
-      }), "");
+      if (selectedTable.row().length > 0) {
+        $("#problemids").val(selectedTable.column(0).data().reduce(function (a,b) {
+              return a.concat(" ").concat(b);
+          }), "");
+      } else {
+        $("#problemids").val("");
+      }
     }
     updateIds();
 
     function addProblem () {
       $(this).parents("tr").addClass('move');
       var items = unselectedTable.row('.move').data();
-      items[2] = '<button class="btn btn-success btn-xs add-problem" type="button" style="display: none"><i class="fa fa-plus fa-fw"></i></button><button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>';
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
       selectedTable.row.add(items).draw(false);
       unselectedTable.row('.move').remove().draw( false );
-
-      $("#problemids").val(selectedTable.column(0).data().reduce(function (a,b) {
-            return a.concat(" ").concat(b);
-        }), "");
-      $('.remove-problem').click(removeProblem);
+      updateIds();
+      $('.remove-problem.new').click(removeProblem);
+      $('.remove-problem').removeClass("new");
     }
 
     function removeProblem () {
       $(this).parents("tr").addClass('move');
       var items = selectedTable.row('.move').data();
-      items[2] = '<button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button><button class="btn btn-danger btn-xs remove-problem" type="button" style="display: none"><i class="fa fa-close fa-fw"></i></button>';
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
       unselectedTable.row.add(items).draw(false);
       selectedTable.row('.move').remove().draw( false );
-
-      
-      $('.add-problem').click(addProblem);
+      updateIds();
+      $('.add-problem.new').click(addProblem);
+      $('.add-problem').removeClass("new");
     }
 
     $('.add-problem').click(addProblem);
@@ -77,10 +79,11 @@ $(document).ready(function() {
 
 
 {% block core %}
-<h1 class="page-header">Edit Problem Set</h1>
+<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit Problem Set</h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/problems">Problems</a></li>
-  <li class="active">Edit Problem Set</li>
+  <li><a href="/admin/problemsets">Problem Sets</a></li>
+  <li><a href="/admin/problemset/{{ problemset.id }}">{{ problemset.name }}</a></li>
+  <li class="active">Edit Set</li>
 </ol>
 
 <div class="panel panel-default">
@@ -135,9 +138,10 @@ $(document).ready(function() {
           <tr>
             <td>{{ id }}</td>
             <td>{{ name }}</td>
-            <td style="text-align: center">
-              <button class="btn btn-success btn-xs add-problem" type="button" style="display: none"><i class="fa fa-plus fa-fw"></i></button>
-              <button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>
+            <td>
+              <div style="width: 100%;text-align: center;">
+                <button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>
+              </div>
             </td>
           </tr>
           {% end %}
@@ -168,9 +172,10 @@ $(document).ready(function() {
           <tr>
             <td>{{ id }}</td>
             <td>{{ name }}</td>
-            <td style="text-align: center">
-              <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
-              <button class="btn btn-danger btn-xs remove-problem" type="button"  style="display: none"><i class="fa fa-close fa-fw"></i></button>
+            <td>
+              <div style="width: 100%;text-align: center;">
+                <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+              </div>
             </td>
           </tr>
           {% end %}
