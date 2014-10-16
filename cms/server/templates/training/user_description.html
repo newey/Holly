@@ -4,29 +4,29 @@
 <h1 class="page-header"><i class="fa fa-bar-chart fa-fw"></i> User Statistics</h1>
 <ol class="breadcrumb">
   <li><a href="/admin/users">Users</a></li>
-  <li class="active">{{ usersetitem.user.username }}</li>
+  <li class="active">{{ user.username }}</li>
 </ol>
 
 <table class="table">
   <tr>
     <td>First Name</td>
-    <td>{{ usersetitem.user.first_name }}</td>
+    <td>{{ user.first_name }}</td>
   </tr>
   <tr>
     <td>Last Name</td>
-    <td>{{ usersetitem.user.last_name }}</td>
+    <td>{{ user.last_name }}</td>
   </tr>
   <tr>
     <td>Username</td>
-    <td>{{ usersetitem.user.username }}</td>
+    <td>{{ user.username }}</td>
   </tr>
   <tr>
     <td>Email</td>
-    <td>{{ usersetitem.user.email }}</td>
+    <td>{{ user.email }}</td>
   </tr>
   <tr>
     <td>Admin</td>
-    <td>{{ usersetitem.is_admin }}</td>
+    <td>{{ user.is_training_admin }}</td>
   </tr>
 </table>
 

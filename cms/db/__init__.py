@@ -75,11 +75,9 @@ __all__ = [
     "test_db_connection", "get_contest_list", "is_contest_id",
     "ask_for_contest",
     # problem sets
-    "ProblemSet", "ProblemSetItem", 
+    "ProblemSet",
     # user sets
-    "UserSet", "UserSetItem",
-    # relationships
-    "ProblemSetToUserSet", "ProblemSetPin"
+    "UserSet",
 ]
 
 

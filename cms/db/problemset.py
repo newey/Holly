@@ -124,4 +124,4 @@ class ProblemSet(Base):
         return len(self.items)
 
     def isPinned(self, user):
-        return self in [pin.problemSet for pin in user.pins]
+        return user in self.usersWhoPinned

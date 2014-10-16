@@ -591,23 +591,17 @@ class SignupHandler(BaseHandler):
             self.sql_session.add(user)
 
             # Add the user to the all users group
-            attrs = {
-                'user': user
-            }
-            setitem = UserSetItem(**attrs) 
-            self.sql_session.add(setitem)
-            self.all_users.items.append(setitem)            
-
+            self.all_users.users.append(user)            
 
             # Add the user to its own unique userset
             attrs = {
                 'name': user.username,
                 'title': xstr(user.first_name) + " " + xstr(user.last_name),
-                'setType': 1
+                'setType': 1,
+                'users': [user]
             }
             individualSet = UserSet(**attrs)
             self.sql_session.add(individualSet)
-            individualSet.items.append(setitem)
 
             self.sql_session.commit()
 
@@ -1087,17 +1081,13 @@ class SubmissionsHandler(BaseHandler):
 class ProblemSetPinHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self, set_id, action, unused):
+        problem_set = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
         if action == "unpin":
-            self.sql_session.query(ProblemSetPin).filter(ProblemSetPin.problemSet_id==set_id,
-                                                         ProblemSetPin.user_id==self.current_user.id).delete()
+            if problem_set in self.current_user.pinnedSets:
+                self.current_user.pinnedSets.remove(problem_set)
 
         elif action == "pin":
-            attrs = {
-                'problemSet': self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one(),
-                'user': self.current_user,
-            }
-            problemSetPin = ProblemSetPin(**attrs)
-            self.sql_session.add(problemSetPin)
+            self.current_user.pinnedSets.append(problem_set)
 
         self.sql_session.commit()
 
@@ -1181,8 +1171,8 @@ class EditProblemSetHandler(BaseHandler):
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
 
-        tasks = self.sql_session.query(Task.id, Task.name).all()
-        unselected_tasks = filter(lambda x: x[0] not in problemSet.tasks, tasks)
+        all_tasks = self.sql_session.query(Task).all()
+        unselected_tasks = filter(lambda x: x not in problemSet.tasks, all_tasks)
 
         self.r_params["problemset"] = problemSet
         self.r_params["selected_tasks"] = problemSet.tasks
@@ -1193,6 +1183,7 @@ class EditProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def post(self, set_id):
+        set_id = int(set_id)
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
         except Exception as error:
@@ -1211,8 +1202,7 @@ class EditProblemSetHandler(BaseHandler):
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
 
-            for item in problemset.items:
-                    self.sql_session.delete(item)
+            problemset.tasks = []
             if attrs["problemids"] is not None:
                 problemids = attrs["problemids"].strip().split()
 
@@ -1222,9 +1212,8 @@ class EditProblemSetHandler(BaseHandler):
 
                 for index, problemid in enumerate(problemids):
                     task = self.sql_session.query(Task).filter(Task.id==problemid).one()
-                    attrs = {"num":index, "problemSet":problemset, "task":task}
-                    problemsetitem = ProblemSetItem(**attrs)
-                    self.sql_session.add(problemsetitem)
+                    problemset.tasks.append(task)
+
             self.sql_session.commit()
 
         except Exception as error:
@@ -1254,13 +1243,13 @@ class UserHandler(BaseHandler):
     @admin_authenticated
     def get(self, user_id):
         try:
-            usersetitem = self.sql_session.query(UserSetItem)\
-            .filter(UserSetItem.user_id==user_id).one()
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
         self.render("user_description.html",
-                    usersetitem=usersetitem, **self.r_params)
+                    user=user, **self.r_params)
 
 class EditUserHandler(BaseHandler):
     """Edits a task.
@@ -1270,13 +1259,13 @@ class EditUserHandler(BaseHandler):
     @admin_authenticated
     def get(self, user_id):
         try:
-            usersetitem = self.sql_session.query(UserSetItem)\
-            .filter(UserSetItem.user_id==user_id).one()
+            user = self.sql_session.query(User)\
+            .filter(User.id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
         self.render("edit_user.html", 
-                    usersetitem=usersetitem, **self.r_params)
+                    user=user, **self.r_params)
 
     @tornado.web.authenticated
     @admin_authenticated
@@ -1284,8 +1273,6 @@ class EditUserHandler(BaseHandler):
         try:
             user = self.sql_session.query(User)\
             .filter(User.id==user_id).one()
-            usersetitem = self.sql_session.query(UserSetItem)\
-            .filter(UserSetItem.user_id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1309,7 +1296,7 @@ class EditUserHandler(BaseHandler):
             user.password = attrs.get("password")
             user.email = attrs.get("email")
             # save input to usersetitem
-            usersetitem.is_admin = is_admin_choice
+            user.is_training_admin = is_admin_choice
 
             self.sql_session.commit()
 
@@ -1327,10 +1314,6 @@ class DeleteAccountHandler(BaseHandler):
 
     @tornado.web.authenticated
     def post(self):
-        usersetitem = self.sql_session.query(UserSetItem)\
-                     .filter(UserSetItem.user==self.current_user).one()
-
-        self.sql_session.delete(usersetitem)
         self.sql_session.delete(self.current_user)
         self.sql_session.commit()
 
@@ -1345,14 +1328,11 @@ class DeleteUserHandler(BaseHandler):
     @admin_authenticated
     def post(self, user_id):
         try:
-            usersetitem = self.sql_session.query(UserSetItem)\
-            .filter(UserSetItem.user_id==user_id).one()
             user = self.sql_session.query(User)\
             .filter(User.id==user_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        self.sql_session.delete(usersetitem)
         self.sql_session.delete(user)
         self.sql_session.commit()
 

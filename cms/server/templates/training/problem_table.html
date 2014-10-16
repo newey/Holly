@@ -25,7 +25,7 @@
     <tr class="outerRow" data-id="{{ set.id }}">
       <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
       <td><a href="#">{{ set.title }}</a></td>
-      <td>{{ len(set.items) }} problem{% if len(set.items) > 1 %}s{% end %}</td>
+      <td>{{ len(set.tasks) }} problem{% if len(set.tasks) != 1 %}s{% end %}</td>
       <td>
         <span class="expandset glyphicon glyphicon-chevron-right"></span> <span class="{% if set.isPinned(current_user) %}pinned text-danger {% else %}unpinned {% end %}glyphicon glyphicon-pushpin"></span>
       </td>
@@ -39,10 +39,10 @@
               <col width="100">
               <col>
               <tbody>
-                {% for problem in set.items %}
+                {% for task in set.tasks %}
                 <tr>
                   <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
-                  <td><a href="/problem/{{ problem.task.id }}">{{ problem.task.title }}</a></td>
+                  <td><a href="/problem/{{ task.id }}">{{ task.title }}</a></td>
                 </tr>
                 {% end %}
               </tbody>
