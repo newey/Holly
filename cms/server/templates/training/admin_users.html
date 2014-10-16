@@ -109,13 +109,13 @@ $("#group-select").change(filterByGroup);
               <td>{{ user.username }}</td>
               <td>
                 <form action="/admin/user/{{ user.id }}" method="get" style="display: inline;">
-                  <button class="btn btn-primary btn-xs" type="submit" value="Stats" disabled="true"><i class="fa fa-bar-chart fa-fw"></i></button>
+                  <button class="btn btn-primary btn-xs" type="submit" value="Stats"><i class="fa fa-bar-chart fa-fw"></i></button>
                 </form>
                 <form action="/admin/user/{{ user.id }}/edit" method="get" style="display: inline;">
-                  <button class="btn btn-success btn-xs" type="submit" value="Edit" disabled="true"><i class="fa fa-edit fa-fw"></i></button>
+                  <button class="btn btn-success btn-xs" type="submit" value="Edit"><i class="fa fa-edit fa-fw"></i></button>
                 </form>
                 <form action="/admin/user/{{ user.id }}/delete" method="post" style="display: inline;">
-                  <button class="btn btn-danger btn-xs" type="submit" value="Delete" disabled="true"><i class="fa fa-trash fa-fw"></i></button>
+                  <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-trash fa-fw"></i></button>
                 </form>
               </td>
               <td style="display: none;">
