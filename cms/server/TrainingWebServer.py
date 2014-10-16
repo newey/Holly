@@ -1086,6 +1086,15 @@ class SubmissionsHandler(BaseHandler):
 
         self.render("task_submissions.html", **self.r_params)
 
+class ProblemSetHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self, set_id):
+        problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        self.r_params = self.render_params()
+        self.r_params["problemset"] = problemset
+        self.r_params["active_sidebar_item"] = "problems"
+        self.render("problemset.html", **self.r_params)
+
 class ProblemSetPinHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self, set_id, action, unused):
@@ -1453,6 +1462,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problemset/([0-9]+)", ProblemSetHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),
