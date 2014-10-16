@@ -454,7 +454,7 @@ class BaseHandler(CommonRequestHandler):
         dest["score_type"] = name
         dest["score_type_parameters"] = params
 
-    def check_signup_valid_input(self, attrs):
+    def check_edit_user_valid_input(self, attrs):
         assert attrs.get("username") is not None,\
             "No username specified."
         name_len = len(attrs["username"])
@@ -478,6 +478,9 @@ class BaseHandler(CommonRequestHandler):
 
         assert re.match(r'^[\w-]*$', attrs["last_name"]),\
             "Last name can only contain alphanumeric characters and dashes."
+
+    def check_signup_valid_input(self, attrs):
+        self.check_edit_user_valid_input(attrs)
 
         num_users = self.sql_session.query(User).\
                     filter(User.username == attrs["username"]).\
@@ -1297,7 +1300,7 @@ class EditUserHandler(BaseHandler):
             self.get_string(attrs, "email")
             is_admin_choice = self.get_argument("is_admin")
 
-            self.check_signup_valid_input(attrs)
+            self.check_edit_user_valid_input(attrs)
 
             # save input to user
             user.first_name = attrs.get("first_name")
@@ -1305,7 +1308,6 @@ class EditUserHandler(BaseHandler):
             user.username = attrs.get("username")
             user.password = attrs.get("password")
             user.email = attrs.get("email")
-            # save input to usersetitem
             user.is_training_admin = is_admin_choice
 
             self.sql_session.commit()
