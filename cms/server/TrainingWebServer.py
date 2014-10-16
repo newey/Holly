@@ -1230,7 +1230,7 @@ class AdminUserHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
-        self.r_params["sets"] = self.sql_session.query(UserSet)
+        self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType==0)
         self.r_params["users"] = self.sql_session.query(User)
         self.render("admin_users.html", **self.r_params)
 
