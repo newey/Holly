@@ -1353,7 +1353,9 @@ class AddUserSetHandler(BaseHandler):
     @admin_authenticated
     def post(self):
         try:
-            attrs = dict()
+            attrs = {
+                'setType': 0,
+            }
 
             self.get_string(attrs, "name", empty=None)
             assert attrs.get("name") is not None, "No set name specified."
@@ -1370,17 +1372,16 @@ class AddUserSetHandler(BaseHandler):
                 user = self.sql_session.query(User).\
                        filter(Contest.id == self.contest.id).\
                        filter(User.username==username).one()
-                userset.items.append(user.item) 
+                userset.users.append(user) 
 
             # get list of problem set checked boxs
-            #problemsets = self.request.arguments['add_problem_sets']
+            problemsets = self.request.arguments['add_problem_sets']
 
-            # at the moment, this says each problemset can only be set to ONE userset
-            # TODO: change problemset table to allow many to many relationship equivalent
-            #for problemsetname in problemsets:
-                # print("problemsetname <"+problemsetname+">")
-                #problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
-                #problemset.userset = userset
+            # TODO These aren't working, not sure why, maybe client side
+            for problemsetname in problemsets:
+                print("problemsetname <"+problemsetname+">")
+                problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.name==problemsetname).one()
+                userset.problemSets.append(problemset)
 
             self.sql_session.commit()
 
