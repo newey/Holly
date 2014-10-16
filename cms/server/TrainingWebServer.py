@@ -627,6 +627,7 @@ class AdminProblemsHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
+        self.r_params["active_sidebar_item"] = "problems"
         self.r_params["tasks"] = self.contest.tasks
         self.render("admin_problems.html", **self.r_params)
 
@@ -638,6 +639,7 @@ class AdminProblemSetsHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
+        self.r_params["active_sidebar_item"] = "problemsets"
         self.r_params["sets"] = self.sql_session.query(ProblemSet)
         self.render("admin_problemsets.html", **self.r_params)
 
@@ -649,6 +651,7 @@ class AddProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("add_task.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -734,6 +737,7 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("admin_problem.html",
                     task=task, **self.r_params)
 
@@ -768,6 +772,7 @@ class EditProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("edit_task.html", 
                     task=task, **self.r_params)
 
@@ -827,6 +832,7 @@ class AddTestHandler(BaseHandler):
         self.r_params = self.render_params()
         self.r_params["task"] = task
         self.r_params["dataset"] = dataset
+        self.r_params["active_sidebar_item"] = "problems"
         self.render("add_testcase.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1099,6 +1105,7 @@ class AddProblemSetHandler(BaseHandler):
     def get(self):
         tasks = self.sql_session.query(Task.id, Task.title).all()
         self.r_params['taskdata'] = tasks
+        self.r_params["active_sidebar_item"] = "problemsets"
         self.render("add_problemset.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1176,6 +1183,7 @@ class EditProblemSetHandler(BaseHandler):
         self.r_params["problemset"] = problemSet
         self.r_params["selected_tasks"] = problemSet.tasks
         self.r_params["unselected_tasks"] = unselected_tasks
+        self.r_params["active_sidebar_item"] = "problemsets"
 
         self.render("edit_problemset.html", **self.r_params)
 
@@ -1231,6 +1239,7 @@ class AdminUserHandler(BaseHandler):
         self.r_params = self.render_params()
         self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType==0)
         self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["active_sidebar_item"] = "users"
         self.render("admin_users.html", **self.r_params)
 
 class UserHandler(BaseHandler):
@@ -1247,6 +1256,7 @@ class UserHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "users"
         self.render("user_description.html",
                     user=user, **self.r_params)
 
@@ -1263,6 +1273,7 @@ class EditUserHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        self.r_params["active_sidebar_item"] = "users"
         self.render("edit_user.html", 
                     user=user, **self.r_params)
 
@@ -1346,6 +1357,7 @@ class AddUserSetHandler(BaseHandler):
     def get(self):
         self.r_params["users"] = self.sql_session.query(User)
         self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
+        self.r_params["active_sidebar_item"] = "users"
         self.render("add_userset.html", **self.r_params)
 
     @tornado.web.authenticated
