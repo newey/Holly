@@ -1486,7 +1486,7 @@ _tws_handlers = [
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
     (r"/admin/problem/([0-9]+)/test/add", AddTestHandler),
-    (r"/admin/problem/([0-9]+)/test/delete", DeleteTestHandler),
+    (r"/admin/problem/([0-9]+)/test/([0-9]+)/delete", DeleteTestHandler),
     #(r"/admin/problemset/([0-9]+)", AdminProblemSetHandler),
     (r"/admin/problemsets", AdminProblemSetsHandler),
     (r"/admin/problemset/add", AddProblemSetHandler),
