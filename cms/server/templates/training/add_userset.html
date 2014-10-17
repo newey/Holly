@@ -1,46 +1,282 @@
 {% extends admin_base.html %}
 
+{% block scripts %}
+<script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+<script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    var unselectedproblemSets = $('#unselectedproblemSets').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+
+    var selectedproblemSets = $('#selectedproblemSets').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+    var unselectedUsers = $('#unselectedusers').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+
+    var selectedUsers = $('#selectedusers').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+
+    function updateIds() {
+      if (selectedproblemSets.row().length > 0) {
+        $("#problemsetids").val(selectedproblemSets.column(0).data().reduce(function (a,b) {
+              return a.concat(" ").concat(b);
+          }), "");
+      } else {
+        $("#problemsetids").val("");
+      }
+
+      if (selectedUsers.row().length > 0) {
+        $("#userids").val(selectedUsers.column(0).data().reduce(function (a,b) {
+              return a.concat(" ").concat(b);
+          }), "");
+      } else {
+        $("#userids").val("");
+      }
+    }
+    updateIds();
+
+    function addProblem () {
+      $(this).parents("tr").addClass('move');
+      var items = unselectedproblemSets.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
+      selectedproblemSets.row.add(items).draw(false);
+      unselectedproblemSets.row('.move').remove().draw( false );
+      updateIds();
+      $('.remove-problem.new').click(removeProblem);
+      $('.remove-problem').removeClass("new");
+    }
+
+    function removeProblem () {
+      $(this).parents("tr").addClass('move');
+      var items = selectedproblemSets.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
+      unselectedproblemSets.row.add(items).draw(false);
+      selectedproblemSets.row('.move').remove().draw( false );
+      updateIds();
+      $('.add-problem.new').click(addProblem);
+      $('.add-problem').removeClass("new");
+    }
+
+    function addUser () {
+      $(this).parents("tr").addClass('move');
+      var items = unselectedUsers.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-user new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
+      selectedUsers.row.add(items).draw(false);
+      unselectedUsers.row('.move').remove().draw( false );
+      updateIds();
+      $('.remove-user.new').click(removeUser);
+      $('.remove-user').removeClass("new");
+    }
+
+    function removeUser () {
+      $(this).parents("tr").addClass('move');
+      var items = selectedUsers.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-user new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
+      unselectedUsers.row.add(items).draw(false);
+      selectedUsers.row('.move').remove().draw( false );
+      updateIds();
+      $('.add-user.new').click(addUser);
+      $('.add-user').removeClass("new");
+    }
+
+    $('.add-problem').click(addProblem);
+    $('.add-user').click(addUser);
+
+    $('#unselectedproblemSets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+    $('#selectedproblemSets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+
+    $('#unselectedproblemSets_length').find("label").empty().append('<label><select name="unselectedproblemSets_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+    $('#selectedproblemSets_length').find("label").empty().append('<label><select name="selectedproblemSets_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+});
+</script>
+{% end %}
+
 {% block core %}
-<h1 class="page-header">New User Set</h1>
+<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New User Set</h1>
 <ol class="breadcrumb">
   <li><a href="/admin/users">Users</a></li>
   <li class="active">New User Set</li>
 </ol>
 
-<form class="form-horizontal" role="form" method="post">
-  <div class="form-group">
-    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-horizontal" role="form" method="post">
+      <div class="form-group">
+        <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+        </div>
+      </div>
+ 
+      <input type="hidden" id="problemsetids" name="problemsetids">
+      <input type="hidden" id="userids" name="userids">
+
+      <div class="form-group">
+        <label class="col-md-2 control-label" for="submit"></label>
+        <div class="col-md-7">
+          <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row">
+<div class="col-md-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Selected Users</h3>
+    </div>
+    <div class="table-responsive">
+      <table id="selectedusers" class="table table-striped">
+        <col>
+        <col>
+        <col width="60">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
   </div>
-
-  <div class="form-group">
-    <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
-    <div class="col-sm-7">
-      <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Unselected Users</h3>
+    </div>
+    <div class="table-responsive">
+      <table id="unselectedusers" class="table table-striped">
+        <col>
+        <col>
+        <col width="60">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>
+              <div style="width: 100%;text-align: center;">
+                <button class="btn btn-success btn-xs add-user" type="button"><i class="fa fa-plus fa-fw"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% end %}
+        </tbody>
+      </table>
     </div>
   </div>
-
-  <div class="form-group">
-    {% for user in users %}
-        <input type="checkbox" name="add_users" id="add_users{{user.id}}" value="{{user.username}}" />
-        <b>{{user.username}}</b><br />
-    {% end %}
-  </div>
-
-  <div class="form-group">
-    {% for problem_set in problem_sets %}
-        <input type="checkbox" name="add_problem_sets" id="add_problem_sets{{problem_set.id}}" value="{{problem_set.name}}" />
-        <b>{{problem_set.name}}</b><br />
-    {% end %}
-  </div>
-
-  <div class="form-group">
-    <label class="col-md-2 control-label" for="submit"></label>
-    <div class="col-md-7">
-      <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+</div>
+<div class="col-md-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Selected Problem Sets</h3>
+    </div>
+    <div class="table-responsive">
+      <table id="selectedproblemSets" class="table table-striped">
+        <col>
+        <col>
+        <col width="60">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
   </div>
-</form>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Unselected Problem Sets</h3>
+    </div>
+    <div class="table-responsive">
+      <table id="unselectedproblemSets" class="table table-striped">
+        <col>
+        <col>
+        <col width="60">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for problem in problem_sets %}
+          <tr>
+            <td>{{ problem.id }}</td>
+            <td>{{ problem.name }}</td>
+            <td>
+              <div style="width: 100%;text-align: center;">
+                <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% end %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
 {% end %}

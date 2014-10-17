@@ -8,19 +8,7 @@
 {% block title %}Holly{% end %}
 
 {% block js_init %} 
-function filterByGroup() {
-    var options = $("#group-select")[0].options;
-    var i;
-    for (i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        $("#" + options[i].value + "-details").show("fast");
-      } else {
-        $("#" + options[i].value + "-details:visible").hide("fast");
-      }
-    }
-};
 
-$("#group-select").change(filterByGroup);
 {% end %}
 
 {% block core %}
@@ -119,11 +107,7 @@ $("#group-select").change(filterByGroup);
                 </form>
               </td>
               <td style="display: none;">
-=               {% for group in user.userSets %}
-                  {% for set in group.problemSets %}
-                    {{ set.name }}
-                  {% end %}
-                {% end %}
+                {% for set in user.userSets %}{{ set.name }};{% end %}
               </td>
             </tr>
           {% end %}
@@ -139,8 +123,18 @@ $("#group-select").change(filterByGroup);
 <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
 <script>
+  $.fn.dataTable.ext.search.push(
+    function( settings, data, dataIndex ) {
+      var groups = data[3] || "";
+      var options = $("#group-select")[0].options;
+
+      //FILTER THEM HERE
+
+      return true;
+    });
+
   $(document).ready(function() {
-    $('#users').dataTable({
+    var userTable = $('#users').DataTable({
       "aoColumnDefs": [
           { 'bSortable': false, 'aTargets': [ 2 ] }
        ],
@@ -152,8 +146,23 @@ $("#group-select").change(filterByGroup);
       "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
       }
     });
-    $('#users_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div><a href="/admin/user/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
+    $('#users_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
     $('#users_length').find("label").empty().append('<label><select name="users_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    function filterByGroup() {
+      var options = $("#group-select")[0].options;
+      var i;
+      for (i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          $("#" + options[i].value + "-details").show("fast");
+        } else {
+          $("#" + options[i].value + "-details:visible").hide("fast");
+        }
+      }
+      userTable.draw();
+    };
+    $("#group-select").change(filterByGroup);
+    
   });
 </script>
 {% end %}
