@@ -125,11 +125,21 @@
 <script>
   $.fn.dataTable.ext.search.push(
     function( settings, data, dataIndex ) {
-      var groups = data[3] || "";
+      var groups = (data[3] || "").split(";");
       var options = $("#group-select")[0].options;
-
-      //FILTER THEM HERE
-
+      for (var i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          result = false;
+          for (var j = 0; j < groups.length; j++) {
+            if (groups[j] == options[i].value) {
+              result = true;
+            }
+          }
+          if (result == false) {
+            return false;
+          }
+        }
+      }
       return true;
     });
 
