@@ -60,19 +60,34 @@
       <div class="sidebar-nav navbar-collapse">
         <ul class="nav" id="side-menu">
           <li>
-            <a href="/admin"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+            <a href="/admin" {% if active_sidebar_item == "admin" %}class="active"{% end %}>
+              <i class="fa fa-dashboard fa-fw"></i>
+              Dashboard
+            </a>
           </li>
           <li>
-            <a href="/admin/problems"><i class="fa fa-tasks fa-fw"></i> Problems</a>
+            <a href="/admin/problems" {% if active_sidebar_item == "problems" %}class="active"{% end %}>
+              <i class="fa fa-tasks fa-fw"></i>
+              Problems
+            </a>
           </li>
           <li>
-            <a href="/admin/problemsets"><i class="fa fa-th fa-fw"></i> Problem Sets</a>
+            <a href="/admin/problemsets" {% if active_sidebar_item == "problemsets" %}class="active"{% end %}>
+              <i class="fa fa-th fa-fw"></i>
+              Problem Sets
+            </a>
           </li>
           <li>
-            <a href="/admin/users"><i class="fa fa-users fa-fw"></i> Users</a>
+            <a href="/admin/users" {% if active_sidebar_item == "users" %}class="active"{% end %}>
+              <i class="fa fa-users fa-fw"></i>
+              Users
+            </a>
           </li>
           <li>
-            <a href="#"><i class="fa fa-calendar fa-fw"></i> Contests</a>
+            <a href="#" {% if active_sidebar_item == "contests" %}class="active"{% end %}>
+              <i class="fa fa-calendar fa-fw"></i>
+              Contests
+            </a>
           </li>
         </ul>
       </div>

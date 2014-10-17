@@ -75,11 +75,9 @@ __all__ = [
     "test_db_connection", "get_contest_list", "is_contest_id",
     "ask_for_contest",
     # problem sets
-    "ProblemSet", "ProblemSetItem", 
+    "ProblemSet",
     # user sets
-    "UserSet", "UserSetItem",
-    # relationships
-    "ProblemSetToUserSet", "ProblemSetPin"
+    "UserSet",
 ]
 
 
@@ -116,10 +114,6 @@ from .util import test_db_connection, get_contest_list, is_contest_id, \
 
 from .userset import UserSet
 from .problemset import ProblemSet
-from .userset import UserSetItem
-from .problemset import ProblemSetItem
-from .problemset import ProblemSetToUserSet
-from .problemset import ProblemSetPin
 
 configure_mappers()
 

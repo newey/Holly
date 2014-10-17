@@ -1,6 +1,6 @@
 {% extends admin_base.html %}
 
-{% block js_init %} 
+{% block js_init %}
 function showTaskTypeOption() {
     var selector = $("select[name=task_type]")[0];
     $(".TaskTypeOptions:visible").hide("fast");
@@ -39,7 +39,7 @@ function submitTest() {
       formData.append("output", form.find('input[name=output]').prop('files')[0]);
 
       $.ajax( {
-        url: '/admin/problem/{{ task.id }}/test',
+        url: '/admin/problem/{{ task.id }}/test/add',
         type: "POST",
         data: formData,
         processData: false,
@@ -50,13 +50,21 @@ function submitTest() {
     } else if (form.hasClass('edit')) {
       testPassed();
     } else if (form.hasClass('remove')) {
-      testPassed();
+      var id = form.find('input[name=id]').val();
+      $.ajax( {
+        url: '/admin/problem/{{ task.id }}/test/'+id+'/delete',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: testPassed,
+        error: testFailed
+      });
     } else {
       alert("Stop doing crazy shit");
     }
   } else {
     count = 0;
-    alert("YAY finished :)")
     window.location.href = "/admin/problem/{{ task.id }}";
   }
 }
@@ -82,23 +90,19 @@ function submitTask() {
 }
 $('#submit-task').click(submitTask);
 
-function updateButtons(row) {
-  row.find('.delete-test').click(function() {
+function updateButtons(form) {
+  form.find('.delete-test').click(function() {
     $(this).parents('form').attr('class', 'remove');
-    $(this).parents('form').hide();
-  });
-
-  row.find('.edit-upload').click(function() {
-    $(this).parent().hide();
-    $(this).parent().next().attr('class', '');
-    $(this).parent().next().find('input').attr('class', 'used');
+    row = $(this).parents('tr');
+    row.empty();
+    row.append('<td rowspan="6">Test Deleted</td><td></td><td></td><td></td><td></td><td></td>');
   });
 };
 
 function addOldRow(id, codename, score) {
   testrows++;
   $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="edit"> \
-      <input type="hidden" name="id" value=""/> \
+      <input type="hidden" name="id" value="'+id+'"/> \
       <table class="table table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
         <col width="40%"> \
         <col width="30%"> \
@@ -109,14 +113,8 @@ function addOldRow(id, codename, score) {
         <tbody> \
           <tr> \
             <td><input type="text" name="codename" class="form-control" value="'+codename+'"/></td> \
-            <td> \
-              <div><button class="btn btn-primary btn-xs edit-upload" type="button"><i class="fa fa-edit fa-fw"></i></button> Change</div> \
-              <div class="ignore-upload"><input type="file" name="input" class="dicks1"/></div> \
-            </td> \
-            <td> \
-              <div><button class="btn btn-primary btn-xs edit-upload" type="button"><i class="fa fa-edit fa-fw"></i></button> Change</div> \
-              <div class="ignore-upload"><input type="file" name="output" class="dicks2"/></div> \
-            </td> \
+            <td>Input Fie</td> \
+            <td>Ouput File</td> \
             <td><input type="text" name="score" class="form-control" value="'+score+'"/></td> \
             <td style="text-align: center;"> \
               <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-trash fa-fw"></i></button> \
@@ -130,7 +128,7 @@ function addOldRow(id, codename, score) {
         </tbody> \
       </table> \
     </form>');
-  updateButtons($("#test"+testrows));
+  updateButtons($("#test-form"+testrows));
 };
 
 {% for testcase in task.active_dataset.testcases.itervalues() %}
@@ -180,8 +178,8 @@ $("#addTest").click(addNewRow);
 <h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit Problems</h1>
 <ol class="breadcrumb page-breadcrumb">
   <li><a href="/admin/problems">Problems</a></li>
-  <li><a href="/admin/problem/{{ task.id }}">{{ task.name }}</a></li>
-  <li class="active">Edit Problem</li>
+  <li><a href="/admin/problem/{{ task.id }}">{{ task.title }}</a></li>
+  <li class="active">Edit</li>
 </ol>
 
 <form id="task-form" class="form-horizontal" role="form" method="post">
@@ -373,5 +371,5 @@ $("#addTest").click(addNewRow);
   </div>
 </div>
  
-<button id="submit-task" type="button" class="btn btn-primary">Create</button>
+<button id="submit-task" type="button" class="btn btn-primary">Save Changes</button>
 {% end %}

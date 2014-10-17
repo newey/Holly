@@ -41,10 +41,18 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from . import Base, Contest, User
 from .smartmappedcollection import smart_mapped_collection
 
-association_table = Table('association', Base.metadata,
-                          Column('usersets.id', Integer, ForeignKey('usersets.id')),
-                          Column('usersetitem.id', Integer, ForeignKey('usersetitem.id'))
-                         ) 
+users_to_usersets = Table(
+    'users_to_usersets',
+    Base.metadata,
+    Column('userset_id',
+           Integer,
+           ForeignKey('usersets.id', onupdate="CASCADE", ondelete="CASCADE")
+           ),
+    Column('user_id',
+           Integer,
+           ForeignKey('users.id', onupdate="CASCADE", ondelete="CASCADE")
+           )
+    )
                           
 
 class UserSet(Base):
@@ -82,47 +90,10 @@ class UserSet(Base):
         default=0,
         index=True)
 
-    items = relationship("UserSetItem",
-        secondary=association_table,
-        backref="sets")
+    users = relationship("User",
+        secondary=users_to_usersets,
+        backref="userSets")
 
     # We could add the other parameters from Task here and combine
     # the rules here with the rules for each task, but it doesn't
     # seem important...
-
-
-class UserSetItem(Base):
-    """ Class to store the membership of a User in a UserSet
-
-    """
-    __tablename__ = 'usersetitem'
-
-    # Auto increment primary key.
-    id = Column(
-        Integer,
-        primary_key=True,
-        # Needed to enable autoincrement on integer primary keys that
-        # are referenced by a foreign key defined on this table.
-        autoincrement='ignore_fk')
-
-    # The User has all memberships to usersets
-    user_id = Column(
-        Integer,
-        ForeignKey(User.id, onupdate="CASCADE", ondelete="CASCADE"),
-        index=True,
-        nullable=False
-        )
-    user = relationship(
-        User,
-        backref=backref(
-            'item',
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            uselist=False)
-        )
-
-    is_admin = Column(
-        Boolean,
-        nullable=False,
-        default=False)
-    # TODO: list of user sets
