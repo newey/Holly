@@ -35,6 +35,9 @@ import logging
 import os
 import pkg_resources
 import re
+import string
+import smtplib
+from email.mime.text import MIMEText
 import traceback
 from datetime import datetime, timedelta
 from StringIO import StringIO
@@ -300,6 +303,13 @@ class BaseHandler(CommonRequestHandler):
                                                  user.password,
                                                  make_timestamp())),
                                    expires_days=None)
+
+        if user.verification_type == 2:
+            self.clear_cookie("login")
+            self.redirect("/confirm_email/%s" % user.id)
+
+        user.verification_type = 0
+
         return user
 
     def render_params(self):
@@ -589,6 +599,12 @@ class SignupHandler(BaseHandler):
 
             # Create the user.
             attrs["contest"] = self.contest
+            attrs["verification_type"] = 2
+            # Generate a new random verification code
+            attrs["verification"] = ''.join(random.choice(string.ascii_uppercase + 
+                                       string.digits) for _ in range(40))
+
+
             user = User(**attrs)
             self.sql_session.add(user)
 
@@ -612,7 +628,22 @@ class SignupHandler(BaseHandler):
             self.redirect("/login?error=%s&signup=T" % error)
             return
 
-        self.redirect("/")
+        # Send the email
+        message = """To confirm your email please use the following verification code: 
+                     %s
+                     If you did not request a new password ignore this email\
+                     and contact an admin.\n""" % user.verification 
+
+        msg = MIMEText(message)
+        msg['Subject'] = "Holly email confirmation"
+        msg['From'] = "admin@holly.com"
+        msg['To'] = user.email
+
+        s = smtplib.SMTP('localhost')
+        s.sendmail(msg['From'], [msg['To']], msg.as_string())
+        s.quit()
+
+        self.redirect("/confirm_email/%s" % user.id)
 
 class LogoutHandler(BaseHandler):
     """Logout handler.
@@ -674,8 +705,9 @@ class AddProblemHandler(BaseHandler):
             attrs["token_mode"] = "disabled"
             attrs["score_precision"] = 0
 
-            # Create the task.
-            attrs["num"] = len(self.contest.tasks)
+            #TODO: CHANGE AFTER DEMO
+            random.seed()
+            attrs["num"] = random.randint(1,1000000000)
             attrs["contest"] = self.contest
             task = Task(**attrs)
             self.sql_session.add(task)
@@ -1133,7 +1165,7 @@ class AddProblemSetHandler(BaseHandler):
             #attrs["contest_id"] = self.contest.id
             #TODO: CHANGE AFTER DEMO
             random.seed()
-            attrs["num"] = random.randint(1,100000)
+            attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
             print(attrs["num"])
@@ -1263,8 +1295,9 @@ class UserHandler(BaseHandler):
     @admin_authenticated
     def get(self, user_id):
         try:
-            user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1280,8 +1313,9 @@ class EditUserHandler(BaseHandler):
     @admin_authenticated
     def get(self, user_id):
         try:
-            user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1293,8 +1327,9 @@ class EditUserHandler(BaseHandler):
     @admin_authenticated
     def post(self, user_id):
         try:
-            user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1452,6 +1487,160 @@ class UserInfoHandler(BaseHandler):
 
         self.redirect("/user")
         
+class PasswordRecoveryHandler(BaseHandler):
+    """Recovers a user's password
+
+    """
+
+    def get(self):
+        self.render("recover_password.html", **self.r_params)
+    
+    def post(self):
+        username = self.get_argument("username")
+        user = self.sql_session.query(User).\
+               filter(User.username == username).\
+               filter(User.contest == self.contest).first()
+                 
+        # Check if the user exists
+        if user is None:
+            self.redirect("/recover_password?error=Invalid username")
+            return
+
+        # Generate a new random verification code
+        code = ''.join(random.choice(string.ascii_uppercase + 
+                      string.digits) for _ in range(40))
+
+        try:
+            user.verification = code
+            user.verification_type = 1
+            self.sql_session.commit()
+        except Exception as error:
+            self.redirect("/recover_password?error=couldn't update code")
+            return
+
+        # Send the email
+        message = """To update your password please use the following verification code: 
+                     %s
+                     If you did not request a new password ignore this email\
+                     and contact an admin.\n""" % code 
+
+        msg = MIMEText(message)
+        msg['Subject'] = "Holly password recovery"
+        msg['From'] = "admin@holly.com"
+        msg['To'] = user.email
+
+        s = smtplib.SMTP('localhost')
+        s.sendmail(msg['From'], [msg['To']], msg.as_string())
+        s.quit()
+
+        self.redirect("/change_password/%s" % user.id)
+
+class PasswordChangeHandler(BaseHandler):
+    """Change a user's password
+
+    """
+
+    def get(self, user_id):
+        try:
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        if user.verification_type != 1:
+            error = "No verification email has been sent"
+            self.redirect("/recover_password?error=%s" % error)
+            return
+
+        self.render("change_password.html")
+
+    def post(self, user_id):
+        try:
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        if user.verification_type != 1:
+            error = "No verification email has been sent"
+            self.redirect("/recover_password?error=%s" % error)
+            return
+            
+        verification = self.get_argument("verification", "")
+        
+        if verification != user.verification:
+            error = "Invalid verification code"
+            self.redirect("/change_password?error=%s" % error)
+            return
+
+        try:
+            password = self.get_argument("password", "")
+            assert len(password) >= 8 and len(password) <= 64,\
+                "Password must be between 8 and 64 chars."
+            user.password = password
+            user.verification_type = 0 
+            self.sql_session.commit()
+        except Exception as error:
+            self.redirect("/change_password?error=%s" % error)
+            return
+
+        self.redirect("/login")
+        
+class EmailConfirmationHandler(BaseHandler):
+    """Confirm a user's email
+
+    """
+
+    def get(self, user_id):
+        try:
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        if user.verification_type != 2:
+            error = "Email address is already verified."
+            self.redirect("/login?error=%s" % error)
+            return
+
+        self.render("confirm_email.html")
+
+    def post(self, user_id):
+        try:
+            user = self.sql_session.query(User).\
+                   filter(User.id == user_id).\
+                   filter(User.contest == self.contest).one()
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        if user.verification_type != 2:
+            error = "Email address is already verified."
+            self.redirect("/login?error=%s" % error)
+            return
+            
+        verification = self.get_argument("verification", "")
+        
+        if verification != user.verification:
+            error = "Invalid verification code"
+            self.redirect("/confirm_email?error=%s" % error)
+            return
+
+        try:
+            user.verification_type = 0 
+            self.sql_session.commit()
+        except Exception as error:
+            self.redirect("/confirm_email?error=%s" % error)
+            return
+
+        self.set_secure_cookie("login",
+                               pickle.dumps((user.username,
+                                             user.password,
+                                             make_timestamp())),
+                               expires_days=None)
+        self.redirect("/")
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -1459,6 +1648,9 @@ _tws_handlers = [
     (r"/login", LoginHandler),
     (r"/signup", SignupHandler),
     (r"/logout", LogoutHandler),
+    (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
+    (r"/recover_password", PasswordRecoveryHandler),
+    (r"/change_password/([0-9]+)", PasswordChangeHandler),
     (r"/problem/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
