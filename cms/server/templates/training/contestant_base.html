@@ -2,7 +2,11 @@
 
 {% block title %}Contestant{% end %}
 
-{% block head %} {% end %}
+{% block head %}
+<link rel="stylesheet" href="/static/css/flat-ui.css">
+<link rel="stylesheet" href="/static/css/contestant_style.css">
+{% block headextension %} {% end %}
+{% end %}
 
 {% block body %}
 <header class="navbar navbar-default navbar-static-top" role="banner">
@@ -25,20 +29,28 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-2">
-      <div class="list-group">
-        <a class ="list-group-item {% if active_sidebar_item == "home" %}active{% end %}" href="/">Home</a>
-        <a class ="list-group-item {% if active_sidebar_item == "problems" %}active{% end %}" href="/problems">Problem Sets</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "competitions" %}active{% end %}" href="#">Competitions</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "history" %}active{% end %}" href="#">History</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "fame" %}active{% end %}" href="#">Hall of Fame</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "help" %}active{% end %}" href="#">Help</a>
-        <a class ="list-group-item" href="/admin/problems">Administration</a>
-      </div>
+    <div class="col-md-2 sidebar-wrapper">
+       <nav class="nav-sidebar">
+        <ul class="nav">
+          <li class="{% if active_sidebar_item == "home" %}active{% end %}"><a href="/"><i class="fa fa-home fa-fw"></i> Home</a></li>
+          <li class ="{% if active_sidebar_item == "problems" %}active{% end %}"><a href="/problems"><i class="fa fa-tasks fa-fw"></i> Problem Sets</a></li>
+          <li class ="{% if active_sidebar_item == "competitions" %}active{% end %}"><a href="#"><i class="fa fa-calendar fa-fw"></i> Competitions</a></li>
+          <li class ="{% if active_sidebar_item == "fame" %}active{% end %}"><a href="#"><i class="fa fa-trophy fa-fw"></i> Hall of Fame</a></li>
+          <li class ="{% if active_sidebar_item == "help" %}active{% end %}"><a href="#"><i class="fa fa-question fa-fw"></i> Help</a></li>
+          <li class="nav-divider"></li>
+          <li><a href="/admin/problems"><i class="fa fa-cog fa-fw"></i> Administration</a></li>
+        </ul>
+      </nav>
     </div>
-    <div class="col-md-10">
+    <div class="col-md-10 content-wrapper">
+      <div class="content">
       {% block core %} {% end %}
+      </div>
     </div>
   </div>
 </div>
+{% end %}
+
+{% block tail %}
+{% block scripts %}{% end %}
 {% end %}

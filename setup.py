@@ -57,6 +57,7 @@ def do_setup():
             os.path.join("static", "css/plugins", "*.*"),
             os.path.join("static", "css/plugins/metisMenu", "*.*"),
             os.path.join("static", "fonts", "*.*"),
+            os.path.join("static", "fonts/lato", "*.*"),
             os.path.join("static", "js", "*.*"),
             os.path.join("static", "js/plugins", "*.*"),
             os.path.join("static", "js/plugins/dataTables", "*.*"),
