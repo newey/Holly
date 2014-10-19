@@ -9,7 +9,7 @@
 	margin-bottom: 0px;
 } 
 
-.status span {
+.status i {
 	margin-left: 18px;
 }
 
@@ -20,6 +20,7 @@ td.last {
 
 .inner {
   padding: 0px !important;
+  padding-left: 15px;
 }
 
 .innerRow table {
@@ -32,6 +33,7 @@ td.last {
 .bs-callout {
   margin: 20px 0;
   padding: 15px 30px 15px 15px;
+  border: 1px solid #eee;
   border-left: 5px solid #eee;
 }
 .bs-callout h4 {
@@ -47,18 +49,29 @@ td.last {
  
 /* Themes for different contexts */
 .bs-callout-danger {
-  background-color: #fcf2f2;
-  border-color: #dFb5b4;
+  border-left-color: #C0392B;
+}
+.bs-callout-danger h4 {
+  color: #C0392B;
 }
 .bs-callout-warning {
-  background-color: #fefbed;
-  border-color: #f1e7bc;
+  border-left-color: #F39C12;
+}
+.bs-callout-warning h4 {
+  color: #F39C12;
 }
 .bs-callout-info {
-  background-color: #f0f7fd;
-  border-color: #d0e3f0;
+  border-left-color: #2980B9;
+}
+.bs-callout-info h4 {
+  color: #2980B9;
 }
 
+.tester {
+  background-color: #3498DB;
+  background-color: #E74C3C;
+  background-color: #F1C40F;
+}
 
 /* Chat
 ---------------------------------------------------------- */
