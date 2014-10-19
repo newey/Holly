@@ -780,6 +780,12 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        # for testcase in task.active_dataset.testcases.itervalues():
+        #     print("testcase.codename: "+testcase.codename)
+        #     print("testcase.input: "+testcase.input)
+        #     print("pickle.dumps(testcase.input): "+pickle.dumps(testcase.input))
+        #     print("pickle.dumps(str(testcase.input)): "+pickle.dumps(str(testcase.input)))
+
         self.r_params["active_sidebar_item"] = "problems"
         self.render("admin_problem.html",
                     task=task, **self.r_params)
