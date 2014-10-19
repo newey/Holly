@@ -12,7 +12,7 @@
 
 <form class="form-horizontal" role="form" method="post" action="/problem/{{ task.id }}/submit" enctype="multipart/form-data">
   {% for idx, filename in enumerate(x.filename for x in task.submission_format) %}
-    <div class="form-group">
+  <div class="form-group">
     <label class="col-md-2 control-label" for="{{ filename }}" style="text-align:left;">{{ filename.replace(".%l", "") }}</label>
     <div class="col-md-7">
       <input id="{{ filename }}" name="{{ filename }}" class="input-file" type="file">
