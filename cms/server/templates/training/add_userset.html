@@ -127,6 +127,33 @@ $(document).ready(function() {
 
     $('#unselectedproblemSets_length').find("label").empty().append('<label><select name="unselectedproblemSets_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
     $('#selectedproblemSets_length').find("label").empty().append('<label><select name="selectedproblemSets_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    $('#unselectedusers_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+    $('#selectedusers_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+
+    $('#unselectedusers_length').find("label").empty().append('<label><select name="unselectedusers_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+    $('#selectedusers_length').find("label").empty().append('<label><select name="selectedusers_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    var navListItems = $('ul.setup-panel li a');
+    var allWells = $('.setup-content');
+
+    allWells.hide();
+
+    navListItems.click(function(e)
+    {
+        e.preventDefault();
+        var $target = $($(this).attr('href')),
+            $item = $(this).closest('li');
+        
+        if (!$item.hasClass('disabled')) {
+            navListItems.closest('li').removeClass('active');
+            $item.addClass('active');
+            allWells.hide();
+            $target.show();
+        }
+    });
+    
+    $('ul.setup-panel li.active a').trigger('click');
 });
 </script>
 {% end %}
@@ -137,10 +164,9 @@ $(document).ready(function() {
   <li><a href="/admin/users">Users</a></li>
   <li class="active">New User Set</li>
 </ol>
-
+<form class="form-horizontal" role="form" method="post">
 <div class="panel panel-default">
   <div class="panel-body">
-    <form class="form-horizontal" role="form" method="post">
       <div class="form-group">
         <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
         <div class="col-sm-7">
@@ -167,116 +193,138 @@ $(document).ready(function() {
   </div>
 </div>
 
-<div class="row">
-<div class="col-md-6">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Selected Users</h3>
-    </div>
-    <div class="table-responsive">
-      <table id="selectedusers" class="table table-striped">
-        <col>
-        <col>
-        <col width="60">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Unselected Users</h3>
-    </div>
-    <div class="table-responsive">
-      <table id="unselectedusers" class="table table-striped">
-        <col>
-        <col>
-        <col width="60">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in users %}
-          <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>
-              <div style="width: 100%;text-align: center;">
-                <button class="btn btn-success btn-xs add-user" type="button"><i class="fa fa-plus fa-fw"></i></button>
-              </div>
-            </td>
-          </tr>
-          {% end %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div class="row form-group">
+      <div class="col-xs-12">
+          <ul class="nav nav-pills nav-justified thumbnail setup-panel">
+              <li class="active"><a href="#step-1">
+                  <p class="list-group-item-text">Add User</p>
+              </a></li>
+              <li><a href="#step-2">
+                  <p class="list-group-item-text">Add Problem Sets</p>
+              </a></li>
+          </ul>
+      </div>
 </div>
-<div class="col-md-6">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Selected Problem Sets</h3>
-    </div>
-    <div class="table-responsive">
-      <table id="selectedproblemSets" class="table table-striped">
-        <col>
-        <col>
-        <col width="60">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Unselected Problem Sets</h3>
-    </div>
-    <div class="table-responsive">
-      <table id="unselectedproblemSets" class="table table-striped">
-        <col>
-        <col>
-        <col width="60">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for problem in problem_sets %}
-          <tr>
-            <td>{{ problem.id }}</td>
-            <td>{{ problem.name }}</td>
-            <td>
-              <div style="width: 100%;text-align: center;">
-                <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
-              </div>
-            </td>
-          </tr>
-          {% end %}
-        </tbody>
-      </table>
+<div class="row setup-content" id="step-1">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Selected Users</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="selectedusers" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Unselected Users</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="unselectedusers" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                <div style="width: 100%;text-align: center;">
+                  <button class="btn btn-success btn-xs add-user" type="button"><i class="fa fa-plus fa-fw"></i></button>
+                </div>
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>  
 </div>
+<div class="row setup-content" id="step-2">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Selected Problem Sets</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="selectedproblemSets" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Unselected Problem Sets</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="unselectedproblemSets" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for problemset in problem_sets %}
+            <tr>
+              <td>{{ problemset.id }}</td>
+              <td>{{ problemset.name }}</td>
+              <td>
+                <div style="width: 100%;text-align: center;">
+                  <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+                </div>
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>  
 </div>
+
+<input id="submit" type="submit" value="Submit" class="btn btn-primary">
+
+</form>
 {% end %}
