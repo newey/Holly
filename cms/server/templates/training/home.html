@@ -6,7 +6,7 @@
 
 {% block title %}Holly{% end %}
 
-{% block head %}
+{% block headextension %}
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -15,74 +15,22 @@
 {% end %}
 
 {% block core %}
-  <h1 class="page-header">Home</h1>
-  <!--h3>Pinned Problems</h3-->
-  <div class="panel panel-default">
-    <!-- Default panel contents -->
-    <div class="panel-heading"><span class="glyphicon glyphicon-pushpin"><span> Pinned-Problem-Sets</div>
-    {% include problem_table.html %}
-  </div>
+<h1 class="page-header">Home</h1>
+  
+<h3>Pinned Problems</h3>
+{% include problem_table.html %}
 
-  <div class="row">
-    <div class="col-md-5">
-      <div class="panel-group" id="accordion">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                <span class="glyphicon glyphicon-list-alt"><span> Competitions
-              </a>
-            </h4>
-          </div>
-          <div id="collapseOne" class="panel-collapse collapse in">
-            <div class="panel-body">
-              You have no upcoming competitions...
-            </div>
-          </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-                <span class="glyphicon glyphicon-time"><span> History
-              </a>
-            </h4>
-          </div>
-          <div id="collapseTwo" class="panel-collapse collapse">
-            <div class="panel-body">
-              This feature will be implemented in another sprint.
-            </div>
-          </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-                <span class="glyphicon glyphicon-star"><span> Hall-of-Fame
-              </a>
-            </h4>
-          </div>
-          <div id="collapseThree" class="panel-collapse collapse">
-            <div class="panel-body">
-              You do not have a ranking yet because in this sprint there is only one user. 
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-7">
-      <h3 style="margin-top: 0px">News</h3>
-      <div class="bs-callout bs-callout-warning">
-        <h4>Site Changes</h4>
-        <p>The training site has had a few touchups. Head over to the irc channel and complain if you find any problems.</p>
-      </div>
-      <div class="bs-callout bs-callout-info">
-        <h4>Congratulations</h4>
-        <p>IOI 2014 was in Taipei, Taiwan from the 13th to the 20th of July. Congratulations to the Australian team for earning 2 gold medals and 2 silver medals! These results placed students (=)first, fifth, thirty-sixth and seventy-third in the world; an incredible achievement!</p>
-      </div>
-    </div>
-  </div>
-  <script>
+<h3 style="margin-top: 0px">News</h3>
+<div class="bs-callout bs-callout-warning">
+  <h4>Site Changes</h4>
+  <p>The training site has had a few touchups. Head over to the irc channel and complain if you find any problems.</p>
+</div>
+<div class="bs-callout bs-callout-info">
+  <h4>Congratulations</h4>
+  <p>IOI 2014 was in Taipei, Taiwan from the 13th to the 20th of July. Congratulations to the Australian team for earning 2 gold medals and 2 silver medals! These results placed students (=)first, fifth, thirty-sixth and seventy-third in the world; an incredible achievement!</p>
+</div>
+
+<script>
     $(document).on('click', '.pinned', function() {
       var $pin = $(this)
       var setID = $pin.closest(".outerRow").data("id");
@@ -90,6 +38,21 @@
         $pin.closest(".outerRow").next().remove();
         $pin.closest(".outerRow").remove();
       })
+    });
+  </script>
+{% end %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function() {
+      $("div.bhoechie-tab-menu>div.list-group>a").click(function(e) {
+          e.preventDefault();
+          $(this).siblings('a.active').removeClass("active");
+          $(this).addClass("active");
+          var index = $(this).index();
+          $("div.bhoechie-tab>div.bhoechie-tab-content").removeClass("active");
+          $("div.bhoechie-tab>div.bhoechie-tab-content").eq(index).addClass("active");
+      });
     });
   </script>
 {% end %}

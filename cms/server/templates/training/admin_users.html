@@ -52,20 +52,27 @@
         <h3 class="panel-title">{{ userset.name }}</h3>
       </div>
       <div class="panel-body">
-        {% for user in userset.users %}
-          {{ user.username }}<br>
-        {% end %}
+        <table class="table">
+          <tr>
+            <td>Users</td>
+            <td>{{ len(userset.users) }}</td>
+          </tr>
+          <tr>
+            <td>Problem Sets</td>
+            <td>{{ len(userset.problemSets) }}</td>
+          </tr>
+        </table>
 
-        <form action="/admin/userset/{{ userset.id }}" method="post" style="display: inline;">
-          <button type="submit" class="btn btn-primary" disabled="true"><i class="fa fa-bar-chart fa-fw"></i> Stats</button>
+        <form action="/admin/userset/{{ userset.id }}" method="get" style="display: inline;">
+          <button type="submit" class="btn btn-primary"><i class="fa fa-bar-chart fa-fw"></i> Stats</button>
         </form>
 
         <form action="/admin/userset/{{ userset.id }}/edit" method="get" style="display: inline;">
-          <button type="submit" class="btn btn-success" disabled="true"><i class="fa fa-edit fa-fw"></i> Edit</button>
+          <button type="submit" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
         </form>
 
         <form action="/admin/userset/{{ userset.id }}/delete" method="post" style="display: inline;">
-          <button type="submit" class="btn btn-danger" disabled="true"><i class="fa fa-trash fa-fw"></i> Delete</button>
+          <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
         </form>
       </div>
     </div>
@@ -125,11 +132,21 @@
 <script>
   $.fn.dataTable.ext.search.push(
     function( settings, data, dataIndex ) {
-      var groups = data[3] || "";
+      var groups = (data[3] || "").split(";");
       var options = $("#group-select")[0].options;
-
-      //FILTER THEM HERE
-
+      for (var i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          result = false;
+          for (var j = 0; j < groups.length; j++) {
+            if (groups[j] == options[i].value) {
+              result = true;
+            }
+          }
+          if (result == false) {
+            return false;
+          }
+        }
+      }
       return true;
     });
 

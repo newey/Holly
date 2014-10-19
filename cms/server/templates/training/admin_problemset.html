@@ -1,10 +1,10 @@
 {% extends admin_base.html %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-bar-chart fa-fw"></i> {{ task.title }} <small>Statistics</small></h1>
+<h1 class="page-header"><i class="fa fa-bar-chart fa-fw"></i> {{ problemset.title }} <small>Statistics</small></h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/problemsets">Problems Sets</a></li>
-  <li class="active">{{ task.name }}</li>
+  <li><a href="/admin/problems">Problems</a></li>
+  <li class="active">{{ problemset.name }}</li>
 </ol>
 
 <div class="panel panel-default">
@@ -14,29 +14,17 @@
         <table class="table">
           <tr>
             <td>Title</td>
-            <td>{{ task.title }}</td>
+            <td>{{ problemset.title }}</td>
           </tr>
           <tr>
             <td>Name</td>
-            <td>{{ task.name }}</td>
-          </tr>
-          <tr>
-            <td>Time limit</td>
-            <td>{{ task.active_dataset.time_limit }}</td>
-          </tr>
-          <tr>
-            <td>Memory limit</td>
-            <td>{{ task.active_dataset.memory_limit }}</td>
-          </tr>
-          <tr>
-            <td>Task type</td>
-            <td>{{ task.active_dataset.task_type }}</td>
+            <td>{{ problemset.name }}</td>
           </tr>
         </table>
-        <a href="/admin/problem/{{ task.id }}/edit" class="pull-left" style="margin-right: 10px;">
+        <a href="/admin/problemset/{{ problemset.id }}/edit" class="pull-left" style="margin-right: 10px;">
           <button type="button" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
         </a>
-        <form action="/admin/problem/{{ task.id }}/delete" method="post">
+        <form action="/admin/problemset/{{ problemset.id }}/delete" method="post">
           <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
         </form>
       </div>
@@ -107,27 +95,23 @@
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title">Tests</h3>
+        <h3 class="panel-title">Problems</h3>
       </div>
       <div class="table-responsive">
         <table class="table table-striped" id ="users">
           <thead>
             <tr>
+              <th>Id</th>
               <th>Name</th>
-              <th>Input</th>
-              <th>Output</th>
-              <th>Score</th>
-              <th>Passed</th>
+              <th>Details</th>
             </tr>
           </thead>
           <tbody>
-            {% for testcase in task.active_dataset.testcases.itervalues() %}
+            {% for task in problemset.tasks %}
             <tr>
-              <td>{{ testcase.codename }}</td>
+              <td>{{ task.id }}</td>
+              <td>{{ task.name }}</td>
               <td></td>
-              <td></td>
-              <td>1</td>
-              <td>2/2</td>
             </tr>
             {% end %}
           </tbody>

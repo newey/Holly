@@ -1,8 +1,10 @@
-<table id="problemsets" class="table table-hover">
-  <col width="100">
+<table id="problemsets" class="table">
+  <col width="80">
   <col>
   <col>
-  <col width="60">
+  <col width="30">
+  <col width="30">
+  <col width="40">
   <tbody>
 
     <!-- Status Minus
@@ -23,33 +25,35 @@
 
     {% for set in sets %}
     <tr class="outerRow" data-id="{{ set.id }}">
-      <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
+      <td class="status"><i class="fa fa-minus fa-fw text-primary"></i></td>
       <td><a href="/problemset/{{ set.id }}">{{ set.title }}</a></td>
       <td>{{ len(set.tasks) }} problem{% if len(set.tasks) != 1 %}s{% end %}</td>
+      <td><a href="/problemset/{{ set.id }}"><i class="fa fa-edit fa-fw"></i></a></td>
       <td>
-        <span class="expandset glyphicon glyphicon-chevron-right"></span> <span class="{% if set.isPinned(current_user) %}pinned text-danger {% else %}unpinned {% end %}glyphicon glyphicon-pushpin"></span>
+        <span class="expandset glyphicon glyphicon-chevron-right"></span> 
+      </td>
+      <td>
+        <span class="{% if set.isPinned(current_user) %}pinned text-danger {% else %}unpinned {% end %}glyphicon glyphicon-pushpin"></span>
       </td>
     </tr>
     <tr class="innerRow" style="display: none">
-      <td class="inner" colspan="4">
-        <div class="row">
-          <div class="col-md-1"></div>
-          <div class="col-md-10">
-            <table class="table">
-              <col width="100">
-              <col>
-              <tbody>
-                {% for task in set.tasks %}
-                <tr>
-                  <td class="status"><span class="glyphicon glyphicon-minus text-primary"></span></td>
-                  <td><a href="/problem/{{ task.id }}">{{ task.title }}</a></td>
-                </tr>
-                {% end %}
-              </tbody>
-            </table>
-          </div>
-          <div class="col-md-1"></div>
-        </div> 
+      <td class="inner" colspan="6">
+        <div class="innerRow-container">
+          <table class="table">
+            <col width="80">
+            <col>
+            <col width="40">
+            <tbody>
+              {% for task in set.tasks %}
+              <tr>
+                <td class="status"><i class="fa fa-minus fa-fw text-primary"></i></td>
+                <td><a href="/problem/{{ task.id }}">{{ task.title }} </a></td>
+                <td><a href="/problem/{{ task.id }}"><i class="fa fa-edit fa-fw"></i></a></td>
+              </tr>
+              {% end %}
+            </tbody>
+          </table>
+        </div>
       </td>
     </tr>
     {% end %}

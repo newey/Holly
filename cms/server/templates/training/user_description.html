@@ -1,34 +1,310 @@
 {% extends admin_base.html %}
 
+{% block scripts %}
+<script src="/static/js/plugins/chartjs/Chart.Core.js"></script>
+<script src="/static/js/plugins/chartjs/Chart.Line.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+
+  var crt = $("#example-chart").get(0).getContext("2d");
+  var data = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+        {
+            label: "My First dataset",
+            fillColor: "rgba(220,220,220,0.2)",
+            strokeColor: "rgba(220,220,220,1)",
+            pointColor: "rgba(220,220,220,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(220,220,220,1)",
+            data: [65, 59, 80, 81, 56, 55, 40]
+        },
+        {
+            label: "My Second dataset",
+            fillColor: "rgba(151,187,205,0.2)",
+            strokeColor: "rgba(151,187,205,1)",
+            pointColor: "rgba(151,187,205,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(151,187,205,1)",
+            data: [28, 48, 40, 19, 86, 27, 90]
+        }
+    ]
+  }
+  var options = {
+    bezierCurve : false,
+    responsive: true
+  }
+  var exampleChart = new Chart(crt).Line(data, options);
+});
+</script>
+{% end %}
+
 {% block core %}
 <h1 class="page-header"><i class="fa fa-bar-chart fa-fw"></i> User Statistics</h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/users">Users</a></li>
+  <li><a href="/admin/problems">Users</a></li>
   <li class="active">{{ user.username }}</li>
 </ol>
 
-<table class="table">
-  <tr>
-    <td>First Name</td>
-    <td>{{ user.first_name }}</td>
-  </tr>
-  <tr>
-    <td>Last Name</td>
-    <td>{{ user.last_name }}</td>
-  </tr>
-  <tr>
-    <td>Username</td>
-    <td>{{ user.username }}</td>
-  </tr>
-  <tr>
-    <td>Email</td>
-    <td>{{ user.email }}</td>
-  </tr>
-  <tr>
-    <td>Admin</td>
-    <td>{{ user.is_training_admin }}</td>
-  </tr>
-</table>
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-6">
+        <table class="table">
+          <tr>
+            <td>First Name</td>
+            <td>{{ user.first_name }}</td>
+          </tr>
+          <tr>
+            <td>Last Name</td>
+            <td>{{ user.last_name }}</td>
+          </tr>
+          <tr>
+            <td>Username</td>
+            <td>{{ user.username }}</td>
+          </tr>
+          <tr>
+            <td>Email</td>
+            <td>{{ user.email }}</td>
+          </tr>
+          <tr>
+            <td>Admin</td>
+            <td>{{ user.is_training_admin }}</td>
+          </tr>
+        </table>
+        <a href="/admin/problem/{{ user.id }}/edit" class="pull-left" style="margin-right: 10px;">
+          <button type="button" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
+        </a>
+        <form action="/admin/problem/{{ user.id }}/delete" method="post">
+          <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <div>
+          <canvas id="example-chart" style="display: block;"></canvas>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default">Problem</button>
+          <button type="button" class="btn btn-default">Tests</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-
+<div class="row">
+  <div class="col-md-8">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Problems</h3>
+        <span class="pull-right">
+          <!-- Tabs -->
+          <ul class="nav panel-tabs">
+            <li class="active"><a href="#tab1" data-toggle="tab">Single</a></li>
+            <li><a href="#tab2" data-toggle="tab">Set</a></li>
+          </ul>
+      </span>
+    </div>
+    <div class="tab-content">
+      <div class="table-responsive tab-pane active" id="tab1">
+          <table class="table table-striped" id ="problems">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Problem</th>
+                <th>Test Passed</th>
+                <th>No. Submissions</th>
+                <th>Submissions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="label label-default">Inactive</span></td>
+                <td>aio10choreo</td>
+                <td>0</td>
+                <td>0</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><span class="label label-danger">Error</span></td>
+                <td>aio10snap</td>
+                <td>0</td>
+                <td>0</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><span class="label label-success">Accepted</span></td>
+                <td>aio10heat</td>
+                <td>9/9</td>
+                <td>2</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><span class="label label-warning">72%</span></td>
+                <td>aio10island</td>
+                <td>5/9</td>
+                <td>1</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-responsive tab-pane" id="tab2">
+          <table class="table table-striped" id ="problems">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Problem</th>
+                <th>Test Passed</th>
+                <th>No. Submissions</th>
+                <th>Submissions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="label label-default">Inactive</span></td>
+                <td>aio10</td>
+                <td>0</td>
+                <td>0</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><span class="label label-danger">Error</span></td>
+                <td>aio11</td>
+                <td>0</td>
+                <td>0</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><span class="label label-success">Accepted</span></td>
+                <td>aio12</td>
+                <td>9/9</td>
+                <td>2</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td><span class="label label-warning">72%</span></td>
+                <td>aio13</td>
+                <td>5/9</td>
+                <td>1</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="chat-window" id="chatWindow">
+      <div class="panel panel-default">
+        <div class="panel-heading top-bar">
+          <h3 class="panel-title"><i class="fa fa-comments fa-fw"></i> Chat</h3>
+        </div>
+        <div class="panel-body msg_container_base">
+          <div class="row msg_container base_sent">
+            <div class="col-md-10 col-xs-10 messages">
+              <p>What Happen?</p>
+              <time datetime="2009-11-13T20:00">Captain • 2 min</time>
+            </div>
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Red-icon.png" class="img-responsive">
+            </div>
+          </div>
+          <div class="row msg_container base_receive">
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Blue-icon.png" class="img-responsive">
+            </div>
+            <div class="col-md-10 col-xs-10 messages">
+              <p>Somebody set up us the bomb.</p>
+              <time datetime="2009-11-13T20:00">Mechanic • 2 min</time>
+            </div>
+          </div>
+          <div class="row msg_container base_receive">
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Green-icon.png" class="img-responsive">
+            </div>
+            <div class="col-md-10 col-xs-10 messages">
+              <p>We get signal.</p>
+              <time datetime="2009-11-13T20:00">Operator • 2 min</time>
+            </div>
+          </div>
+          <div class="row msg_container base_sent">
+            <div class="col-md-10 col-xs-10 messages">
+              <p>What!</p>
+              <time datetime="2009-11-13T20:00">Captain • 1 min</time>
+            </div>
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Red-icon.png" class="img-responsive">
+            </div>
+          </div>
+          <div class="row msg_container base_receive">
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Green-icon.png" class="img-responsive">
+            </div>
+            <div class="col-md-10 col-xs-10 messages">
+              <p>Main screen turn on.</p>
+              <time datetime="2009-11-13T20:00">Operator • 1 min</time>
+            </div>
+          </div>
+          <div class="row msg_container base_sent">
+            <div class="col-md-10 col-xs-10 messages">
+              <p>It's you!!</p>
+              <time datetime="2009-11-13T20:00">Captain • 1 min</time>
+            </div>
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Red-icon.png" class="img-responsive">
+            </div>
+          </div>
+          <div class="row msg_container base_receive">
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Executive-Green-icon.png" class="img-responsive">
+            </div>
+            <div class="col-md-10 col-xs-10 messages">
+              <p>How are you gentlemen!!</p>
+              <time datetime="2009-11-13T20:00">CATS • 1 min</time>
+            </div>
+          </div>
+          <div class="row msg_container base_receive">
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Executive-Green-icon.png" class="img-responsive">
+            </div>
+            <div class="col-md-10 col-xs-10 messages">
+              <p>All you base are belong to us.</p>
+              <time datetime="2009-11-13T20:00">CATS • 1 min</time>
+            </div>
+          </div>
+          <div class="row msg_container base_receive">
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Executive-Green-icon.png" class="img-responsive">
+            </div>
+            <div class="col-md-10 col-xs-10 messages">
+              <p>You are on the way to destruction.</p>
+              <time datetime="2009-11-13T20:00">CATS • 1 min</time>
+            </div>
+          </div>
+          <div class="row msg_container base_sent">
+            <div class="col-md-10 col-xs-10 messages">
+              <p>What you say !!</p>
+              <time datetime="2009-11-13T20:00">Captain • 1 min</time>
+            </div>
+            <div class="col-md-2 col-xs-2 avatar">
+              <img src="http://icons.iconarchive.com/icons/hopstarter/soft-scraps/256/User-Coat-Red-icon.png" class="img-responsive">
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <div class="input-group">
+            <input id="btn-input" type="text" class="form-control input-sm chat_input" placeholder="Write your message here..." />
+            <span class="input-group-btn">
+              <button class="btn btn-primary btn-sm" id="btn-chat"><i class="fa fa-send fa-fw"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% end %}

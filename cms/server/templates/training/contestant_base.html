@@ -2,7 +2,11 @@
 
 {% block title %}Contestant{% end %}
 
-{% block head %} {% end %}
+{% block head %}
+<link rel="stylesheet" href="/static/css/flat-ui.css">
+<link rel="stylesheet" href="/static/css/contestant_style.css">
+{% block headextension %} {% end %}
+{% end %}
 
 {% block body %}
 <header class="navbar navbar-default navbar-static-top" role="banner">
@@ -11,13 +15,46 @@
       <a href="#" class="navbar-brand">Holly</a>
     </div>
     <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
-      <ul class="nav navbar-nav navbar-right">
-        {% if current_user.first_name and current_user.last_name %}
-          <li><a>{{ current_user.first_name }} {{ current_user.last_name }}</a></li>
-        {% else %}
-          <li><a>{{ current_user.username }}</a></li>
-        {% end %}
-        <li><a href="/logout">Logout</a></li>
+     <ul class="nav navbar-nav navbar-right">
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                <i class="fa fa-user fa-fw"></i> 
+                <strong>{{ current_user.first_name.capitalize() }} {{ current_user.last_name.capitalize() }}</strong> 
+                <i class="fa fa-chevron-down fa-fw"></i>
+            </a>
+            <ul class="dropdown-menu login-dropdown">
+                <li>
+                    <div class="navbar-login">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <p class="text-center">
+                                    <span class="glyphicon glyphicon-user icon-size"></span>
+                                </p>
+                            </div>
+                            <div class="col-lg-8">
+                                <p class="text-left" style="margin-bottom: 0px;"><strong>{{ current_user.first_name.capitalize() }} {{ current_user.last_name.capitalize() }}</strong></p>
+                                <p class="text-left small">{{ current_user.username }}</p>
+                                <p class="text-left">
+                                    <a href="/user/{{ current_user.id }}" class="btn btn-primary btn-block btn-sm"><i class="fa fa-edit fa-fw"></i> Edit Account</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="divider"></li>
+                <li>
+                    <div class="navbar-login navbar-login-session">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    <a href="/logout" class="btn btn-danger btn-block"><i class="fa fa-power-off fa-fw"></i> Logout</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </li>
       </ul>
     </nav>
   </div>
@@ -25,20 +62,28 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-2">
-      <div class="list-group">
-        <a class ="list-group-item {% if active_sidebar_item == "home" %}active{% end %}" href="/">Home</a>
-        <a class ="list-group-item {% if active_sidebar_item == "problems" %}active{% end %}" href="/problems">Problem Sets</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "competitions" %}active{% end %}" href="#">Competitions</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "history" %}active{% end %}" href="#">History</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "fame" %}active{% end %}" href="#">Hall of Fame</a>
-        <a class ="list-group-item disabled {% if active_sidebar_item == "help" %}active{% end %}" href="#">Help</a>
-        <a class ="list-group-item" href="/admin/problems">Administration</a>
-      </div>
+    <div class="col-md-2 sidebar-wrapper">
+       <nav class="nav-sidebar">
+        <ul class="nav">
+          <li class="{% if active_sidebar_item == "home" %}active{% end %}"><a href="/"><i class="fa fa-home fa-fw"></i> Home</a></li>
+          <li class ="{% if active_sidebar_item == "problems" %}active{% end %}"><a href="/problems"><i class="fa fa-tasks fa-fw"></i> Problem Sets</a></li>
+          <li class ="{% if active_sidebar_item == "competitions" %}active{% end %}"><a href="#"><i class="fa fa-calendar fa-fw"></i> Competitions</a></li>
+          <li class ="{% if active_sidebar_item == "fame" %}active{% end %}"><a href="#"><i class="fa fa-trophy fa-fw"></i> Hall of Fame</a></li>
+          <li class ="{% if active_sidebar_item == "help" %}active{% end %}"><a href="#"><i class="fa fa-question fa-fw"></i> Help</a></li>
+          <li class="nav-divider"></li>
+          <li><a href="/admin/problems"><i class="fa fa-cog fa-fw"></i> Administration</a></li>
+        </ul>
+      </nav>
     </div>
-    <div class="col-md-10">
+    <div class="col-md-10 content-wrapper">
+      <div class="content">
       {% block core %} {% end %}
+      </div>
     </div>
   </div>
 </div>
+{% end %}
+
+{% block tail %}
+{% block scripts %}{% end %}
 {% end %}
