@@ -167,6 +167,17 @@ class User(Base):
         Boolean,
         default=False)
 
+    # 0 = Invalid
+    # 1 = recover
+    # 2 = confirm
+    verification_type = Column(
+        Integer,
+        default=0)
+
+    verification = Column(
+        String,
+        default="")
+         
 
 class Message(Base):
     """Class to store a private message from the managers to the
