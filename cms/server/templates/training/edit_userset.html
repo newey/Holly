@@ -132,10 +132,11 @@ $(document).ready(function() {
 {% end %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New User Set</h1>
+<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit User Set</h1>
 <ol class="breadcrumb">
   <li><a href="/admin/users">Users</a></li>
-  <li class="active">New User Set</li>
+  <li><a href="/admin/user/{{ userset.id }}">{{ userset.name }}</a></li>
+  <li class="active">Edit User Set</li>
 </ol>
 
 <div class="panel panel-default">
@@ -144,13 +145,13 @@ $(document).ready(function() {
       <div class="form-group">
         <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
         <div class="col-sm-7">
-          <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+          <input type="text" class="form-control" id="name" name="name" value="{{ userset.name }}">
         </div>
       </div>
       <div class="form-group">
         <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
         <div class="col-sm-7">
-          <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+          <input type="text" class="form-control" id="title" name="title" value="{{ userset.title }}">
         </div>
       </div>
  
@@ -186,6 +187,17 @@ $(document).ready(function() {
           </tr>
         </thead>
         <tbody>
+          {% for user in selected_users %}
+          <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>
+              <div style="width: 100%;text-align: center;">
+                <button class="btn btn-success btn-xs add-user" type="button"><i class="fa fa-plus fa-fw"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% end %}
         </tbody>
       </table>
     </div>
@@ -207,7 +219,7 @@ $(document).ready(function() {
           </tr>
         </thead>
         <tbody>
-          {% for user in users %}
+          {% for user in unselected_users %}
           <tr>
             <td>{{ user.id }}</td>
             <td>{{ user.username }}</td>
@@ -241,6 +253,17 @@ $(document).ready(function() {
           </tr>
         </thead>
         <tbody>
+        {% for problemset in selected_sets %}
+          <tr>
+            <td>{{ problemset.id }}</td>
+            <td>{{ problemset.name }}</td>
+            <td>
+              <div style="width: 100%;text-align: center;">
+                <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% end %}
         </tbody>
       </table>
     </div>
@@ -262,10 +285,10 @@ $(document).ready(function() {
           </tr>
         </thead>
         <tbody>
-          {% for problem in problem_sets %}
+          {% for problemset in unselected_sets %}
           <tr>
-            <td>{{ problem.id }}</td>
-            <td>{{ problem.name }}</td>
+            <td>{{ problemset.id }}</td>
+            <td>{{ problemset.name }}</td>
             <td>
               <div style="width: 100%;text-align: center;">
                 <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>

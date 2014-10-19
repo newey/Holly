@@ -8,19 +8,7 @@
 {% block title %}Holly{% end %}
 
 {% block js_init %} 
-function filterByGroup() {
-    var options = $("#group-select")[0].options;
-    var i;
-    for (i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        $("#" + options[i].value + "-details").show("fast");
-      } else {
-        $("#" + options[i].value + "-details:visible").hide("fast");
-      }
-    }
-};
 
-$("#group-select").change(filterByGroup);
 {% end %}
 
 {% block core %}
@@ -64,20 +52,27 @@ $("#group-select").change(filterByGroup);
         <h3 class="panel-title">{{ userset.name }}</h3>
       </div>
       <div class="panel-body">
-        {% for user in userset.users %}
-          {{ user.username }}<br>
-        {% end %}
+        <table class="table">
+          <tr>
+            <td>Users</td>
+            <td>{{ len(userset.users) }}</td>
+          </tr>
+          <tr>
+            <td>Problem Sets</td>
+            <td>{{ len(userset.problemSets) }}</td>
+          </tr>
+        </table>
 
-        <form action="/admin/userset/{{ userset.id }}" method="post" style="display: inline;">
-          <button type="submit" class="btn btn-primary" disabled="true"><i class="fa fa-bar-chart fa-fw"></i> Stats</button>
+        <form action="/admin/userset/{{ userset.id }}" method="get" style="display: inline;">
+          <button type="submit" class="btn btn-primary"><i class="fa fa-bar-chart fa-fw"></i> Stats</button>
         </form>
 
         <form action="/admin/userset/{{ userset.id }}/edit" method="get" style="display: inline;">
-          <button type="submit" class="btn btn-success" disabled="true"><i class="fa fa-edit fa-fw"></i> Edit</button>
+          <button type="submit" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
         </form>
 
         <form action="/admin/userset/{{ userset.id }}/delete" method="post" style="display: inline;">
-          <button type="submit" class="btn btn-danger" disabled="true"><i class="fa fa-trash fa-fw"></i> Delete</button>
+          <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
         </form>
       </div>
     </div>
@@ -119,11 +114,7 @@ $("#group-select").change(filterByGroup);
                 </form>
               </td>
               <td style="display: none;">
-=               {% for group in user.userSets %}
-                  {% for set in group.problemSets %}
-                    {{ set.name }}
-                  {% end %}
-                {% end %}
+                {% for set in user.userSets %}{{ set.name }};{% end %}
               </td>
             </tr>
           {% end %}
@@ -139,8 +130,28 @@ $("#group-select").change(filterByGroup);
 <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
 <script>
+  $.fn.dataTable.ext.search.push(
+    function( settings, data, dataIndex ) {
+      var groups = (data[3] || "").split(";");
+      var options = $("#group-select")[0].options;
+      for (var i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          result = false;
+          for (var j = 0; j < groups.length; j++) {
+            if (groups[j] == options[i].value) {
+              result = true;
+            }
+          }
+          if (result == false) {
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+
   $(document).ready(function() {
-    $('#users').dataTable({
+    var userTable = $('#users').DataTable({
       "aoColumnDefs": [
           { 'bSortable': false, 'aTargets': [ 2 ] }
        ],
@@ -152,8 +163,23 @@ $("#group-select").change(filterByGroup);
       "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
       }
     });
-    $('#users_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div><a href="/admin/user/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
+    $('#users_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
     $('#users_length').find("label").empty().append('<label><select name="users_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    function filterByGroup() {
+      var options = $("#group-select")[0].options;
+      var i;
+      for (i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          $("#" + options[i].value + "-details").show("fast");
+        } else {
+          $("#" + options[i].value + "-details:visible").hide("fast");
+        }
+      }
+      userTable.draw();
+    };
+    $("#group-select").change(filterByGroup);
+    
   });
 </script>
 {% end %}
