@@ -780,13 +780,23 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        inputs = dict()
+        outputs = dict()
+
+        # TODO: covert digest
         for testcase in task.active_dataset.testcases.itervalues():
-            print("testcase.codename: "+testcase.codename)
-            print("testcase.input: "+testcase.input)
-            print("pickle.dumps(testcase.input): "+pickle.dumps(testcase.input))
-            print("pickle.dumps(str(testcase.input)): "+pickle.dumps(str(testcase.input)))
+            # print("testcase.codename: "+testcase.codename)
+            # print("testcase.input: "+testcase.input)
+            # print("input_digest decoded: "+self.application.service.file_cacher.get_file_content(testcase.input))
+            inputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.input)
+            outputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.output)
+            print("inputs[testcase.codename]: "+inputs[testcase.codename])
+            print("outputs[testcase.codename]: "+outputs[testcase.codename])
+
 
         self.r_params["active_sidebar_item"] = "problems"
+        self.r_params["inputs"] = inputs
+        self.r_params["outputs"] = outputs
         self.render("admin_problem.html",
                     task=task, **self.r_params)
 
@@ -913,6 +923,12 @@ class AddTestHandler(BaseHandler):
                 self.application.service.file_cacher.put_file_content(
                     output["body"],
                     "Testcase output for task %s" % task.name)
+
+            print("PRINTING DIGESTS")
+            print("input_digest: "+input_digest)
+            print("input_[\"bogy\"]: "+input_["body"])
+            print("input_digest decoded: "+self.application.service.file_cacher.get_file_content(input_digest))
+            
             testcase = Testcase(codename, public, input_digest,
                                     output_digest, dataset=dataset)
             self.sql_session.add(testcase)
