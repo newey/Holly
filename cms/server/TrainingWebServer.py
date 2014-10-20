@@ -780,11 +780,11 @@ class AdminProblemHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        # for testcase in task.active_dataset.testcases.itervalues():
-        #     print("testcase.codename: "+testcase.codename)
-        #     print("testcase.input: "+testcase.input)
-        #     print("pickle.dumps(testcase.input): "+pickle.dumps(testcase.input))
-        #     print("pickle.dumps(str(testcase.input)): "+pickle.dumps(str(testcase.input)))
+        for testcase in task.active_dataset.testcases.itervalues():
+            print("testcase.codename: "+testcase.codename)
+            print("testcase.input: "+testcase.input)
+            print("pickle.dumps(testcase.input): "+pickle.dumps(testcase.input))
+            print("pickle.dumps(str(testcase.input)): "+pickle.dumps(str(testcase.input)))
 
         self.r_params["active_sidebar_item"] = "problems"
         self.render("admin_problem.html",
@@ -1094,6 +1094,10 @@ class SubmitHandler(BaseHandler):
                         filename, self.current_user.username,
                         make_timestamp(self.timestamp)))
                 file_digests[filename] = digest
+
+                ##############################################
+                # print("text/plain: "+self.fetch(digest, "text/plain", filename))
+                ##############################################
 
         # In case of error, the server aborts the submission
         except Exception as error:
