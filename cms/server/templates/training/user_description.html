@@ -74,10 +74,10 @@ $(document).ready(function() {
             <td>{{ user.is_training_admin }}</td>
           </tr>
         </table>
-        <a href="/admin/problem/{{ user.id }}/edit" class="pull-left" style="margin-right: 10px;">
+        <a href="/admin/user/{{ user.id }}/edit" class="pull-left" style="margin-right: 10px;">
           <button type="button" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
         </a>
-        <form action="/admin/problem/{{ user.id }}/delete" method="post">
+        <form action="/admin/user/{{ user.id }}/delete" method="post">
           <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
         </form>
       </div>
@@ -198,7 +198,7 @@ $(document).ready(function() {
     </div>
   </div>
   <div class="col-md-4">
-    <div class="chat-window" id="chatWindow">
+    <!-- <div class="chat-window" id="chatWindow">
       <div class="panel panel-default">
         <div class="panel-heading top-bar">
           <h3 class="panel-title"><i class="fa fa-comments fa-fw"></i> Chat</h3>
@@ -304,7 +304,7 @@ $(document).ready(function() {
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </div>
 {% end %}

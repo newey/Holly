@@ -480,13 +480,21 @@ class BaseHandler(CommonRequestHandler):
         assert pass_len >= 8 and pass_len <= 64,\
             "Password must be between 8 and 64 chars."
         
+        # assert re.match(r'^[\w-@.]+$', attrs["email"]),\
+        #     "Email can only contain alphanumeric characters, @, dots and dashes."
         result = email.utils.parseaddr(attrs["email"])
         assert result[0] != "" or result[1] != "",\
             "Invalid email."        
 
+        fname_len = len(attrs["first_name"])
+        assert fname_len < 56,\
+            "First name must be below 56 chars."
         assert re.match(r'^[\w-]*$', attrs["first_name"]),\
             "First name can only contain alphanumeric characters and dashes."
 
+        lname_len = len(attrs["last_name"])
+        assert lname_len < 56,\
+            "Last name must be below 56 chars."
         assert re.match(r'^[\w-]*$', attrs["last_name"]),\
             "Last name can only contain alphanumeric characters and dashes."
 
@@ -1300,7 +1308,8 @@ class AdminUserHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
-        self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType!=1)
+        self.r_params["specialSets"] = self.sql_session.query(UserSet).filter(UserSet.setType==2)
+        self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType==0)
         self.r_params["users"] = self.sql_session.query(User)
         self.r_params["active_sidebar_item"] = "users"
         self.render("admin_users.html", **self.r_params)
@@ -1361,7 +1370,8 @@ class EditUserHandler(BaseHandler):
             self.get_string(attrs, "username", empty=None)
             self.get_string(attrs, "password", empty=None)
             self.get_string(attrs, "email")
-            is_admin_choice = self.get_argument("is_admin")
+            
+            is_admin_choice = self.get_argument("is_admin", False)
 
             self.check_edit_user_valid_input(attrs)
 

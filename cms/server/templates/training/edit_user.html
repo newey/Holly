@@ -52,29 +52,17 @@
     <label for="name" class="col-sm-4 control-label" style="text-align:left;">Admin</label>
     <div class="col-sm-8">
         {% if user.is_training_admin == True %}
-          <div class="radio">
+          <div class="checkbox">
             <label>
-              <input type="radio" name="is_admin" id="is_admin_True" value=True checked>
-              True
-            </label>
-          </div>
-          <div class="radio">
-            <label>
-              <input type="radio" name="is_admin" id="is_admin_False" value=False> 
-              False
+              <input type="checkbox" name="is_admin" id="is_admin" value=True checked>
+              Admin
             </label>
           </div>
         {% else %}
-          <div class="radio">
+          <div class="checkbox">
             <label>
-              <input type="radio" name="is_admin" id="is_admin_True" value=True>
-              True
-            </label>
-          </div>
-          <div class="radio">
-            <label>
-              <input type="radio" name="is_admin" id="is_admin_False" value=False checked> 
-              False
+              <input type="checkbox" name="is_admin" id="is_admin" value=True>
+              Admin
             </label>
           </div>
         {% end %}

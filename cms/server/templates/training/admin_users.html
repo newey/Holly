@@ -39,6 +39,9 @@
         </div>
         <div class="form-group">
           <select multiple class="form-control" id="group-select" size="6">
+            {% for userset in specialSets %}
+            <option>{{ userset.name }}</option>
+            {% end %}
             {% for userset in sets %}
             <option>{{ userset.name }}</option>
             {% end %}
@@ -46,6 +49,37 @@
         </div>
       </div>
     </div>
+    {% for userset in specialSets %}
+    <div id="{{ userset.name }}-details" class="panel panel-default userset-panel" style="display: none;">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ userset.name }}</h3>
+      </div>
+      <div class="panel-body">
+        <table class="table">
+          <tr>
+            <td>Users</td>
+            <td>{{ len(userset.users) }}</td>
+          </tr>
+          <tr>
+            <td>Problem Sets</td>
+            <td>{{ len(userset.problemSets) }}</td>
+          </tr>
+        </table>
+
+        <form action="/admin/userset/{{ userset.id }}" method="get" style="display: inline;">
+          <button type="submit" class="btn btn-primary"><i class="fa fa-bar-chart fa-fw"></i> Stats</button>
+        </form>
+        <form action="/admin/usersers" method="get" style="display: inline;">
+          <button type="submit" class="btn btn-default" disabled="true"><i class="fa fa-edit fa-fw"></i> Edit</button>
+        </form>
+
+        <form action="/admin/users" method="get" style="display: inline;">
+          <button type="submit" class="btn btn-default" disabled="true"><i class="fa fa-trash fa-fw"></i> Delete</button>
+        </form>
+      </div>
+    </div>
+    {% end %}
+
     {% for userset in sets %}
     <div id="{{ userset.name }}-details" class="panel panel-default userset-panel" style="display: none;">
       <div class="panel-heading">
