@@ -73,7 +73,7 @@ def admin_authenticated(foo):
     def func(self, *args, **kwargs):
         print('self is %s' % self)
         if not self.current_user.is_training_admin:
-            self.redirect("/")
+            self.redirect("/?error=You are not an admin.")
         else:
             return foo(self, *args, **kwargs)
     return func
@@ -322,6 +322,7 @@ class BaseHandler(CommonRequestHandler):
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
+        params["error"] = self.get_argument("error", "")
         return params
 
     def get_task_by_id(self, task_id):
@@ -558,7 +559,6 @@ class LoginHandler(BaseHandler):
 
     """
     def get(self):
-        self.get_string(self.r_params, "error")
         self.render("login.html", **self.r_params)
 
     def post(self):
