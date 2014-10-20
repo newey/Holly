@@ -51,15 +51,19 @@ function submitTest() {
       testPassed();
     } else if (form.hasClass('remove')) {
       var id = form.find('input[name=id]').val();
-      $.ajax( {
-        url: '/admin/problem/{{ task.id }}/test/'+id+'/delete',
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: testPassed,
-        error: testFailed
-      });
+      if (id != "") { 
+        $.ajax( {
+          url: '/admin/problem/{{ task.id }}/test/'+id+'/delete',
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: testPassed,
+          error: testFailed
+        });
+      } else {
+        testPassed();
+      }
     } else {
       alert("Stop doing crazy shit");
     }
@@ -164,7 +168,7 @@ function addNewRow() {
         </tbody> \
       </table> \
     </form>');
-  updateButtons($("#test"+testrows));
+  updateButtons($("#test-form"+testrows));
 };
 $("#addTest").click(addNewRow);
 
