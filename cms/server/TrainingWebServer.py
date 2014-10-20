@@ -99,6 +99,41 @@ def create_training_contest():
 
     return Contest(**attrs)
 
+def getTaskResults(user, task):
+    submission = self.sql_session.query(Submission)\
+        .filter(Submission.user == user)\
+        .filter(Submission.task == task)\
+        .order_by(Submission.timestamp.desc()).first()
+    if submission is None:
+        raise tornado.web.HTTPError(404)
+
+    sr = submission.get_result(task.active_dataset)
+    score_type = get_score_type(dataset=task.active_dataset)
+
+    result = {
+        status: None,
+        max_score: None,
+        score: None,
+    }
+    if sr is None or not sr.compiled():
+        result['status'] = "compiling"
+    elif sr.compilation_failed():
+        result['status'] = "failed_compilation"
+    elif not sr.evaluated():
+        result['status'] = "evaluating"
+    elif not sr.scored():
+        result['status'] = "scoring"
+    else:
+        result['status'] = "ready"
+
+        if score_type is not None and score_type.max_score != 0:
+            result['max_score'] = round(score_type.max_score, task.score_precision)
+        else:
+            result['max_score'] = 0
+        result['score'] = round(sr.score, task.score_precision)
+
+    return result
+
 def argument_reader(func, empty=None):
     """Return an helper method for reading and parsing form values.
 
