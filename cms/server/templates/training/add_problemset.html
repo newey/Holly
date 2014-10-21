@@ -45,26 +45,23 @@ $(document).ready(function() {
     function addProblem () {
       $(this).parents("tr").addClass('move');
       var items = unselectedTable.row('.move').data();
-      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
       selectedTable.row.add(items).draw(false);
       unselectedTable.row('.move').remove().draw( false );
       updateIds();
-      $('.remove-problem.new').click(removeProblem);
-      $('.remove-problem').removeClass("new");
     }
 
     function removeProblem () {
       $(this).parents("tr").addClass('move');
       var items = selectedTable.row('.move').data();
-      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
       unselectedTable.row.add(items).draw(false);
       selectedTable.row('.move').remove().draw( false );
       updateIds();
-      $('.add-problem.new').click(addProblem);
-      $('.add-problem').removeClass("new");
     }
 
-    $('.add-problem').click(addProblem);
+    $(document).on('click', '.add-problem', addProblem);
+    $(document).on('click', '.remove-problem', removeProblem);
 
     $('#unselectedproblems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
     $('#selectedproblems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
