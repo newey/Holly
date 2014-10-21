@@ -41,9 +41,9 @@
           </div>
         -->
 
-        {% for task in problemset.tasks %}
+        {% for (task, result) in tasks %}
         <tr>
-          <td class="status"><span class="glyphicon {% if True %}glyphicon-ok text-success{% else %}glyphicon-minus text-primary{% end %}"></span></td> <!-- TODO check if user has done it -->
+          <td class="status">{{ result['status'] }}<span class="glyphicon {% if result['status'] == "ready" %}glyphicon-ok text-success{% else %}glyphicon-minus text-primary{% end %}"></span></td> <!-- TODO check if user has done it -->
           <td><a href="/problem/{{ task.id }}">{{ task.title }}</a></td>
           <td></td>
           <td></td>
