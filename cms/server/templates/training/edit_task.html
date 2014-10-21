@@ -9,169 +9,6 @@ function showTaskTypeOption() {
 
 showTaskTypeOption();
 $("select[name=task_type]").change(showTaskTypeOption);
-
-var testrows = 0;
-var count = 0;
-
-function testFailed() {
-  var form = $("#test-form"+count);
-  form.addClass('has-error');
-  form.find('tbody tr').addClass("danger");
-  count--;
-  $('#submit-task').prop("disabled", ""); 
-}
-
-function testPassed() {
-  var form = $("#test-form"+count);
-  form.find('input, .btn').prop('disabled', 'true');
-  submitTest();
-}
-
-function submitTest() {
-  count++;
-
-  if (count <= testrows) {
-    var form = $("#test-form"+count);
-    if (form.hasClass('add')) {
-      var formData = new FormData();
-      formData.append("codename", form.find('input[name=codename]').val());
-      formData.append("input", form.find('input[name=input]').prop('files')[0]);
-      formData.append("output", form.find('input[name=output]').prop('files')[0]);
-
-      $.ajax( {
-        url: '/admin/problem/{{ task.id }}/test/add',
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: testPassed,
-        error: testFailed
-      });
-    } else if (form.hasClass('edit')) {
-      testPassed();
-    } else if (form.hasClass('remove')) {
-      var id = form.find('input[name=id]').val();
-      if (id != "") { 
-        $.ajax( {
-          url: '/admin/problem/{{ task.id }}/test/'+id+'/delete',
-          type: "POST",
-          data: formData,
-          processData: false,
-          contentType: false,
-          success: testPassed,
-          error: testFailed
-        });
-      } else {
-        testPassed();
-      }
-    } else {
-      alert("Stop doing crazy shit");
-    }
-  } else {
-    count = 0;
-    window.location.href = "/admin/problem/{{ task.id }}";
-  }
-}
-
-function submittedTask( data ) {
-  $("#task-form").find('input, textarea, select').prop('disabled', 'true');
-  submitTest();
-}
-
-function submitTask() {
-  $('#submit-task').prop("disabled", "true");  
-  if (count == 0) {
-    var taskForm = $("#task-form");
-    $.ajax({
-      type: "POST",
-      url: "/admin/problem/{{ task.id }}/edit",
-      data: taskForm.serialize(),
-      success: submittedTask,
-    });
-  } else {
-    submitTest();
-  }
-}
-$('#submit-task').click(submitTask);
-
-function updateButtons(form) {
-  form.find('.delete-test').click(function() {
-    $(this).parents('form').attr('class', 'remove');
-    row = $(this).parents('tr');
-    row.empty();
-    row.append('<td rowspan="6">Test Deleted</td><td></td><td></td><td></td><td></td><td></td>');
-  });
-};
-
-function addOldRow(id, codename, score) {
-  testrows++;
-  $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="edit"> \
-      <input type="hidden" name="id" value="'+id+'"/> \
-      <table class="table table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
-        <col width="40%"> \
-        <col width="30%"> \
-        <col width="30%"> \
-        <col width="100"> \
-        <col width="70"> \
-        <col width="60"> \
-        <tbody> \
-          <tr> \
-            <td><input type="text" name="codename" class="form-control" value="'+codename+'"/></td> \
-            <td>Input Fie</td> \
-            <td>Ouput File</td> \
-            <td><input type="text" name="score" class="form-control" value="'+score+'"/></td> \
-            <td style="text-align: center;"> \
-              <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-trash fa-fw"></i></button> \
-            </td> \
-            <td> \
-                <label> \
-                  <input type="checkbox" name="public"> \
-                </label> \
-            </td> \
-          </tr> \
-        </tbody> \
-      </table> \
-    </form>');
-  updateButtons($("#test-form"+testrows));
-};
-
-{% for testcase in task.active_dataset.testcases.itervalues() %}
-addOldRow({{ testcase.id }}, "{{ testcase.codename }}", 1);
-{% end %}
-
-function addNewRow() {
-  testrows++;
-  $("#tests").append('<form id="test-form'+testrows+'" role="form" enctype="multipart/form-data" method="post" class="add"> \
-      <input type="hidden" name="id" value=""/> \
-      <table class="table table-bordered" style="margin-bottom: 0px; table-layout: fixed;"> \
-        <col width="40%"> \
-        <col width="30%"> \
-        <col width="30%"> \
-        <col width="100"> \
-        <col width="70"> \
-        <col width="60"> \
-        <tbody> \
-          <tr> \
-            <td><input type="text" id="codename" name="codename" class="form-control"></td> \
-            <td><input type="file" id="input" name="input" class="input-file"></td> \
-            <td><input type="file" id="output" name="output" class="input-file"></td> \
-            <td><input type="text" id="score" name="score" class="form-control"></td> \
-            <td style="text-align: center;"> \
-              <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-close fa-fw"></i></button> \
-            </td> \
-            <td> \
-                <label> \
-                  <input type="checkbox" name="public"> \
-                </label> \
-            </td> \
-          </tr> \
-        </tbody> \
-      </table> \
-    </form>');
-  updateButtons($("#test-form"+testrows));
-};
-$("#addTest").click(addNewRow);
-
 {% end %}
 
 {% block core %}
@@ -321,26 +158,13 @@ $("#addTest").click(addNewRow);
               </div>
             </div>
           </div>
-
-          <div class="form-group" style="display: none;">
-            <label for="score_type" class="col-sm-4 control-label" style="text-align:left;">Score Type</label>
-            <div class="col-sm-8">
-              <select class="form-control" name="score_type">
-                {% for score_type in score_type_list %}
-                  {% if score_type.__name__ == task.active_dataset.score_type %}
-                      <option selected="selected" value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
-                  {% else %}
-                      <option value="{{ score_type.__name__}}">{{score_type.__name__}}</option>
-                  {% end %}
-              {% end %}
-              </select>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </div>
-</form>
+
+<input type="hidden" id="num_tests" name="num_tests" value="0">
+<input type="hidden" id="delete_ids" name="delete_ids" value>
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -353,7 +177,6 @@ $("#addTest").click(addNewRow);
           <col width="40%">
           <col width="30%">
           <col width="30%">
-          <col width="100">
           <col width="70">
           <col width="60">
           <thead>
@@ -361,7 +184,6 @@ $("#addTest").click(addNewRow);
               <th>Name</th>
               <th>Input</th>
               <th>Output</th>
-              <th>Score</th>
               <th>Remove</th>
               <th>Public</th>
             </tr>
@@ -375,5 +197,65 @@ $("#addTest").click(addNewRow);
   </div>
 </div>
  
-<button id="submit-task" type="button" class="btn btn-primary">Save Changes</button>
+<button id="submit-task" type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+{% end %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+  var newItems = 0;
+  var oldItems = 0;
+
+  function addNewRow() {
+    $('#tests').find('tbody').append('\
+      <tr> \
+        <td> \
+          <input type="hidden" class="test-id" name="new-action-'+newItems+'" value="add"> \
+          <input type="text" name="new-codename-'+newItems+'" class="form-control"> \
+        </td> \
+        <td><input type="file" name="new-input-'+newItems+'" class="input-file"></td> \
+        <td><input type="file" name="new-output-'+newItems+'" class="input-file"></td> \
+        <td style="text-align: center;"> \
+          <button id="ignore-test-'+newItems+'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
+        </td> \
+        <td><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
+      </tr>');
+
+    $('#ignore-test-'+newItems).click(function() {
+      $(this).parents('tr').find('.test-id').attr("value", "ignore");
+      $(this).parents('tr').after('<tr><td colspan="5">Test Deleted</td><tr>');
+      $(this).parents('tr').hide();
+    });
+
+    newItems++;
+    $('#num_tests').val(newItems);
+  }
+  $('#addTest').click(addNewRow);
+
+  function addOldRow(id, codename, public) {
+    $('#tests').find('tbody').append('\
+      <tr> \
+        <td>'+ codename +'</td> \
+        <td><Input-Filename></td> \
+        <td><Output-Filename></td> \
+        <td style="text-align: center;"> \
+          <button id="delete-test-'+ oldItems +'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
+        </td> \
+        <td>false</td> \
+      </tr>');
+
+    $('#delete-test-'+ oldItems).click(function() {
+      $('#delete_ids').val($('#delete_ids').val() + " " + id);
+      $(this).parents('tr').after('<tr><td colspan="5">Test Deleted</td><tr>');
+      $(this).parents('tr').hide();
+    });
+
+    oldItems++;
+  }
+  {% for test in task.active_dataset.testcases.itervalues() %}
+  addOldRow({{ test.id }}, "{{ test.codename }}", false);
+  {% end %}
+}); 
+</script>
 {% end %}
