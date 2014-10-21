@@ -333,33 +333,6 @@ class BaseHandler(CommonRequestHandler):
                 return task
         raise KeyError
 
-    def get_submission_format(self, dest):
-        """Parse the submission format.
-
-        Using the two arguments "submission_format_choice" and
-        "submission_format" set the "submission_format" item of the
-        given dictionary.
-
-        dest (dict): a place to store the result.
-
-        """
-        choice = self.get_argument("submission_format_choice", "other")
-        if choice == "simple":
-            filename = "%s.%%l" % dest["name"]
-            format_ = [SubmissionFormatElement(filename)]
-        elif choice == "other":
-            value = self.get_argument("submission_format", "[]")
-            if value == "":
-                value = "[]"
-            format_ = []
-            try:
-                for filename in json.loads(value):
-                    format_ += [SubmissionFormatElement(filename)]
-            except ValueError:
-                raise ValueError("Submission format not recognized.")
-        else:
-            raise ValueError("Submission format not recognized.")
-        dest["submission_format"] = format_
 
     def get_task_type(self, dest, name, params):
         """Parse the task type.
@@ -436,33 +409,6 @@ class BaseHandler(CommonRequestHandler):
             if not 0 < value:
                 raise ValueError("Invalid memory limit.")
             dest["memory_limit"] = value
-
-    def get_score_type(self, dest, name, params):
-        """Parse the score type.
-
-        Parse the arguments to get the score type and its parameters,
-        and fill them in the "score_type" and "score_type_parameters"
-        items of the given dictionary.
-
-        dest (dict): a place to store the result.
-        name (string): the name of the argument that holds the score
-            type name.
-        params (string): the name of the argument that hold the
-            parameters.
-
-        """
-        name = self.get_argument(name, None)
-        if name is None:
-            raise ValueError("Score type not found.")
-        try:
-            get_score_type_class(name)
-        except KeyError:
-            raise ValueError("Score type not recognized: %s." % name)
-        params = self.get_argument(params, None)
-        if params is None:
-            raise ValueError("Score type parameters not found.")
-        dest["score_type"] = name
-        dest["score_type_parameters"] = params
 
     def check_edit_user_valid_input(self, attrs):
         assert attrs.get("username") is not None,\
@@ -708,7 +654,10 @@ class AddProblemHandler(BaseHandler):
             assert attrs.get("name") is not None, "No task name specified."
 
             self.get_string(attrs, "primary_statements")
-            self.get_submission_format(attrs)
+
+            filename = "%s.%%l" % attrs["name"]
+            format_ = [SubmissionFormatElement(filename)]
+            attrs["submission_format"] = format_
 
             attrs["token_mode"] = "disabled"
             attrs["score_precision"] = 0
@@ -731,15 +680,55 @@ class AddProblemHandler(BaseHandler):
             self.get_time_limit(attrs, "time_limit")
             self.get_memory_limit(attrs, "memory_limit")
             self.get_task_type(attrs, "task_type", "TaskTypeOptions_")
-            self.get_score_type(attrs, "score_type", "score_type_parameters")
 
             # Create its first dataset.
             attrs["description"] = "Default"
             attrs["autojudge"] = True
             attrs["task"] = task
+            attrs["score_type"] = "Sum"
+            attrs["score_type_parameters"] = "1"
             dataset = Dataset(**attrs)
             self.sql_session.add(dataset)
 
+        except Exception as error:
+            print(error)
+            self.redirect("/admin/problem/add")
+            return
+
+        numTests = int(self.get_argument("num_tests"))
+        for i in range(0, numTests):
+            
+            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            codename = self.get_argument("new-codename-" + str(i))
+            
+            try:
+                input_ = self.request.files["new-input-" + str(i)][0]
+                output = self.request.files["new-output-" + str(i)][0]
+            except KeyError:
+                print("Couldn't find files for %dth entry" % i)
+                self.redirect("/admin/problem/add")
+                return
+
+            public = self.get_argument("public", None) is not None
+
+            try:
+                input_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        input_["body"],
+                        "Testcase input for task %s" % task.name)
+                output_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        output["body"],
+                        "Testcase output for task %s" % task.name)
+                testcase = Testcase(codename, public, input_digest,
+                                        output_digest, dataset=dataset)
+                self.sql_session.add(testcase)
+            except Exception as error:
+                print(error)
+                self.redirect("/admin/problem/add" % task_id)
+                return
+
+        try:
             # Make the dataset active. Life works better that way.
             task.active_dataset = dataset
             self.sql_session.commit()
@@ -840,8 +829,6 @@ class EditProblemHandler(BaseHandler):
             self.get_string(attrs, "time_limit")
             self.get_string(attrs, "memory_limit")
             self.get_string(attrs, "task_type")
-            self.get_string(attrs, "score_type")
-            self.get_string(attrs, "score_type_parameters")
 
             # save input to task
             task.name = attrs.get("name")
@@ -850,73 +837,78 @@ class EditProblemHandler(BaseHandler):
             task.active_dataset.time_limit = attrs.get("time_limit")
             task.active_dataset.memory_limit = attrs.get("memory_limit")
             task.active_dataset.task_type = attrs.get("task_type")
-            task.active_dataset.score_type = attrs.get("score_type")
-            task.active_dataset.score_type_parameters = attrs.get("score_type_parameters")
-            
-            self.sql_session.commit()
+            task.active_dataset.score_type = "Sum"
+            task.active_dataset.score_type_parameters = "1"
 
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
             print(error)
             return
 
-        self.redirect("/admin/problem/%s" % task_id)
 
-class AddTestHandler(BaseHandler):
-    """Add a testcase to a dataset.
+        #Add New Tests
+        numTests = int(self.get_argument("num_tests"))
+        for i in range(0, numTests):
+            
+            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            codename = self.get_argument("new-codename-" + str(i))
+            
+            try:
+                input_ = self.request.files["new-input-" + str(i)][0]
+                output = self.request.files["new-output-" + str(i)][0]
+            except KeyError:
+                print("Couldn't find files for %dth entry" % i)
+                self.redirect("/admin/problem/%s/edit" % task_id)
+                return
 
-    """
-    @tornado.web.authenticated
-    @admin_authenticated
-    def get(self, task_id):
-        task = self.get_task_by_id(task_id)
-        dataset = task.active_dataset
+            public = self.get_argument("public", None) is not None
 
-        self.r_params = self.render_params()
-        self.r_params["task"] = task
-        self.r_params["dataset"] = dataset
-        self.r_params["active_sidebar_item"] = "problems"
-        self.render("add_testcase.html", **self.r_params)
+            try:
+                input_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        input_["body"],
+                        "Testcase input for task %s" % task.name)
+                output_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        output["body"],
+                        "Testcase output for task %s" % task.name)
+                testcase = Testcase(codename, public, input_digest,
+                                        output_digest, dataset=dataset)
+                self.sql_session.add(testcase)
+            except Exception as error:
+                print(error)
+                self.redirect("/admin/problem/%s/edit" % task_id)
+                return
 
-    @tornado.web.authenticated
-    @admin_authenticated
-    def post(self, task_id):
-        task = self.get_task_by_id(task_id)
-        dataset = task.active_dataset
+        #Delete old tests
+        working = dict()
+        self.get_string(working, "delete_ids")
+        deleteids = working["delete_ids"].strip().split()
 
-        codename = self.get_argument("codename")
+        assert reduce(lambda x, y: x and y.isdigit(), deleteids, True), "Not all problem ids are integers"
+
+        deleteids = map(int, deleteids)
+
+        ## TODO: Ensure all problem ids are actually problems.
+
+        for index, deleteid in enumerate(deleteids):
+            test = self.sql_session.query(Testcase).\
+               filter(Testcase.id == test_id).one()
+            try:
+                self.sql_session.delete(test)
+            except Exception as error:
+                print(error)
+                self.redirect("/admin/problem/%s/edit" % task_id)
+                return
 
         try:
-            input_ = self.request.files["input"][0]
-            output = self.request.files["output"][0]
-        except KeyError:
-            assert attrs.get("codename") is not None, "No test name specified"
-
-            print("Couldn't find files")
-            self.redirect("/admin/problem/%s/test" % task_id)
-            return
-
-        public = self.get_argument("public", None) is not None
-
-        try:
-            input_digest = \
-                self.application.service.file_cacher.put_file_content(
-                    input_["body"],
-                    "Testcase input for task %s" % task.name)
-            output_digest = \
-                self.application.service.file_cacher.put_file_content(
-                    output["body"],
-                    "Testcase output for task %s" % task.name)
-            testcase = Testcase(codename, public, input_digest,
-                                    output_digest, dataset=dataset)
-            self.sql_session.add(testcase)
             self.sql_session.commit()
         except Exception as error:
+            self.redirect("/admin/problem/%s/edit" % task_id)
             print(error)
-            self.redirect("/admin/problem/%s/test" % task_id)
             return
 
-        self.redirect("/admin/problem/%s" % task.id)
+        self.redirect("/admin/problem/%s" % task_id)
 
 class DeleteTestHandler(BaseHandler):
     """Delete a testcase.
@@ -1826,8 +1818,6 @@ _tws_handlers = [
     (r"/admin/problem/add", AddProblemHandler),
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
-    (r"/admin/problem/([0-9]+)/test/add", AddTestHandler),
-    (r"/admin/problem/([0-9]+)/test/([0-9]+)/delete", DeleteTestHandler),
     (r"/admin/problemsets", AdminProblemSetsHandler),
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),
