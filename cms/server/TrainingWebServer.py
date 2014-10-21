@@ -61,7 +61,7 @@ from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
-from cms.grading.scoretypes import get_score_type_class
+from cms.grading.scoretypes import get_score_type_class, get_score_type
 from cms.server import file_handler_gen, get_url_root, \
     CommonRequestHandler
 from cmscommon.datetime import make_datetime, make_timestamp
@@ -214,6 +214,44 @@ class BaseHandler(CommonRequestHandler):
         self.sql_session.add(individualSet)
 
         self.sql_session.commit()
+
+    def get_task_results(self, user, task):
+        result = {
+            "status": None,
+            "max_score": None,
+            "score": None,
+            "percent": None,
+        }
+        submission = self.sql_session.query(Submission)\
+            .filter(Submission.user == user)\
+            .filter(Submission.task == task)\
+            .order_by(Submission.timestamp.desc()).first()
+        
+        if submission is None:
+            result["status"] = "none"
+        else:
+            sr = submission.get_result(task.active_dataset)
+            score_type = get_score_type(dataset=task.active_dataset)
+
+            if sr is None or not sr.compiled():
+                result['status'] = "compiling"
+            elif sr.compilation_failed():
+                result['status'] = "failed_compilation"
+            elif not sr.evaluated():
+                result['status'] = "evaluating"
+            elif not sr.scored():
+                result['status'] = "scoring"
+            else:
+                result['status'] = "ready"
+
+                if score_type is not None and score_type.max_score != 0:
+                    result['max_score'] = round(score_type.max_score, task.score_precision)
+                else:
+                    result['max_score'] = 0
+                result['score'] = round(sr.score, task.score_precision)
+                result['percent'] = round(result['score'] * 100.0 / result['max_score'])
+
+        return result
         
 
     def prepare(self):
@@ -1124,6 +1162,7 @@ class ProblemSetHandler(BaseHandler):
         problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
         self.r_params = self.render_params()
         self.r_params["problemset"] = problemset
+        self.r_params["tasks"] = [(task, self.get_task_results(self.current_user, task)) for task in problemset.tasks]
         self.r_params["active_sidebar_item"] = "problems"
         self.render("problemset.html", **self.r_params)
 
