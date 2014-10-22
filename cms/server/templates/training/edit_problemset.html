@@ -3,6 +3,8 @@
 {% block scripts %}
 <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
@@ -73,6 +75,49 @@ $(document).ready(function() {
 
     $('#unselectedproblems_length').find("label").empty().append('<label><select name="unselectedproblems_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
     $('#selectedproblems_length').find("label").empty().append('<label><select name="selectedproblems_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    $('.editsetform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            name: {
+                message: 'This name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Problem set names cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'Problem set names must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'Problem set names must only consist of underscores and alphanumeric characters'
+                    }
+                }
+            },
+            title: {
+                message: 'This title is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Problem set titles cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'Problem set titles must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                        message: 'Problem set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                    }
+                }
+            }
+        }
+    });
 });
 </script>
 {% end %}
@@ -88,7 +133,7 @@ $(document).ready(function() {
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <form class="form-horizontal" role="form" method="post">
+        <form class="form-horizontal editsetform" role="form" method="post">
           <div class="form-group">
             <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
             <div class="col-sm-7">
@@ -106,9 +151,9 @@ $(document).ready(function() {
           <input type="hidden" id="problemids" name="problemids">
 
           <div class="form-group">
-            <label class="col-md-2 control-label" for="submit"></label>
+            <label class="col-md-2 control-label" for="submitbtn"></label>
             <div class="col-md-7">
-              <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+              <input id="submitbtn" type="submit" value="Submit" class="btn btn-primary">
             </div>
           </div>
         </form>
