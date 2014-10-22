@@ -3,6 +3,8 @@
 {% block scripts %}
 <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     var unselectedproblemSets = $('#unselectedproblemSets').DataTable({
@@ -154,6 +156,49 @@ $(document).ready(function() {
     });
     
     $('ul.setup-panel li.active a').trigger('click');
+
+    $('.addusersetform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            name: {
+                message: 'This name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set names cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set names must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'User set names must only consist of underscores and alphanumeric characters'
+                    }
+                }
+            },
+            title: {
+                message: 'This title is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set titles cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set titles must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                        message: 'User set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                    }
+                }
+            }
+        }
+    });
 });
 </script>
 {% end %}
@@ -164,7 +209,7 @@ $(document).ready(function() {
   <li><a href="/admin/users">Users</a></li>
   <li class="active">New User Set</li>
 </ol>
-<form class="form-horizontal" role="form" method="post">
+<form class="form-horizontal addusersetform" role="form" method="post">
 <div class="panel panel-default">
   <div class="panel-body">
       <div class="form-group">
@@ -316,7 +361,7 @@ $(document).ready(function() {
   </div>  
 </div>
 
-<input id="submit" type="submit" value="Submit" class="btn btn-primary">
+<input type="submit" value="Submit" class="btn btn-primary">
 
 </form>
 {% end %}
