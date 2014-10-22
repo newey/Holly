@@ -4,6 +4,87 @@
 <link href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.css" rel="stylesheet">
 {% end %}
 
+{% block scripts %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#edituserform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            username: {
+                message: 'This username is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Usernames cannot be empty'
+                    },
+                    stringLength: {
+                        min: 4,
+                        max: 24,
+                        message: 'Usernames must be at least 4, and no more than 24 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'Usernames must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            password: {
+                message: 'This password is not valid',
+                validators: {
+                    regexp: {
+                        regexp: /^(|.{8,64})$/,
+                        message: 'Passwords being replaced must be at least 8, and no more than 64 characters long'
+                    }
+                }
+            },
+            first_name: {
+                message: 'This first name is not valid',
+                validators: {
+                    stringLength: {
+                        max: 56,
+                        message: 'First name must be no more than 56 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'First name must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            last_name: {
+                message: 'This last name is not valid',
+                validators: {
+                    stringLength: {
+                        max: 56,
+                        message: 'Last name must be no more than 56 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'Last name must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            email: {
+                message: 'This email is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Email cannot be empty'
+                    },
+                    emailAddress: {
+                        message: 'Email is not valid'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% end %}
+
 {% block core %}
 <h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit User</h1>
 <ol class="breadcrumb">
@@ -14,7 +95,7 @@
 
 <div class="panel panel-default">
   <div class="panel-body">
-    <form class="form-horizontal" role="form" method="post">
+    <form class="form-horizontal" id="edituserform" role="form" method="post">
       <div class="form-group">
         <label for="name" class="col-sm-2 control-label" style="text-align:left;">First Name</label>
         <div class="col-sm-7">
@@ -39,7 +120,7 @@
       <div class="form-group">
         <label for="name" class="col-sm-2 control-label" style="text-align:left;">Password</label>
         <div class="col-sm-7">
-          <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="">
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password (Leave blank to keep the same)" value="">
         </div>
       </div>
         
@@ -74,9 +155,9 @@
       <input type="hidden" id="userids" name="userids">
 
       <div class="form-group">
-        <label class="col-md-2 control-label" for="submit"></label>
+        <label class="col-md-2 control-label" for="submitbtn"></label>
         <div class="col-md-7">
-          <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+          <input id="submitbtn" type="submit" value="Submit" class="btn btn-primary">
         </div>
       </div>
     </form>

@@ -1399,7 +1399,7 @@ class EditUserHandler(BaseHandler):
             self.get_string(attrs, "first_name")
             self.get_string(attrs, "last_name")
             self.get_string(attrs, "username", empty=None)
-            self.get_string(attrs, "password", empty=None)
+            self.get_string(attrs, "password", empty=user.password)
             self.get_string(attrs, "email")
             
             is_admin_choice = self.get_argument("is_admin", False)
