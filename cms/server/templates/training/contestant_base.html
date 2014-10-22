@@ -75,8 +75,10 @@
           <li class ="{% if active_sidebar_item == "competitions" %}active{% end %}"><a href="#"><i class="fa fa-calendar fa-fw"></i> Competitions</a></li>
           <li class ="{% if active_sidebar_item == "fame" %}active{% end %}"><a href="#"><i class="fa fa-trophy fa-fw"></i> Hall of Fame</a></li>
           <li class ="{% if active_sidebar_item == "help" %}active{% end %}"><a href="#"><i class="fa fa-question fa-fw"></i> Help</a></li>
+          {% if current_user.is_training_admin %}
           <li class="nav-divider"></li>
           <li><a href="/admin/problems"><i class="fa fa-cog fa-fw"></i> Administration</a></li>
+          {% end %}
         </ul>
       </div>
       <!-- /.sidebar-collapse -->
