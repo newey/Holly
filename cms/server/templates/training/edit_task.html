@@ -143,8 +143,8 @@ $("select[name=task_type]").change(showTaskTypeOption);
             <label for="name" class="col-sm-4 control-label" style="text-align:left;">Time Limit</label>
             <div class="col-sm-8">
               <div class="input-group">
+                <span class="input-group-addon">Sec</span>
                 <input type="text" class="form-control" id="time_limit" name="time_limit" value="{{ task.active_dataset.time_limit }}" placeholder="Time Limit">
-                <span class="input-group-addon">Sec</span>    
               </div>
             </div>
           </div>
@@ -153,8 +153,8 @@ $("select[name=task_type]").change(showTaskTypeOption);
             <label for="name" class="col-sm-4 control-label" style="text-align:left;">Memory Limit</label>
             <div class="col-sm-8">
               <div class="input-group">
+                <span class="input-group-addon">MiB</span>
                 <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="{{ task.active_dataset.memory_limit }}" placeholder="Time Limit">
-                <span class="input-group-addon">MiB</span>    
               </div>
             </div>
           </div>
@@ -202,6 +202,8 @@ $("select[name=task_type]").change(showTaskTypeOption);
 {% end %}
 
 {% block scripts %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
 <script>
 $(document).ready(function() {
   var newItems = 0;
@@ -256,6 +258,91 @@ $(document).ready(function() {
   {% for test in task.active_dataset.testcases.itervalues() %}
   addOldRow({{ test.id }}, "{{ test.codename }}", false);
   {% end %}
+
+    $('#task-form').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            name: {
+                message: 'This name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set names cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set names must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'User set names must only consist of underscores and alphanumeric characters'
+                    }
+                }
+            },
+            title: {
+                message: 'This title is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set titles cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set titles must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                        message: 'User set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                    }
+                }
+            },
+            TaskTypeOptions_Batch_io_0_inputfile: {
+                message: 'Invalid input file name',
+                validators: {
+                    regexp: {
+                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                        message: "Filename must be empty, or alphanumeric with at most one period in it"
+                    }
+                }
+            },
+            TaskTypeOptions_Batch_io_1_outputfile: {
+                message: 'Invalid output file name',
+                validators: {
+                    regexp: {
+                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                        message: "Filename must be empty, or alphanumeric with at most one period in it"
+                    }
+                }
+            },
+            time_limit: {
+                message: "Invalid time timit",
+                validators: {
+                    notEmpty: {
+                        message: "Time limit must not be blank"
+                    },
+                    numeric: {
+                        separator: ".",
+                        message: "Time limit must be numeric"
+                    }
+                }
+            },
+            memory_limit: {
+                message: "Invalid memory timit",
+                validators: {
+                    notEmpty: {
+                        message: "Memory limit must not be blank"
+                    },
+                    numeric: {
+                        separator: ".",
+                        message: "Memory limit must be numeric"
+                    }
+                }
+            }
+        }
+    });
 }); 
 </script>
 {% end %}
