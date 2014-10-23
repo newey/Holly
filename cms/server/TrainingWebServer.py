@@ -1841,7 +1841,7 @@ class EmailConfirmationHandler(BaseHandler):
             self.redirect("/login?error=%s" % error)
             return
 
-        self.render("confirm_email.html")
+        self.render("confirm_email.html", **self.r_params)
 
     def post(self, user_id):
         try:
