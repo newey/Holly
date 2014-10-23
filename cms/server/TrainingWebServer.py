@@ -1807,7 +1807,7 @@ class PasswordChangeHandler(BaseHandler):
         
         if verification != user.verification:
             error = "Invalid verification code"
-            self.redirect("/change_password?error=%s" % error)
+            self.redirect("/change_password/%s?error=%s" % (user_id, error))
             return
 
         try:
@@ -1818,7 +1818,7 @@ class PasswordChangeHandler(BaseHandler):
             user.verification_type = 0 
             self.sql_session.commit()
         except Exception as error:
-            self.redirect("/change_password?error=%s" % error)
+            self.redirect("/change_password/%s?error=%s" % (user_id, error))
             return
 
         self.redirect("/login")
@@ -1860,14 +1860,14 @@ class EmailConfirmationHandler(BaseHandler):
         
         if verification != user.verification:
             error = "Invalid verification code"
-            self.redirect("/confirm_email?error=%s" % error)
+            self.redirect("/confirm_email/%s?error=%s" % (user_id, error))
             return
 
         try:
             user.verification_type = 0 
             self.sql_session.commit()
         except Exception as error:
-            self.redirect("/confirm_email?error=%s" % error)
+            self.redirect("/confirm_email/%s?error=%s" % (user_id, error))
             return
 
         self.set_secure_cookie("login",

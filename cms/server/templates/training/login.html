@@ -15,7 +15,6 @@ function getUrlParameter(sParam) {
 var errMsg = getUrlParameter("error");
 
 if (errMsg.length > 0) {
-console.log(errMsg);
 $(loginalert).show();
 $(loginalert).html(decodeURIComponent(errMsg));
 }
