@@ -12,30 +12,77 @@
 {% block core %}
 <h1 class="page-header">Submissions</h1>
 
-<table id="submissions" class="table table-hover">
-  <col width="100">
-  <col>
-  <col>
-  <col width="60">
-  <thead>
-    <tr>
-      <th>Compliation</th>
-      <th>Compliation Text</th>
-      <th>Result</th>
-      <th>Score</th>
-    </tr>
-  </thead>
-  <tbody>
+<div class="panel-group" id="accordion">
+  {% set count = 0 %}
   {% for submission in submissions %}
   {% for result in submission.results %}
-	<tr>
-	  <td>{{ result.compilation_outcome }}</td>
-      <td>{{ result.compilation_text }}</td>
-      <td>{{ result.evaluation_outcome }}</td>
-      <td>{{ result.score_details }}</td>
-	</tr>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ count = count + 1 }}">
+          Submission #{{ count }} <span class="pull-right">{{ submission.timestamp }}</span>
+        </a>
+      </h4>
+    </div>
+    <div id="collapse{{ count }}" class="panel-collapse collapse {% if (count == 1) %}out{% else %}in{% end %}">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table">
+              <tbody>
+              <tr>
+                <td>Compiled:</td>
+                <td>
+                  {% if result.compilation_failed() %}
+                  <i class="fa fa-times text-danger fa-fw"></i> Failed <button class="btn btn-xs btn-danger pull-right">View</button>{% else %}
+                  <i class="fa fa-check text-success fa-fw"></i> Correctly {% end %}
+                </td>
+              </tr>
+              <tr>
+                <td>Evaluated:</td>
+                <td>
+                  {% if result.compilation_failed() %}
+                  <i class="fa fa-minus text-info fa-fw"></i>{% elif result.evaluated() %}
+                  <i class="fa fa-check text-success fa-fw"></i> Finished {% else %}
+                  <i class="fa fa-refresh text-info fa-fw"></i> Processing {% end %}
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <td>Score:</td>
+                  <td>
+                    {{ int(result.score) }} / {{ int(score_type.max_score) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2">
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-{% if (result.score == score_type.max_score) %}success{% else %}warning{% end %}" role="progressbar" aria-valuenow="{{ (result.score / score_type.max_score) * 100 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ (result.score / score_type.max_score) * 100 }}%; margin-bottom: 0px;">
+                        <span class="sr-only">{{ (result.score / score_type.max_score) * 100 }}% Complete</span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   {% end %}
   {% end %}
-  </tbody>
-</table>
+</div>
+{% end %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function(){
+    $('.collapse').collapse();
+  });
+</script>
 {% end %}
