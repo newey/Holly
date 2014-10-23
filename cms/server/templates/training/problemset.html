@@ -2,12 +2,14 @@
 
 {% block title %}Holly{% end %}
 
-{% block core %}
-  <ol class="breadcrumb page-breadcrumb">
-    <li><a href="/problems">Problems</a></li>
-    <li>{{ problemset.title }}</li>
-  </ol>
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li><a href="/problems"><i class="fa fa-tasks fa-fw"></i></a></li>
+  <li>{{ problemset.title }}</li>
+</ol>
+{% end %}
 
+{% block core %}
   <h1 class="page-header">{{ problemset.title }}</h1>
 
   <p>Some kind of longer description probably goes here.</p>
@@ -44,7 +46,7 @@
         {% for (task, result) in tasks %}
         <tr>
           <td class="status">{{ result['status'] }}<span class="glyphicon {% if result['status'] == "ready" %}glyphicon-ok text-success{% else %}glyphicon-minus text-primary{% end %}"></span></td> <!-- TODO check if user has done it -->
-          <td><a href="/problem/{{ task.id }}">{{ task.title }}</a></td>
+          <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }}</a></td>
           <td></td>
           <td></td>
         </tr>

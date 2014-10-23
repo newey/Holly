@@ -784,15 +784,17 @@ class ProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
-    def get(self, task_id):
+    def get(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
         self.r_params["active_sidebar_item"] = "problems"
-        self.render("task_description.html",
-                    task=task, **self.r_params)
+        self.r_params["task"] = task
+        self.r_params["problemset"] = problemset
+        self.render("task_description.html", **self.r_params)
 
 class AdminProblemHandler(BaseHandler):
     """Shows the data of a task.
@@ -1845,7 +1847,7 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
-    (r"/problem/([0-9]+)", ProblemHandler),
+    (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
     (r"/problemset/([0-9]+)", ProblemSetHandler),
