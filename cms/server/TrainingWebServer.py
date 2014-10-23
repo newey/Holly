@@ -668,10 +668,10 @@ class SignupHandler(BaseHandler):
             return
 
         # Send the email
-        message = """To confirm your email please use the following verification code: 
-                     %s
-                     If you did not request a new password ignore this email\
-                     and contact an admin.\n""" % user.verification 
+        message = ("To confirm your email please use the following verification code:\n" +
+                   "%s\n" +
+                   "If you did not request a new password ignore this email " +
+                   "and contact an admin.\n") % user.verification
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly email confirmation"
@@ -1757,10 +1757,10 @@ class PasswordRecoveryHandler(BaseHandler):
             return
 
         # Send the email
-        message = """To update your password please use the following verification code: 
-                     %s
-                     If you did not request a new password ignore this email\
-                     and contact an admin.\n""" % code 
+        message = ("To update your password please use the following verification code:\n" +
+                     "%s\n" +
+                     "If you did not request a new password ignore this email "
+                     "and contact an admin.\n") % code
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly password recovery"
