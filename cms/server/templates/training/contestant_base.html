@@ -36,7 +36,7 @@
                   <p class="text-left" style="margin-bottom: 0px;"><strong>{{ current_user.first_name.capitalize() }} {{ current_user.last_name.capitalize() }}</strong></p>
                   <p class="text-left small">{{ current_user.username }}</p>
                   <p class="text-left">
-                    <a href="/user/{{ current_user.id }}" class="btn btn-primary btn-block btn-sm"><i class="fa fa-edit fa-fw"></i> Edit Account</a>
+                    <a href="/user" class="btn btn-primary btn-block btn-sm"><i class="fa fa-edit fa-fw"></i> Edit Account</a>
                   </p>
                 </div>
               </div>
@@ -88,9 +88,12 @@
 </nav>
 
 <div class="container">
-<div id="page-wrapper">
-  {% block core %}{% end %}
-</div>
+  <div id="page-breadcrumbs">
+    {% block breadcrumbs %}{% end %}
+  </div>
+  <div id="page-wrapper">
+    {% block core %}{% end %}
+  </div>
 </div>
 {% end %}
 

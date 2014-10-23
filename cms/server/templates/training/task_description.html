@@ -1,31 +1,30 @@
 {% extends contestant_base.html %}
 
-{% block core %}
+{% block breadcrumbs %}
 <ol class="breadcrumb">
-  <li><a href="/">Home</a></li>
+  <li><a href="/"><i class="fa fa-tasks fa-fw"></i></a></li>
+  <li><a href="/problemset/{{ problemset.id }}">{{ problemset.title }}</a></li>
   <li class="active">{{ task.title }}</li>
 </ol>
+{% end %}
+
+{% block core %}
 
 {% raw task.primary_statements %}
 
 <h3>Submit a solution</h3>
 
-<form class="form-horizontal" role="form" method="post" action="/problem/{{ task.id }}/submit" enctype="multipart/form-data">
+<form role="form" role="form" method="post" action="/problem/{{ problemset.id }}/{{ task.id }}/submit" enctype="multipart/form-data">
   {% for idx, filename in enumerate(x.filename for x in task.submission_format) %}
   <div class="form-group">
-    <label class="col-md-2 control-label" for="{{ filename }}" style="text-align:left;">{{ filename.replace(".%l", "") }}</label>
-    <div class="col-md-7">
-      <input id="{{ filename }}" name="{{ filename }}" class="input-file" type="file">
-    </div>
+    <label for="{{ filename }}" style="line-height: normal;">{{ filename.replace(".%l", "").capitalize() }}</label>
+    <input id="{{ filename }}" name="{{ filename }}" class="input-file" type="file">
   </div>
   {% end %}
 
-
   <div class="form-group">
-    <label class="col-md-2 control-label" for="submit"></label>
-    <div class="col-md-7">
-      <input id="submit" type="submit" value="Submit" class="btn btn-primary">
-    </div>
+    <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+    <a href="/problem/{{ problemset.id }}/{{ task.id}}/submissions"><button class="btn btn-info" type="button">View Submissions</button></a>
   </div>
 </form>
 
