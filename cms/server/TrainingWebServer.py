@@ -617,6 +617,13 @@ class LoginHandler(BaseHandler):
         self.redirect(next_page)
 
 class SignupHandler(BaseHandler):
+    """Signup handler.
+
+    """
+    def get(self):
+        self.get_string(self.r_params, "error")
+        self.render("signup.html", **self.r_params)
+
     def post(self):
         try:
             attrs = dict()
@@ -661,10 +668,10 @@ class SignupHandler(BaseHandler):
             return
 
         # Send the email
-        message = """To confirm your email please use the following verification code: 
-                     %s
-                     If you did not request a new password ignore this email\
-                     and contact an admin.\n""" % user.verification 
+        message = ("To confirm your email please use the following verification code:\n" +
+                   "%s\n" +
+                   "If you did not request a new password ignore this email " +
+                   "and contact an admin.\n") % user.verification
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly email confirmation"
@@ -1750,10 +1757,10 @@ class PasswordRecoveryHandler(BaseHandler):
             return
 
         # Send the email
-        message = """To update your password please use the following verification code: 
-                     %s
-                     If you did not request a new password ignore this email\
-                     and contact an admin.\n""" % code 
+        message = ("To update your password please use the following verification code:\n" +
+                     "%s\n" +
+                     "If you did not request a new password ignore this email "
+                     "and contact an admin.\n") % code
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly password recovery"
@@ -1781,7 +1788,7 @@ class PasswordChangeHandler(BaseHandler):
             self.redirect("/recover_password?error=%s" % error)
             return
 
-        self.render("change_password.html")
+        self.render("change_password.html", **self.r_params)
 
     def post(self, user_id):
         try:
@@ -1834,7 +1841,7 @@ class EmailConfirmationHandler(BaseHandler):
             self.redirect("/login?error=%s" % error)
             return
 
-        self.render("confirm_email.html")
+        self.render("confirm_email.html", **self.r_params)
 
     def post(self, user_id):
         try:
