@@ -128,6 +128,46 @@ def argument_reader(func, empty=None):
     return helper
 
 
+def send_mail(mime_message):
+    """Sends a MIME message as configured in cms.conf, and will ignore messages if message sending
+    is turned off in the config.
+
+    mime_message (email.mime.*): message to send, must have 'To' field defined.
+
+    return (boolean): True if a message was send, False otherwise
+
+    """
+    if config.training_send_mail:
+        try:
+            mime_message['From'] = config.training_email_address
+            s = smtplib.SMTP(config.training_smtp_server_address, config.training_smtp_server_port)
+            if config.training_smtp_server_use_tls:
+                s.starttls()
+                s.ehlo()
+            if config.training_smtp_server_authenticate:
+                s.login(config.training_smtp_server_username, config.training_smtp_server_password)
+            s.sendmail(mime_message['From'], [mime_message['To']], mime_message.as_string())
+            s.quit()
+            return True
+        except smtplib.SMTPServerDisconnected:
+            logger.exception("SMTP server disconnected while sending message")
+        except smtplib.SMTPSenderRefused:
+            logger.exception("SMTP server refused the sender address")
+        except smtplib.SMTPRecipientsRefused:
+            logger.exception("SMTP server refused the recipient addresses")
+        except smtplib.SMTPDataError:
+            logger.exception("SMTP server refused the message data")
+        except smtplib.SMTPConnectError:
+            logger.exception("SMTP server refused the connection")
+        except smtplib.SMTPHeloError:
+            logger.exception("SMTP server refused our HELO message")
+        except smtplib.SMTPAuthenticationError:
+            logger.exception("SMTP server refused Authentication")
+        except Exception as e:
+            logger.exception("caught: %s" % e.message)
+    return False
+
+
 class BaseHandler(CommonRequestHandler):
     """Base RequestHandler for this application.
 
@@ -646,12 +686,9 @@ class SignupHandler(BaseHandler):
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly email confirmation"
-        msg['From'] = "admin@holly.com"
         msg['To'] = user.email
 
-        s = smtplib.SMTP('localhost')
-        s.sendmail(msg['From'], [msg['To']], msg.as_string())
-        s.quit()
+        send_mail(msg)
 
         self.redirect("/confirm_email/%s" % user.id)
 
@@ -1752,12 +1789,9 @@ class PasswordRecoveryHandler(BaseHandler):
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly password recovery"
-        msg['From'] = "admin@holly.com"
         msg['To'] = user.email
 
-        s = smtplib.SMTP('localhost')
-        s.sendmail(msg['From'], [msg['To']], msg.as_string())
-        s.quit()
+        send_mail(msg)
 
         self.redirect("/change_password/%s" % user.id)
 
