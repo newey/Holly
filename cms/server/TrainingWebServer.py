@@ -617,6 +617,13 @@ class LoginHandler(BaseHandler):
         self.redirect(next_page)
 
 class SignupHandler(BaseHandler):
+    """Signup handler.
+
+    """
+    def get(self):
+        self.get_string(self.r_params, "error")
+        self.render("signup.html", **self.r_params)
+
     def post(self):
         try:
             attrs = dict()
@@ -1781,7 +1788,7 @@ class PasswordChangeHandler(BaseHandler):
             self.redirect("/recover_password?error=%s" % error)
             return
 
-        self.render("change_password.html")
+        self.render("change_password.html", **self.r_params)
 
     def post(self, user_id):
         try:
