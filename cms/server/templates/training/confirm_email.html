@@ -1,6 +1,23 @@
 {% extends base.html %}
 
 {% block js_init %}
+function getUrlParameter(sParam) {
+   var sPageURL = $(location).attr('search').slice(1)
+   var sURLVariables = sPageURL.split('&');
+   for (var i = 0; i < sURLVariables.length; i++) {
+       var sParameterName = sURLVariables[i].split('=');
+       if (sParameterName[0] == sParam) {
+           return sParameterName[1];
+       }
+   }
+   return "";
+}
+var errMsg = getUrlParameter("error");
+
+if (errMsg.length > 0) {
+$(confirmemailalert).show();
+$(confirmemailalert).html(decodeURIComponent(errMsg));
+}
 {% end %}
 
 {% block title %}Verify email{% end %}
@@ -16,11 +33,11 @@
 		<div class="panel panel-info" >
 			<div class="panel-heading">
 				<div class="panel-title">Verify Email</div>
-				<div style="float:right; font-size: 85%; position: relative; top:-10px"><a id="signinlink" href="login">Sign In</a></div>
+				<div style="float:right; font-size: 85%; position: relative; top:-10px"><a id="signinlink" href="/login">Sign In</a></div>
 			</div>
 			<div style="padding-top:30px" class="panel-body" >
 
-				<div style="display:none" id="login-alert" class="alert alert-danger col-sm-12"></div>
+				<div style="display:none" id="confirmemailalert" class="alert alert-danger col-sm-12"></div>
 
 				<form id="verificationform" class="form-horizontal" role="form" method="POST">
 
