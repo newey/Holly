@@ -145,7 +145,7 @@
 
     "_help": "SMTP server information to send emails to users, this is",
     "_help": "required only when training_send_mail is true.",
-    "training_email_address": "holly@nuiz.org",
+    "training_email_address": "",
     "training_smtp_server_address": "",
     "training_smtp_server_port": 587,
     "training_smtp_server_use_tls": false,
