@@ -12,43 +12,63 @@
 {% block core %}
   <h1 class="page-header">{{ problemset.title }}</h1>
 
-  <p>Some kind of longer description probably goes here.</p>
-  <p>Maybe it could motivate the user to do the problem sets by explaining what the theme of the set is</p>
-
-  <p></p>
-
-  <div class="panel panel-default">
-    <!-- Default panel contents -->
-    <div class="panel-heading"><span>Problems</span></div>
-    <table id="problem-table" class="table table-hover">
-      <col width="100">
+  <div class="responsive-table">
+    <table id="problemsTable" class="table">
+      <col width="80">
       <col>
-      <col>
-      <col width="60">
-      <tbody>
-
-        <!-- Status Minus
-          <td class="status"><span class="glyphicon glyphicon-minus text-primary"><span></td>
-        -->
-
-        <!-- Status ok
-          <td class="status"><span class="glyphicon glyphicon-ok text-success"><span></td>
-        -->
-
-        <!-- Partial Completion
-          <div class="progress">
-            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="40" style="width: [[percent]]%;">
-              <span class="sr-only">[[percent]]% Complete</span>
-            </div>
-          </div>
-        -->
-
-        {% for (task, result) in tasks %}
+      <col width="150">
+      <col width="180">
+      <thead>
         <tr>
-          <td class="status">{{ result['status'] }}<span class="glyphicon {% if result['status'] == "ready" %}glyphicon-ok text-success{% else %}glyphicon-minus text-primary{% end %}"></span></td> <!-- TODO check if user has done it -->
-          <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }}</a></td>
-          <td></td>
-          <td></td>
+          <th>Status</th>
+          <th>Problem</th>
+          <th>Message</th>
+          <th>Options</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for task in problemset.tasks %}
+        {% set s = statuses[task.id] %}
+        {% if s["status"] == "failed_compilation" %}
+          <tr class="danger">
+            <td class="status"><i class="fa fa-times fa-fw text-danger"></i></td>
+            <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }} </a></td>
+            <td class="text-danger" style="font-size: 12px">Compilation Failed</td>
+        {% elif s["status"] == "evaluating" %}
+          <tr class="info">
+            <td class="status"><i class="fa fa-spinner fa-fw text-info"></i></td>
+            <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }} </a></td>
+            <td class="text-info" style="font-size: 12px">Evaluating</td>
+        {% elif s["status"] == "scoring" %}
+          <tr class="info">
+            <td class="status"><i class="fa fa-spinner fa-fw text-info"></i></td>
+            <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }} </a></td>
+            <td class="text-info" style="font-size: 12px">Scoring</td>
+        {% elif s["status"] == "ready" %}
+          {% if s["max_score"] == s["score"] %}
+            <tr class="success">
+              <td class="status"><i class="fa fa-check fa-fw text-success"></i></td>
+              <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }} </a></td>
+              <td class="text-success" style="font-size: 12px">Accepted</td>
+          {% else %}
+            <tr class="warning">
+              <td class="status">
+                <div class="progress">
+                  <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="{{ (s["percent"] / 100) * 40 }}" aria-valuemin="0" aria-valuemax="40" style="width: {{ s["percent"] }}%; margin-bottom: 0px;">
+                    <span class="sr-only">{{ s["percent"] }}% Complete</span>
+                  </div>
+                </div>
+              </td>
+              <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }} </a></td>
+              <td class="text-warning" style="font-size: 12px">{{ int(s["percent"]) }}% Completed</td>
+          {% end %}
+        {% else %}
+          <tr>
+            <td class="status"><i class="fa fa-minus fa-fw"></i></td>
+            <td><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }} </a></td>
+            <td style="font-size: 12px">Not Attempted</td>
+        {% end %}
+          <td class="table-options"><a href="/problem/{{ problemset.id }}/{{ task.id }}"><button class="btn btn-xs btn-primary">Attempt</button></a> <a href="/problem/{{ problemset.id }}/{{ task.id }}/submissions"><button class="btn btn-xs btn-info">Submissions</button></a></td>
         </tr>
         {% end %}
       </tbody>

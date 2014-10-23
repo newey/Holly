@@ -1184,8 +1184,16 @@ class ProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, set_id):
         problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        statuses = dict()
+        try:
+            for task in problemset.tasks:
+                statuses[task.id] = self.get_task_results(self.current_user, task)
+        except KeyError:
+            raise tornado.web.HTTPError(404)  
+
         self.r_params = self.render_params()
         self.r_params["problemset"] = problemset
+        self.r_params["statuses"] = statuses
         self.r_params["tasks"] = [(task, self.get_task_results(self.current_user, task)) for task in problemset.tasks]
         self.r_params["active_sidebar_item"] = "problems"
         self.render("problemset.html", **self.r_params)

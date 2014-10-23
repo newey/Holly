@@ -16,6 +16,17 @@ body {
     border: none;
 }
 
+#problemsTable thead tr {
+  background-color: #34495E;
+  color: #ECF0F1;
+  border-bottom: 1px solid #34495E !important;
+}
+
+#problemsTable tr {
+  border-bottom: 1px solid #34495E !important;
+  border-top: none !important;
+}
+
 .status .progress {
   height: 14px;
   margin-top: 3px;
