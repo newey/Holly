@@ -1,53 +1,139 @@
 {% extends contestant_base.html %}
 
-{% block core %}
+{% block breadcrumbs %}
 <ol class="breadcrumb">
-  <li><a href="/">Home</a></li>
+  <li><a href="/"><i class="fa fa-home fa-fw"></i> Home</a></li>
+  <li>{{ current_user.first_name.capitalize() }}</li>
 </ol>
+{% end %}
 
-<form class="form-horizontal" method="POST">
-<fieldset>
+{% block scripts %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#edituserform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            username: {
+                message: 'This username is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Usernames cannot be empty'
+                    },
+                    stringLength: {
+                        min: 4,
+                        max: 24,
+                        message: 'Usernames must be at least 4, and no more than 24 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'Usernames must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            password: {
+                message: 'This password is not valid',
+                validators: {
+                    regexp: {
+                        regexp: /^(|.{8,64})$/,
+                        message: 'Passwords being replaced must be at least 8, and no more than 64 characters long'
+                    }
+                }
+            },
+            first_name: {
+                message: 'This first name is not valid',
+                validators: {
+                    stringLength: {
+                        max: 56,
+                        message: 'First name must be no more than 56 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'First name must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            last_name: {
+                message: 'This last name is not valid',
+                validators: {
+                    stringLength: {
+                        max: 56,
+                        message: 'Last name must be no more than 56 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'Last name must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            email: {
+                message: 'This email is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Email cannot be empty'
+                    },
+                    emailAddress: {
+                        message: 'Email is not valid'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% end %}
 
-<legend>Edit Account</legend>
+{% block core %}
+<h1 class="page-header">Edit Account</h1>
 
-<div class="control-group">
-  <label class="control-label" for="first_name">First Name</label>
-  <div class="controls">
-    <input name="first_name" type="text" value="{{ current_user.first_name }}" class="input-xlarge">
+<form class="form-horizontal" method="POST" id="edituserform">
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label" style="text-align:left;">First Name</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name" value="{{ current_user.first_name }}">
+    </div>
+  </div>
     
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Last Name</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name" value="{{ current_user.last_name }}">
+    </div>
   </div>
-</div>
-
-<div class="control-group">
-  <label class="control-label" for="last_name">Last Name</label>
-  <div class="controls">
-    <input name="last_name" type="text" value="{{ current_user.last_name }}" class="input-xlarge">
     
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Username</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="username" name="username" placeholder="Username" value="{{ current_user.username }}">
+    </div>
   </div>
-</div>
-
-<div class="control-group">
-  <label class="control-label" for="email">Email</label>
-  <div class="controls">
-    <input name="email" type="text" value="{% if current_user.email is not None %}{{ current_user.email }}{% end %}" class="input-xlarge">
     
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Password</label>
+    <div class="col-sm-7">
+      <input type="password" class="form-control" id="password" name="password" placeholder="Password (Leave blank to keep the same)" value="">
+    </div>
   </div>
-</div>
-
-<div class="control-group">
-  <label class="control-label" for="password">Password</label>
-  <div class="controls">
-    <input name="password" type="text" value="" class="input-xlarge">
+    
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label" style="text-align:left;">Email</label>
+    <div class="col-sm-7">
+      <input type="text" class="form-control" id="email" name="email" placeholder="Email" value="{{ current_user.email }}">
+    </div>
   </div>
-</div>
 
-<input type="submit" value="Submit">
-
-</fieldset>
+  <div class="form-group">
+    <label class="col-md-2 control-label" for="submitbtn"></label>
+    <div class="col-md-7">
+      <input id="submitbtn" type="submit" value="Save Changes" class="btn btn-primary">
+      <button type="button" action="deleteAccount.post();" class="btn btn-danger">Delete</button>
+    </div>
+  </div>
 </form>
-
-<form action="/user/delete"  method="POST">
-    <input type="submit" value="Submit">  
-</form>
-
+<form id="deleteAccount" action="/user/delete"  method="POST"></form>
 {% end %}

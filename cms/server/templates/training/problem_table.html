@@ -1,0 +1,114 @@
+<table id="problemsets" class="table">
+  <col width="80">
+  <col>
+  <col>
+  <col width="30">
+  <col width="30">
+  <col width="40">
+  <tbody>
+
+    <!-- Status Minus
+      <td class="status"><span class="glyphicon glyphicon-minus text-primary"><span></td>
+    -->
+
+    <!-- Status ok
+      <td class="status"><span class="glyphicon glyphicon-ok text-success"><span></td>
+    -->
+
+    <!-- Partial Completion
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="40" style="width: [[percent]]%;">
+          <span class="sr-only">[[percent]]% Complete</span>
+        </div>
+      </div>
+    -->
+
+    {% for set in sets %}
+    <tr class="outerRow" data-id="{{ set.id }}">
+      <td class="status"><i class="fa fa-minus fa-fw text-primary"></i></td>
+      <td><a href="/problemset/{{ set.id }}">{{ set.title }}</a></td>
+      <td>{{ len(set.tasks) }} problem{% if len(set.tasks) != 1 %}s{% end %}</td>
+      <td class="table-options"><a href="/problemset/{{ set.id }}"><i class="fa fa-edit fa-fw"></i></a></td>
+      <td class="table-options">
+        <span class="expandset glyphicon glyphicon-chevron-right"></span> 
+      </td>
+      <td class="table-options"> 
+        <span class="{% if set.isPinned(current_user) %}pinned text-danger {% else %}unpinned {% end %}glyphicon glyphicon-pushpin"></span>
+      </td>
+    </tr>
+    <tr class="innerRow" style="display: none">
+      <td class="inner" colspan="6">
+        <div class="innerRow-container">
+          <table class="table">
+            <col width="80">
+            <col>
+            <col width="150">
+            <col width="40">
+            <tbody>
+              {% for task in set.tasks %}
+              {% set s = statuses[task.id] %}
+              {% if s["status"] == "failed_compilation" %}
+                <tr class="danger">
+                  <td class="status"><i class="fa fa-times fa-fw text-danger"></i></td>
+                  <td><a href="/problem/{{ set.id }}/{{ task.id }}">{{ task.title }} </a></td>
+                  <td class="text-danger" style="font-size: 12px">Compilation Failed</td>
+              {% elif s["status"] == "evaluating" %}
+                <tr class="info">
+                  <td class="status"><i class="fa fa-spinner fa-fw text-info"></i></td>
+                  <td><a href="/problem/{{ set.id }}/{{ task.id }}">{{ task.title }} </a></td>
+                  <td class="text-info" style="font-size: 12px">Evaluating</td>
+              {% elif s["status"] == "scoring" %}
+                <tr class="info">
+                  <td class="status"><i class="fa fa-spinner fa-fw text-info"></i></td>
+                  <td><a href="/problem/{{ set.id }}/{{ task.id }}">{{ task.title }} </a></td>
+                  <td class="text-info" style="font-size: 12px">Scoring</td>
+              {% elif s["status"] == "ready" %}
+                {% if s["max_score"] == s["score"] %}
+                  <tr class="success">
+                    <td class="status"><i class="fa fa-check fa-fw text-success"></i></td>
+                    <td><a href="/problem/{{ set.id }}/{{ task.id }}">{{ task.title }} </a></td>
+                    <td class="text-success" style="font-size: 12px">Accepted</td>
+                {% else %}
+                  <tr class="warning">
+                    <td class="status">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="{{ (s["percent"] / 100) * 40 }}" aria-valuemin="0" aria-valuemax="40" style="width: {{ s["percent"] }}%; margin-bottom: 0px;">
+                          <span class="sr-only">{{ s["percent"] }}% Complete</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td><a href="/problem/{{ set.id }}/{{ task.id }}">{{ task.title }} </a></td>
+                    <td class="text-warning" style="font-size: 12px">{{ int(s["percent"]) }}% Completed</td>
+                {% end %}
+              {% else %}
+                <tr>
+                  <td class="status"><i class="fa fa-minus fa-fw"></i></td>
+                  <td><a href="/problem/{{ set.id }}/{{ task.id }}">{{ task.title }} </a></td>
+                  <td style="font-size: 12px">Not Attempted</td>
+              {% end %}
+                <td class="table-options"><a href="/problem/{{ set.id }}/{{ task.id }}"><i class="fa fa-edit fa-fw"></i></a></td>
+              </tr>
+              {% end %}
+            </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>
+    {% end %}
+  </tbody>
+</table>
+
+<script>
+  $(document).ready(function(){
+    $(".outerRow .expandset").click(function(){
+      var $row = $(this).closest(".outerRow");
+      $row.next("tr").toggle();
+      $row.toggleClass("open");
+      if ($row.hasClass("open")) {
+        $row.find("span.glyphicon.glyphicon-chevron-right").addClass("glyphicon-chevron-down").removeClass("glyphicon-chevron-right");
+      } else {
+        $row.find("span.glyphicon.glyphicon-chevron-down").addClass("glyphicon-chevron-right").removeClass("glyphicon-chevron-down");
+      }
+    });
+  });
+</script>
