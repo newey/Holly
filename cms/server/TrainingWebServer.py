@@ -664,7 +664,7 @@ class SignupHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/login?error=%s&signup=T" % error)
+            self.redirect("/signup?error=%s&signup=T" % error)
             return
 
         # Send the email

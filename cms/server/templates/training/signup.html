@@ -1,6 +1,24 @@
 {% extends base.html %}
 
-{% block js_init %} 
+{% block js_init %}
+function getUrlParameter(sParam) {
+   var sPageURL = $(location).attr('search').slice(1)
+   var sURLVariables = sPageURL.split('&');
+   for (var i = 0; i < sURLVariables.length; i++) {
+       var sParameterName = sURLVariables[i].split('=');
+       if (sParameterName[0] == sParam) {
+           return sParameterName[1];
+       }
+   }
+   return "";
+}
+var errMsg = getUrlParameter("error");
+
+if (errMsg.length > 0) {
+console.log(errMsg);
+$(signupalert).show();
+$(signupalert).html(decodeURIComponent(errMsg));
+}
 {% end %}
 
 {% block title %}Sign up{% end %}
