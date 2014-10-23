@@ -14,7 +14,7 @@
 
 <h3>Submit a solution</h3>
 
-<form role="form" role="form" method="post" action="/problem/{{ task.id }}/submit" enctype="multipart/form-data">
+<form role="form" role="form" method="post" action="/problem/{{ problemset.id }}/{{ task.id }}/submit" enctype="multipart/form-data">
   {% for idx, filename in enumerate(x.filename for x in task.submission_format) %}
   <div class="form-group">
     <label for="{{ filename }}" style="line-height: normal;">{{ filename.replace(".%l", "").capitalize() }}</label>

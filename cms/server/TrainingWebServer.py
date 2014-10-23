@@ -526,7 +526,16 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
+        statuses = dict()
+        try:
+            for problemset in self.current_user.pinnedSets:
+                for task in problemset.tasks:
+                    statuses[task.id] = self.get_task_results(self.current_user, task)
+        except KeyError:
+            raise tornado.web.HTTPError(404) 
+
         self.r_params["sets"] = self.current_user.pinnedSets
+        self.r_params["statuses"] = statuses
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -540,8 +549,17 @@ class ProblemListHandler(BaseHandler):
         for userset in self.current_user.userSets:
             for problemset in userset.problemSets:
                 accessibleSets.add(problemset)
+        
+        statuses = dict()
+        try:
+            for problemset in accessibleSets:
+                for task in problemset.tasks:
+                    statuses[task.id] = self.get_task_results(self.current_user, task)
+        except KeyError:
+            raise tornado.web.HTTPError(404)        
 
         self.r_params["sets"] = accessibleSets
+        self.r_params["statuses"] = statuses
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -974,7 +992,7 @@ class SubmitHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
-    def post(self, task_id):
+    def post(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
         except KeyError:
@@ -1139,13 +1157,15 @@ class SubmitHandler(BaseHandler):
             submission_id=submission.id)
 
 
-        self.redirect("/problem/%s/submissions" % task.id)
+        self.redirect("/problem/%s/%s/submissions" % (set_id, task.id))
 
 class SubmissionsHandler(BaseHandler):
     @tornado.web.authenticated
-    def get(self, task_id):
+    def get(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+            score_type = get_score_type(dataset=task.active_dataset)
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1154,6 +1174,8 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
         self.r_params["task"] = task
+        self.r_params["score_type"] = score_type
+        self.r_params["problemset"] = problemset
         self.r_params["active_sidebar_item"] = "problems"
 
         self.render("task_submissions.html", **self.r_params)
@@ -1848,8 +1870,8 @@ _tws_handlers = [
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
-    (r"/problem/([0-9]+)/submit", SubmitHandler),
-    (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
+    (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),
     (r"/problemset/([0-9]+)", ProblemSetHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),

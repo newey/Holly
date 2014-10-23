@@ -1,12 +1,15 @@
 {% extends contestant_base.html %}
 
-{% block core %}
+{% block breadcrumbs %}
 <ol class="breadcrumb">
-  <li><a href="/home">Home</a></li>
-  <li><a href="/problem/{{ task.id }}">{{ task.name }}</a></li>
+  <li><a href="/"><i class="fa fa-tasks fa-fw"></i></a></li>
+  <li><a href="/problemset/{{ problemset.id }}">{{ problemset.title }}</a></li>
+  <li><a href="/problem/{{ problemset.id }}/{{ task.id }}">{{ task.title }}</a></li>
   <li class="active">Submissions</li>
 </ol>
+{% end %}
 
+{% block core %}
 <h1 class="page-header">Submissions</h1>
 
 <table id="submissions" class="table table-hover">
@@ -29,7 +32,7 @@
 	  <td>{{ result.compilation_outcome }}</td>
       <td>{{ result.compilation_text }}</td>
       <td>{{ result.evaluation_outcome }}</td>
-      <td>{{ result.score }}</td>
+      <td>{{ result.score_details }}</td>
 	</tr>
   {% end %}
   {% end %}
