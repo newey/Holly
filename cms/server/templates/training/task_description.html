@@ -9,23 +9,101 @@
 {% end %}
 
 {% block core %}
+<!-- Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1" role="dialog" aria-labelledby="submitModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="submitModalLabel">Results</h4>
+      </div>
+      <div id="submissionStatus" class="modal-body">
+        <div class="processing">
+          <h3><i class="fa text-info fa-spinner fa-2x fa-fw fa-spin"></i>Processing Submission</h3>
+          <p>Initial</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="/problem/{{ problemset.id }}/{{ task.id }}/submissions"><button class="btn btn-info" type="button">All Submissions</button></a>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% raw task.primary_statements %}
 
 <h3>Submit a solution</h3>
 
-<form role="form" role="form" method="post" action="/problem/{{ problemset.id }}/{{ task.id }}/submit" enctype="multipart/form-data">
+<form id="submitForm" role="form" method="post" action="/problem/{{ problemset.id }}/{{ task.id }}/submit" enctype="multipart/form-data">
   {% for idx, filename in enumerate(x.filename for x in task.submission_format) %}
   <div class="form-group">
-    <label for="{{ filename }}" style="line-height: normal;">{{ filename.replace(".%l", "").capitalize() }}</label>
+    <label for="{{ filename }}" style="line-height: normal;">Upload File: {{ filename.replace(".%l", "").capitalize() }}</label>
     <input id="{{ filename }}" name="{{ filename }}" class="input-file" type="file">
   </div>
   {% end %}
 
   <div class="form-group">
-    <input id="submit" type="submit" value="Submit" class="btn btn-primary">
-    <a href="/problem/{{ problemset.id }}/{{ task.id}}/submissions"><button class="btn btn-info" type="button">View Submissions</button></a>
+    <button id="interactive-submit" class="btn btn-primary" type="button" data-toggle="modal" data-target="#submitModal">Submit</button>
+    <a href="/problem/{{ problemset.id }}/{{ task.id }}/submissions"><button class="btn btn-info" type="button">All Submissions</button></a>
   </div>
 </form>
+{% end %}
 
+{% block scripts %}
+<script>
+  $(document).ready(function(){
+    
+    var submission_id = 0;
+
+    function submitted() {
+      $.ajax({
+        url: "/problem/"+submission_id+"/submission_status",
+        type: "POST",
+        data: {"name":"test"},
+        success: function(data) {
+          $('#submissionStatus').empty();
+          $('#submissionStatus').append(data);
+          if ($('#submissionStatus').find('div').hasClass("processing")) {
+            $('#interactive-submit').empty().append('<i class="fa fa-spinner fa-fw fa-spin"></i>Submit');
+            setTimeout(submitted, 1000);
+          } else {
+            $('#interactive-submit').empty().append('Submit')
+          }
+        }
+      });
+    }
+
+    $('#interactive-submit').click( function() {
+      var formData = new FormData($('#submitForm')[0]);
+      var ajax = $.ajax({
+          url: "/problem/{{ problemset.id }}/{{ task.id }}/submit",
+          type: "POST",
+          data: formData,
+          contentType: false,
+          processData: false
+      });
+
+      ajax.done(function(data) {
+            $('#submissionStatus').empty();
+            $('#submissionStatus').append('<div class="processing"> \
+                  <h3><i class="fa text-info fa-spinner fa-2x fa-fw fa-spin"></i>Processing Submission</h3> \
+                  <p>Initial</p> \
+                </div>');
+            submission_id = data;
+            $('#interactive-submit').empty().append('<i class="fa fa-spinner fa-fw fa-spin"></i>Submit');
+            submitted();
+          });
+
+      ajax.fail(function(jqXHR, textStatus, errorThrown) {
+            $('#submissionStatus').empty();
+            $('#submissionStatus').append('<div> \
+                  <h3><i class="fa text-danger fa-times fa-2x fa-fw"></i>Submission Upload Failed</h3> \
+                  <p>'+jqXHR.responseText+'</p>  \
+                </div>');
+            $('#interactive-submit').empty().append('Submit')
+          });
+    });
+  });
+</script>
 {% end %}
