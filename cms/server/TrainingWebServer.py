@@ -1915,6 +1915,16 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class HallOfFameHandler(BaseHandler):
+    """Show the users with the most problems solved on the site.
+
+    """
+
+    def get(self):
+        self.r_params["active_sidebar_item"] = "fame"
+        self.render("hall_of_fame.html", **self.r_params)
+
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -1924,6 +1934,7 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
+    (r"/hof", HallOfFameHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),
