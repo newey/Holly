@@ -71,7 +71,6 @@ logger = logging.getLogger(__name__)
 
 def admin_authenticated(foo):
     def func(self, *args, **kwargs):
-        print('self is %s' % self)
         if not self.current_user.is_training_admin:
             self.redirect("/")
         else:
@@ -316,7 +315,7 @@ class BaseHandler(CommonRequestHandler):
                 self.sql_session.add(self.contest)
                 self.sql_session.commit()
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.set_status(500)
                 return
         else:
@@ -617,11 +616,11 @@ class LoginHandler(BaseHandler):
             .filter(User.username == username).first()
 
         if user is None:
-            self.redirect("/login?error=Invalid Username&ext=%s" % next_page)
+            self.redirect("/login?error=Invalid username or password&ext=%s" % next_page)
             return
 
         if user.password != password:
-            self.redirect("/login?error=Invalid Password&next=%s" % next_page)
+            self.redirect("/login?error=Invalid username or password&next=%s" % next_page)
             return
 
         self.set_secure_cookie("login",
@@ -688,7 +687,7 @@ class SignupHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/signup?error=%s&signup=T" % error)
             return
 
@@ -752,6 +751,8 @@ class AddProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def post(self):
+        dataset = None
+        task_id = None
         try:
             attrs = dict()
 
@@ -775,10 +776,10 @@ class AddProblemHandler(BaseHandler):
             attrs["contest"] = self.contest
             task = Task(**attrs)
             self.sql_session.add(task)
-
+            task_id = task.id
         except Exception as error:
             self.redirect("/admin/problem/add")
-            print(error)
+            logger.exception(error)
             return
 
         try:
@@ -798,21 +799,21 @@ class AddProblemHandler(BaseHandler):
             self.sql_session.add(dataset)
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problem/add")
             return
 
         numTests = int(self.get_argument("num_tests"))
         for i in range(0, numTests):
             
-            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
             
             try:
                 input_ = self.request.files["new-input-" + str(i)][0]
                 output = self.request.files["new-output-" + str(i)][0]
             except KeyError:
-                print("Couldn't find files for %dth entry" % i)
+                logger.exception("Couldn't find files for %dth entry" % i)
                 self.redirect("/admin/problem/add")
                 return
 
@@ -831,7 +832,7 @@ class AddProblemHandler(BaseHandler):
                                         output_digest, dataset=dataset)
                 self.sql_session.add(testcase)
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.redirect("/admin/problem/add" % task_id)
                 return
 
@@ -841,7 +842,7 @@ class AddProblemHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problem/add")
             return
 
@@ -951,22 +952,24 @@ class EditProblemHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
-            print(error)
+            logger.exception(error)
             return
 
 
         #Add New Tests
         numTests = int(self.get_argument("num_tests"))
+        logger.info("Found %d tests to add" % numTests)
         for i in range(0, numTests):
             
-            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
-            
+
+            logger.info("Adding testcase: %s" % codename)
             try:
                 input_ = self.request.files["new-input-" + str(i)][0]
                 output = self.request.files["new-output-" + str(i)][0]
             except KeyError:
-                print("Couldn't find files for %dth entry" % i)
+                logger.exception("Couldn't find files for %dth entry" % i)
                 self.redirect("/admin/problem/%s/edit" % task_id)
                 return
 
@@ -981,11 +984,13 @@ class EditProblemHandler(BaseHandler):
                     self.application.service.file_cacher.put_file_content(
                         output["body"],
                         "Testcase output for task %s" % task.name)
+                logger.info("Adding input digest: %s" % input_digest)
+                logger.info("Adding output digest: %s" % output_digest)
                 testcase = Testcase(codename, public, input_digest,
-                                        output_digest, dataset=dataset)
+                                        output_digest, dataset=task.active_dataset)
                 self.sql_session.add(testcase)
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.redirect("/admin/problem/%s/edit" % task_id)
                 return
 
@@ -1002,11 +1007,11 @@ class EditProblemHandler(BaseHandler):
 
         for index, deleteid in enumerate(deleteids):
             test = self.sql_session.query(Testcase).\
-               filter(Testcase.id == test_id).one()
+               filter(Testcase.id == deleteid).one()
             try:
                 self.sql_session.delete(test)
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.redirect("/admin/problem/%s/edit" % task_id)
                 return
 
@@ -1014,7 +1019,7 @@ class EditProblemHandler(BaseHandler):
             self.sql_session.commit()
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/problem/%s" % task_id)
@@ -1032,7 +1037,7 @@ class DeleteTestHandler(BaseHandler):
             self.sql_session.delete(test)
             self.sql_session.commit()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problem/%s" % task_id)
             return
 
@@ -1323,7 +1328,7 @@ class AddProblemSetHandler(BaseHandler):
 
         except:
             self.redirect("/admin/problemset/add")
-            logger.error(traceback.format_exc())
+            logger.exception(traceback.format_exc())
             return
 
         self.redirect("/admin/problemsets")
@@ -1359,7 +1364,7 @@ class DeleteProblemSetHandler(BaseHandler):
             self.sql_session.delete(problemset)
             self.sql_session.commit()
         except Exception as error:
-            print(error)
+            logger.exception(error)
         self.redirect("/admin/problemsets")
 
 class EditProblemSetHandler(BaseHandler):
@@ -1388,7 +1393,7 @@ class EditProblemSetHandler(BaseHandler):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
         except:
-            logger.error(traceback.format_exc())
+            logger.exception(traceback.format_exc())
             self.redirect("/admin/problemset/%d/edit" % set_id)
         try:
             attrs = dict()
@@ -1431,7 +1436,7 @@ class EditProblemSetHandler(BaseHandler):
             self.sql_session.commit()
 
         except:
-            logger.error(traceback.format_exc())
+            logger.exception(traceback.format_exc())
             self.redirect("/admin/problemset/%d/edit" % set_id)
 
         self.redirect("/admin/problemsets")
@@ -1523,7 +1528,7 @@ class EditUserHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/user/%s/edit" % user_id)
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/users")
@@ -1638,7 +1643,7 @@ class AddUserSetHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/userset/add")
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/users")
@@ -1673,7 +1678,7 @@ class EditUserSetHandler(BaseHandler):
         try:
             userset = self.sql_session.query(UserSet).filter(UserSet.id==set_id).one()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/userset/%d/edit" % set_id)
         try:
             attrs = dict()
@@ -1722,7 +1727,7 @@ class EditUserSetHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/userset/%s/edit" % userset_id)
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/users")
@@ -1740,7 +1745,7 @@ class DeleteUserSetHandler(BaseHandler):
             self.sql_session.delete(userset)
             self.sql_session.commit()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/userset/%s" % userset_id)
             return
 
@@ -1780,7 +1785,7 @@ class UserInfoHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/user")
             return
 
