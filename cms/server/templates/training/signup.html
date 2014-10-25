@@ -115,12 +115,18 @@ $(document).ready(function() {
 </script>
 <div class="container">
 	<div id="signupbox" style="margin-top:50px" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+
+
 		<div class="panel panel-info">
 			<div class="panel-heading">
 				<div class="panel-title">Sign Up</div>
 				<div style="float:right; font-size: 85%; position: relative; top:-10px"><a id="signinlink" href="login">Sign In</a></div>
 			</div>  
 			<div class="panel-body" >
+
+                <p>
+                    We will email you a verification code which you will need to enter before you sign in for the first time. So please use a real email address, we will only contact you when you request we do so.
+                </p>
 				<form id="signupform" class="form-horizontal" role="form" action="/signup" method="POST" >
 					<div id="signupalert" style="display:none" class="alert alert-danger">
 						<p>Error:</p>
