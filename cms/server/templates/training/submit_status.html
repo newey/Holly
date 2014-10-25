@@ -2,6 +2,9 @@
 <div>
   <h3><i class="fa text-danger fa-times fa-2x fa-fw"></i>Failed Compilation</h3>
   <p>Your code failed compilation, ouput below.</p>
+  <textarea class="form-control" name="compiler" id="compiler" rows="10">
+    {{ result.compilation_stderr }}
+  </textarea>
 </div>
 {% elif (s["status"] != "ready") %}
 <div class="processing">

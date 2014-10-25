@@ -1220,6 +1220,7 @@ class SubmissionStatusHandler(BaseHandler):
     def post(self, submission_id):
         submission = self.sql_session.query(Submission).filter(Submission.id == submission_id).one()
 
+        self.r_params["result"] = submission.results[0]
         self.r_params["s"] = self.get_submission_results(self.current_user, submission)
         self.render("submit_status.html", **self.r_params)
 
