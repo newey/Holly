@@ -166,29 +166,27 @@ $("select[name=task_type]").change(showTaskTypeOption);
     <h3 class="panel-title">Tests</h3>
   </div>
   <div class="panel-body">
-    <div class="tab-pane fade in active" style="margin-bottom: 10px;">
-      <div class="table-responsive" id="tests">
-        <table class="table table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
-          <col width="40%">
-          <col width="30%">
-          <col width="30%">
-          <col width="70">
-          <col width="60">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Input</th>
-              <th>Output</th>
-              <th>Remove</th>
-              <th>Public</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <button id="addTest" type="button" class="btn btn-success">Add Test</button>    
+    <button id="addTest" type="button" class="btn btn-success pull-right" style="margin-bottom: 10px;">Add Test Row</button> 
+    <div class="table-responsive" id="tests">
+      <table class="table table-bordered" id="tests" style="table-layout: fixed;">
+        <col width="40%">
+        <col width="30%">
+        <col width="30%">
+        <col width="70">
+        <col width="60">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Remove</th>
+            <th>Public</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>  
   </div>
 </div>
 
@@ -214,10 +212,17 @@ $(document).ready(function() {
         <td><input type="file" name="new-input-'+newItems+'" class="input-file"></td> \
         <td><input type="file" name="new-output-'+newItems+'" class="input-file"></td> \
         <td style="text-align: center;"> \
-          <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-close fa-fw"></i></button> \
+          <button id="ignore-test-'+newItems+'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
         </td> \
         <td><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
       </tr>');
+
+    $('#ignore-test-'+newItems).click(function() {
+      $(this).parents('tr').find('.test-id').attr("value", "ignore");
+      $(this).parents('tr').after('<tr><td colspan="5">Test Deleted</td><tr>');
+      $(this).parents('tr').hide();
+    });
+
     newItems++;
     $('#num_tests').val(newItems);
   }
