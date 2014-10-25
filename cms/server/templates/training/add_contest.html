@@ -1,0 +1,28 @@
+{% extends admin_base.html %}
+
+{% block js %}
+
+{% end %}
+
+{% block core %}
+<h1>New contest</h1>
+
+<!-- We use "multipart/form-data" to have Tornado distinguish between missing and empty values. -->
+<form enctype="multipart/form-data" action="{{ url_root }}/admin/contest/add" method="POST">
+  Name
+  <input type="text" name="name"><br>
+  Description
+  <textarea name="description"></textarea><br>
+  Languages allowed
+  {% for lang in LANGUAGES %}
+    <label><input type="checkbox" name="languages" value="{{ lang }}" {{ "checked" if lang in DEFAULT_LANGUAGES else "" }}>{{ LANGUAGE_NAMES[lang] }}</label>
+  {% end %}<br>
+  Start (in UTC)
+  <input type="text" name="start" value="{{ str(timestamp) }}"><br>
+  End (in UTC)
+  <input type="text" name="stop" value="{{ str(timestamp) }}"><br>
+
+  <input type="submit"><input type="reset" value="Reset">
+</form>
+{% end %}
+

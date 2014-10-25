@@ -127,6 +127,14 @@ def argument_reader(func, empty=None):
             dest[name] = func(value)
     return helper
 
+def parse_datetime(value):
+    """Parse and validate a datetime (in pseudo-ISO8601)."""
+    if '.' not in value:
+        value += ".0"
+    try:
+        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+    except:
+        raise ValueError("Can't cast %s to datetime." % value)
 
 def send_mail(mime_message):
     """Sends a MIME message as configured in cms.conf, and will ignore messages if message sending
@@ -400,6 +408,9 @@ class BaseHandler(CommonRequestHandler):
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
+        self.get_string(params, "error")
+        params["active_sidebar_item"] = ""
+        params["admin_port"] = config.admin_listen_port
         return params
 
     def get_task_by_id(self, task_id):
@@ -439,6 +450,8 @@ class BaseHandler(CommonRequestHandler):
 
 
     get_string = argument_reader(lambda a: a, empty="")
+    
+    get_datetime = argument_reader(parse_datetime)
 
     def get_time_limit(self, dest, field):
         """Parse the time limit.
@@ -556,6 +569,11 @@ class TrainingWebServer(WebService):
 
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
+        
+        ranking_enabled = len(config.rankings) > 0
+        self.proxy_service = self.connect_to(
+            ServiceCoord("ProxyService", 0),
+            must_be_present=ranking_enabled)
 
         self.file_cacher = FileCacher(self)
 
@@ -608,7 +626,6 @@ class LoginHandler(BaseHandler):
 
     """
     def get(self):
-        self.get_string(self.r_params, "error")
         self.render("login.html", **self.r_params)
 
     def post(self):
@@ -639,7 +656,6 @@ class SignupHandler(BaseHandler):
 
     """
     def get(self):
-        self.get_string(self.r_params, "error")
         self.render("signup.html", **self.r_params)
 
     def post(self):
@@ -681,7 +697,6 @@ class SignupHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
             self.redirect("/signup?error=%s&signup=T" % error)
             return
 
@@ -1915,6 +1930,48 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class AddContestHandler(BaseHandler):
+    """Adds a new contest.
+
+    """
+    
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self):
+        self.r_params = self.render_params()
+        self.render("add_contest.html", **self.r_params)
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self):
+        try:
+            attrs = dict()
+
+            self.get_string(attrs, "name", empty=None)
+            self.get_string(attrs, "description")
+
+            assert attrs.get("name") is not None, "No contest name specified."
+
+            attrs["allowed_localizations"] = []
+            attrs["languages"] = self.get_arguments("languages", [])
+
+            attrs["token_mode"] = "disabled"
+            self.get_datetime(attrs, "start")
+            self.get_datetime(attrs, "stop")
+            attrs["score_precision"] = 0
+
+            # Create the contest.
+            contest = Contest(**attrs)
+            self.sql_session.add(contest)
+            self.sql_session.commit()
+            self.application.service.proxy_service.reinitialize()
+        except Exception as error:
+            self.redirect("/admin/contest/add")
+            print(error)
+            return
+            
+        self.redirect("/contest/%s" % contest.id)
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -1931,6 +1988,7 @@ _tws_handlers = [
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),
+    (r"/admin/contests", AdminContestsHandler),
     (r"/admin/problems", AdminProblemsHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),
