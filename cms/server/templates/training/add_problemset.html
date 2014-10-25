@@ -133,18 +133,33 @@ $(document).ready(function() {
           <input type="text" class="form-control" id="name" name="name" placeholder="Name">
         </div>
       </div>
+
       <div class="form-group">
         <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
         <div class="col-sm-7">
           <input type="text" class="form-control" id="title" name="title" placeholder="Title">
         </div>
       </div>
+
       <div class="form-group">
-        <label for="default_pinned" class="col-sm-2 control-label" style="text-align:left;">Pinned for new users</label>
-        <div class="col-sm-7">
-          <input type="checkbox" class="form-control" id="pinned_by_default" name="pinned_by_default" placeholder="Pinned by default">
-        </div>
-      </div>
+            <div class="col-sm-7 col-sm-offset-2">
+              <div class="checkbox" style="text-align:left;">
+                <label>
+                  <input type="checkbox" class="admin-problemset-public-checkbox" id="public" name="public" placeholder="Public">Public
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-problemset-pinned form-group" style="display:none;"}>
+            <div class="col-sm-7 col-sm-offset-2">
+              <div class="checkbox" style="text-align:left;">
+                <label>
+                  <input type="checkbox" class="admin-problemset-public-checkbox" id="pinned_by_default" name="pinned_by_default" placeholder="Pinnedby default">Pinned for new users
+                </label>
+              </div>
+            </div>
+          </div>
  
       <input type="hidden" id="problemids" name="problemids">
 

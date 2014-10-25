@@ -400,6 +400,7 @@ class BaseHandler(CommonRequestHandler):
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
+        params["all_users"] = self.all_users
         return params
 
     def get_task_by_id(self, task_id):
@@ -1289,6 +1290,8 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
 
+            public = self.get_argument("public", default=None)
+
             if "pinned_by_default" in attrs:
                 attrs["pinned_by_default"] = True
             else:
@@ -1300,10 +1303,11 @@ class AddProblemSetHandler(BaseHandler):
             attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
-            print(attrs["num"])
-
             problemset = ProblemSet(**attrs)
             self.sql_session.add(problemset)
+
+            if public:
+                self.all_users.problemSets.append(problemset)
 
             working = dict()
             self.get_string(working, "problemids")
@@ -1397,6 +1401,7 @@ class EditProblemSetHandler(BaseHandler):
             self.get_string(attrs, "problemids", empty=None)
             self.get_string(attrs, "pinned_by_default", empty=None)
 
+            public = self.get_argument("public", default=None)
 
             if attrs["name"] is not None:
                 problemset.name = attrs["name"]
@@ -1404,7 +1409,7 @@ class EditProblemSetHandler(BaseHandler):
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
 
-            if "pinned_by_default" in attrs:
+            if public and "pinned_by_default" in attrs:
                 problemset.pinned_by_default = True
             else:
                 problemset.pinned_by_default = False
@@ -1421,6 +1426,11 @@ class EditProblemSetHandler(BaseHandler):
                     task = self.sql_session.query(Task).filter(Task.id==problemid).one()
                     problemset.tasks.append(task)
 
+            # If necessary add or remove this userSet from the allUsers group
+            if public and problemset not in self.all_users.problemSets:
+                self.all_users.problemSets.append(problemset)
+            if not public and problemset in self.all_users.problemSets:
+                self.all_users.problemSets.remove(problemset)
 
             self.sql_session.commit()
 

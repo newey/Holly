@@ -149,9 +149,22 @@ $(document).ready(function() {
           </div>
 
           <div class="form-group">
-            <label for="pinned_by_default" class="col-sm-2 control-label" style="text-align:left;">Pinned for new users</label>
-            <div class="col-sm-7">
-              <input type="checkbox" class="form-control" id="pinned_by_default" name="pinned_by_default" placeholder="Pinned by default" {% if problemset.pinned_by_default %}checked{% end %}>
+            <div class="col-sm-7 col-sm-offset-2">
+              <div class="checkbox" style="text-align:left;">
+                <label>
+                  <input type="checkbox" class="admin-problemset-public-checkbox" id="public" name="public" placeholder="Public" {% if all_users in problemset.userSets %}checked{% end %}>Public
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-problemset-pinned form-group" {% if all_users not in problemset.userSets %}style="display:none;"{% end %}>
+            <div class="col-sm-7 col-sm-offset-2">
+              <div class="checkbox" style="text-align:left;">
+                <label>
+                  <input type="checkbox" class="admin-problemset-public-checkbox" id="pinned_by_default" name="pinned_by_default" placeholder="Pinnedby default" {% if problemset.pinned_by_default %}checked{% end %}>Pinned for new users
+                </label>
+              </div>
             </div>
           </div>
 

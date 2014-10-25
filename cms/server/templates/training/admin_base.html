@@ -18,6 +18,18 @@
 {% end %}
 
 {% block body %}
+<script>
+  $(document).ready(function() {
+    $(document).on('change', '.admin-problemset-public-checkbox', function() {
+      if ($('.admin-problemset-public-checkbox').prop("checked")) {
+        $('.admin-problemset-pinned').show();
+      } else {
+        $('.admin-problemset-pinned').hide();
+      }
+    });
+  });
+</script>
+
 <div id="wrapper">
   <!-- Navigation -->
   <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
