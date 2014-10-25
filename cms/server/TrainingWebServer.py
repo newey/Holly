@@ -1745,7 +1745,7 @@ class EditUserSetHandler(BaseHandler):
 
 
             userset.users = []
-            if attrs["userids"] is not None:
+            if attrs["userids"] is not None and userset.setType == 0:
                 userids = attrs["userids"].strip().split()
 
                 assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
