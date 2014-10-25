@@ -1538,7 +1538,14 @@ class EditUserHandler(BaseHandler):
             user.username = attrs.get("username")
             user.password = attrs.get("password")
             user.email = attrs.get("email")
-            user.is_training_admin = is_admin_choice
+
+            if user.is_training_admin and not is_admin_choice and self.sql_session.query(User)\
+                    .filter(User.contest == self.contest,
+                            User.is_training_admin == True).count() == 1:
+                # Can't delete the last admin...
+                self.redirect("/admin/users?error=You cannot stop being an administrator because you are the only administrator.") # TODO inform user
+            else:
+                user.is_training_admin = is_admin_choice
 
             self.sql_session.commit()
 
@@ -1556,10 +1563,15 @@ class DeleteAccountHandler(BaseHandler):
 
     @tornado.web.authenticated
     def post(self):
-        self.sql_session.delete(self.current_user)
-        self.sql_session.commit()
-
-        self.redirect("/login")
+        if self.current_user.is_training_admin and self.sql_session.query(User)\
+            .filter(User.contest == self.contest,
+                    User.is_training_admin == True).count() == 1:
+            # Can't delete the last admin...
+            self.redirect("/admin/problems?error=You cannot delete your account because you are the only administrator.") # TODO inform user
+        else:
+            self.sql_session.delete(self.current_user)
+            self.sql_session.commit()
+            self.redirect("/login")
 
 class DeleteUserHandler(BaseHandler):
     """Deletes a user.
@@ -1576,10 +1588,15 @@ class DeleteUserHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        self.sql_session.delete(user)
-        self.sql_session.commit()
-
-        self.redirect("/admin/users")
+        if user.is_training_admin and self.sql_session.query(User)\
+            .filter(User.contest == self.contest,
+                    User.is_training_admin == True).count() == 1:
+            # Can't delete the last admin...
+            self.redirect("/admin/users?error=You cannot delete your account because you are the only administrator.") # TODO inform user
+        else:
+            self.sql_session.delete(user)
+            self.sql_session.commit()
+            self.redirect("/admin/users")
 
 class AdminUserSetHandler(BaseHandler):
     """Shows the data of a task.
@@ -1759,7 +1776,8 @@ class DeleteUserSetHandler(BaseHandler):
     @admin_authenticated
     def post(self, userset_id):
         userset = self.sql_session.query(UserSet).\
-               filter(UserSet.id == userset_id).one()
+               filter(UserSet.id == userset_id,
+                      UserSet.setType == 0).one()
         try:
             self.sql_session.delete(userset)
             self.sql_session.commit()
