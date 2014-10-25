@@ -3,6 +3,8 @@
 {% block scripts %}
 <script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     var unselectedTable = $('#unselectedproblems').DataTable({
@@ -45,32 +47,72 @@ $(document).ready(function() {
     function addProblem () {
       $(this).parents("tr").addClass('move');
       var items = unselectedTable.row('.move').data();
-      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
       selectedTable.row.add(items).draw(false);
       unselectedTable.row('.move').remove().draw( false );
       updateIds();
-      $('.remove-problem.new').click(removeProblem);
-      $('.remove-problem').removeClass("new");
     }
 
     function removeProblem () {
       $(this).parents("tr").addClass('move');
       var items = selectedTable.row('.move').data();
-      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
       unselectedTable.row.add(items).draw(false);
       selectedTable.row('.move').remove().draw( false );
       updateIds();
-      $('.add-problem.new').click(addProblem);
-      $('.add-problem').removeClass("new");
     }
 
-    $('.add-problem').click(addProblem);
+    $(document).on('click', '.add-problem', addProblem);
+    $(document).on('click', '.remove-problem', removeProblem);
 
     $('#unselectedproblems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
     $('#selectedproblems_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
 
     $('#unselectedproblems_length').find("label").empty().append('<label><select name="unselectedproblems_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
     $('#selectedproblems_length').find("label").empty().append('<label><select name="selectedproblems_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    $('.addsetform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            name: {
+                message: 'This name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Problem set names cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'Problem set names must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'Problem set names must only consist of underscores and alphanumeric characters'
+                    }
+                }
+            },
+            title: {
+                message: 'This title is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Problem set titles cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'Problem set titles must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                        message: 'Problem set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                    }
+                }
+            }
+        }
+    });
 });
 </script>
 {% end %}
@@ -84,7 +126,7 @@ $(document).ready(function() {
 
 <div class="panel panel-default">
   <div class="panel-body">
-    <form class="form-horizontal" role="form" method="post">
+    <form class="form-horizontal addsetform" role="form" method="post">
       <div class="form-group">
         <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
         <div class="col-sm-7">
@@ -101,9 +143,9 @@ $(document).ready(function() {
       <input type="hidden" id="problemids" name="problemids">
 
       <div class="form-group">
-        <label class="col-md-2 control-label" for="submit"></label>
+        <label class="col-md-2 control-label" for="submitbtn"></label>
         <div class="col-md-7">
-          <input id="submit" type="submit" value="Submit" class="btn btn-primary">
+          <input id="submitbtn" type="submit" value="Submit" class="btn btn-primary">
         </div>
       </div>
     </form>

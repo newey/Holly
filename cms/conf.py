@@ -108,6 +108,16 @@ class Config(object):
         self.training_listen_address = ""
         self.training_listen_port = 8891
 
+        self.training_send_mail = False
+
+        self.training_email_address = ""
+        self.training_smtp_server_address = ""
+        self.training_smtp_server_port = 587
+        self.training_smtp_server_use_tls = False
+        self.training_smtp_server_authenticate = False
+        self.training_smtp_server_username = ""
+        self.training_smtp_server_password = ""
+
         # ProxyService.
         self.rankings = ["http://usern4me:passw0rd@localhost:8890/"]
         self.https_certfile = None

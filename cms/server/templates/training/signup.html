@@ -1,0 +1,170 @@
+{% extends base.html %}
+
+{% block js_init %}
+function getUrlParameter(sParam) {
+   var sPageURL = $(location).attr('search').slice(1)
+   var sURLVariables = sPageURL.split('&');
+   for (var i = 0; i < sURLVariables.length; i++) {
+       var sParameterName = sURLVariables[i].split('=');
+       if (sParameterName[0] == sParam) {
+           return sParameterName[1];
+       }
+   }
+   return "";
+}
+var errMsg = getUrlParameter("error");
+
+if (errMsg.length > 0) {
+$(signupalert).show();
+$(signupalert).html(decodeURIComponent(errMsg));
+}
+{% end %}
+
+{% block title %}Sign up{% end %}
+
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/flat-ui.css">
+<link rel="stylesheet" href="/static/css/contestant_style.css">
+{% end %}
+
+
+{% block body %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#signupform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            username: {
+                message: 'This username is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Usernames cannot be empty'
+                    },
+                    stringLength: {
+                        min: 4,
+                        max: 24,
+                        message: 'Usernames must be at least 4, and no more than 24 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'Usernames must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            password: {
+                message: 'This password is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Passwords cannot be empty'
+                    },
+                    stringLength: {
+                        min: 8,
+                        max: 64,
+                        message: 'Passwords must be at least 8, and no more than 64 characters long'
+                    }
+                }
+            },
+            first_name: {
+                message: 'This first name is not valid',
+                validators: {
+                    stringLength: {
+                        max: 56,
+                        message: 'First name must be no more than 56 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'First name must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            last_name: {
+                message: 'This last name is not valid',
+                validators: {
+                    stringLength: {
+                        max: 56,
+                        message: 'Last name must be no more than 56 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9\-]+$/,
+                        message: 'Last name must only consist of dashes and alphanumeric characters'
+                    }
+                }
+            },
+            email: {
+                message: 'This email is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Email cannot be empty'
+                    },
+                    emailAddress: {
+                        message: 'Email is not valid'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+<div class="container">
+	<div id="signupbox" style="margin-top:50px" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<div class="panel-title">Sign Up</div>
+				<div style="float:right; font-size: 85%; position: relative; top:-10px"><a id="signinlink" href="login">Sign In</a></div>
+			</div>  
+			<div class="panel-body" >
+				<form id="signupform" class="form-horizontal" role="form" action="/signup" method="POST" >
+					<div id="signupalert" style="display:none" class="alert alert-danger">
+						<p>Error:</p>
+						<span></span>
+					</div>
+					<div class="form-group required">
+						<label for="username" class="col-md-3 control-label">Username</label>
+						<div class="col-md-9">
+							<input type="text" class="form-control" name="username" placeholder="Username">
+						</div>
+					</div>
+					<div class="form-group required">
+						<label for="password" class="col-md-3 control-label">Password</label>
+						<div class="col-md-9">
+							<input type="password" class="form-control" name="password" placeholder="Password">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="firstname" class="col-md-3 control-label">First Name</label>
+						<div class="col-md-9">
+							<input type="text" class="form-control" name="first_name" placeholder="First Name">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="lastname" class="col-md-3 control-label">Last Name</label>
+						<div class="col-md-9">
+							<input type="text" class="form-control" name="last_name" placeholder="Last Name">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="email" class="col-md-3 control-label">Email</label>
+						<div class="col-md-9">
+							<input type="text" class="form-control" name="email" placeholder="Email Address">
+						</div>
+					</div>
+					<div class="form-group">
+						<!-- Button -->                                        
+						<div class="col-md-offset-3 col-md-9">
+							<input class="btn btn-success" type="submit" value="Sign Up">
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div> 
+</div>
+{% end %}

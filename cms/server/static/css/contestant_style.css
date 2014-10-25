@@ -2,13 +2,35 @@ body {
     background-color: #3498DB !important;
 }
 
+.form-control {
+  height: 36px;
+}
+
 #problemsets {
-    border-radius: 2px;
-    -moz-border-radius: 2px;
+  border-radius: 2px;
+  -moz-border-radius: 2px;
+  font-size: 15px;
 }
 
 #problemsets td {
     border: none;
+}
+
+#problemsTable thead tr {
+  background-color: #34495E;
+  color: #ECF0F1;
+  border-bottom: 1px solid #34495E !important;
+}
+
+#problemsTable tr {
+  border-bottom: 1px solid #34495E !important;
+  border-top: none !important;
+}
+
+.status .progress {
+  height: 14px;
+  margin-top: 3px;
+  background-color: #BDC3C7;
 }
 
 .innerRow-container {
@@ -22,6 +44,10 @@ body {
 
 .inner .table {
   background-color: #ECF0F1;
+}
+
+.outerRow {
+  padding: 5px;
 }
 
 #problemsets .outerRow {
@@ -38,145 +64,152 @@ body {
     background-color: #2C3E50;
 }
 
+/* NAVIGATION */
+
 .navbar {
-    background-color: #34495E;
-    padding: 0px 15px;   
+    background-color: #34495E; 
 }
 
-.navbar-header a, .navbar .dropdown-toggle {
+.navbar .dropdown {
+  display: none; 
+}
+
+.collapse-btn, .navbar-header a, .navbar .dropdown-toggle {
     color: #95A5A6 !important;
     padding-right: 10px; 
     padding-left: 10px;
 }
 
-.navbar-header a:hover, .navbar .dropdown-toggle:hover {
+.collapse-btn:hover, .navbar-header a:hover, .navbar .dropdown-toggle:hover {
     background-color: #2C3E50 !important;
     color: #7F8C8D;
+}
+
+.collapse-btn {
+  display: block;
+  height: 100%;
+  float: right;
+}
+
+.navbar, {
+  background-color: #95A5A6;
+}
+.navbar-header {
+  background-color: #34495E;     
+}
+
+.sidebar {
+  background-color: #34495E;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
+
+.sidebar .sidebar-nav.navbar-collapse {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.sidebar .active a { 
+    cursor: default;
+    background-color: #1ABC9C; 
+    color: #fff; 
+    text-shadow: 1px 1px 1px #666; 
+}
+
+.nav-sidebar .active a:hover {
+    background-color: #1ABC9C;   
+}
+
+.sidebar-login-title {
+  display: inline;
+  color: #FFFFFF;
+  padding: 10px 0px 10px 15px;
+}
+
+.sidebar-login-btns {
+  display: inline;
+  text-align: right;
+  float: right;
+}
+
+.sidebar-login a {
+  width: 50px !important;
+  display: inline !important;
+  margin: 0px 5px;
+}
+
+.sidebar-nav {
+  border-top: none;
+}
+
+@media(min-width:768px) {
+    .sidebar {
+        z-index: 1;
+        position: absolute;
+        width: 180px;
+        margin-right: 20px;
+        margin-top: 73px;
+        background-color: #FFFFFF;
+    }
+
+    .navbar-top-links .dropdown-messages,
+    .navbar-top-links .dropdown-tasks,
+    .navbar-top-links .dropdown-alerts {
+        margin-left: auto;
+    }
+
+    .sidebar-login, .nav-divider-login {
+      display: none !important;
+    }
+    .collapse-btn {
+      display: none;
+    }
+    .navbar .dropdown {
+      display: block; 
+    }
+    .navbar {
+      background-color: #34495E;
+    }
+    
 }
 
 .page-header {
     padding-top: 20px;
     margin-top: 0px;
     border-bottom: none;
-    font-size: 51px;
-}
-
-.content, .nav-sidebar {
-    padding: 0px 15px 1px 15px;
-    background-color: #FFFFFF;
-    -webkit-border-radius: 2px;
-    -moz-border-radius: 2px;
-    border-radius: 2px; 
-}
-
-.content-wrapper, .nav-sidebar-wrapper {
-    padding-left: 0px;
-}
-
-.nav-sidebar { 
-    width: 100%;
-    padding: 8px 0; 
-}
-.nav-sidebar a {
-    color: #333;
-    -webkit-transition: all 0.08s linear;
-    -moz-transition: all 0.08s linear;
-    -o-transition: all 0.08s linear;
-    transition: all 0.08s linear;
-}
-.nav-sidebar .active a { 
-    cursor: default;
-    background-color: #1ABC9C; 
-    color: #fff; 
-    text-shadow: 1px 1px 1px #666; 
-}
-.nav-sidebar .active a:hover {
-    background-color: #1ABC9C;   
-}
-.nav-sidebar .text-overflow a,
-.nav-sidebar .text-overflow .media-body {
-    white-space: nowrap;
-    overflow: hidden;
-    -o-text-overflow: ellipsis;
-    text-overflow: ellipsis; 
-}
-
-/* Right-aligned sidebar */
-.nav-sidebar.pull-right { 
-    border-right: 0; 
-    border-left: 1px solid #ddd; 
+    font-size: 42px;
+    margin-bottom: 20px;
 }
 
 
-/* ---------------------------- */
-/*  bhoechie tab */
-div.bhoechie-tab-container{
-  z-index: 10;
-  background-color: #ffffff;
-  padding: 0 !important;
-  border-radius: 4px;
+/* ----------------------- */
+
+#page-wrapper, #page-breadcrumbs {
+  margin-top: 20px;
+  -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
-  border:1px solid #ddd;
-  -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
-  box-shadow: 0 6px 12px rgba(0,0,0,.175);
-  -moz-box-shadow: 0 6px 12px rgba(0,0,0,.175);
-  background-clip: padding-box;
-  opacity: 0.97;
-  filter: alpha(opacity=97);
-}
-div.bhoechie-tab-menu{
-  padding-right: 0;
-  padding-left: 0;
-  padding-bottom: 0;
-}
-div.bhoechie-tab-menu div.list-group{
-  margin-bottom: 0;
-}
-div.bhoechie-tab-menu div.list-group>a{
-  margin-bottom: 0;
-}
-div.bhoechie-tab-menu div.list-group>a .glyphicon,
-div.bhoechie-tab-menu div.list-group>a .fa {
-  color: #5A55A3;
-}
-div.bhoechie-tab-menu div.list-group>a:first-child{
-  border-top-right-radius: 0;
-  -moz-border-top-right-radius: 0;
-}
-div.bhoechie-tab-menu div.list-group>a:last-child{
-  border-bottom-right-radius: 0;
-  -moz-border-bottom-right-radius: 0;
-}
-div.bhoechie-tab-menu div.list-group>a.active,
-div.bhoechie-tab-menu div.list-group>a.active .glyphicon,
-div.bhoechie-tab-menu div.list-group>a.active .fa{
-  background-color: #5A55A3;
-  background-image: #5A55A3;
-  color: #ffffff;
-}
-div.bhoechie-tab-menu div.list-group>a.active:after{
-  content: '';
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  margin-top: -13px;
-  border-left: 0;
-  border-bottom: 13px solid transparent;
-  border-top: 13px solid transparent;
-  border-left: 10px solid #5A55A3;
+  border-radius: 4px; 
 }
 
-div.bhoechie-tab-content{
-  background-color: #ffffff;
-  /* border: 1px solid #eeeeee; */
-  padding-left: 20px;
-  padding-top: 10px;
+#page-wrapper {
+  min-height: 568px;
+  padding: 0 15px;
+  background-color: #fff;
 }
 
-div.bhoechie-tab div.bhoechie-tab-content:not(.active){
-  display: none;
+#page-breadcrumbs .breadcrumb {
+  background-color: #fff;
+  width: auto !important;
+  font-size: 16px;
 }
 
+@media(min-width:768px) {
+    #page-wrapper, #page-breadcrumbs {
+        position: inherit;
+        margin: 20px 0 0 200px;
+    }
+}
 
 .login-dropdown {
     background-color: #ECF0F1;

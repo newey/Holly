@@ -1,10 +1,10 @@
 {% extends admin_base.html %}
 
-{% block js_init %} 
+{% block js_init %}
 function showTaskTypeOption() {
     var selector = $("select[name=task_type]")[0];
     $(".TaskTypeOptions:visible").hide("fast");
-    $("#TaskType" + selector.options[selector.selectedIndex].value + "Options").show("fast")
+    $("#TaskType" + selector.options[selector.selectedIndex].value + "Options").show("fast");
 };
 
 showTaskTypeOption();
@@ -22,7 +22,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
   <li class="active">New Problem</li>
 </ol>
 
-<form id="task-form" class="form-horizontal" role="form" method="post">
+<form id="task-form" class="form-horizontal" enctype="multipart/form-data" role="form" method="post">
   <div class="panel panel-default">
     <div class="panel-body">
       <div class="form-group">
@@ -140,8 +140,8 @@ $("select[name=task_type]").change(showTaskTypeOption);
             <label for="name" class="col-sm-4 control-label" style="text-align:left;">Time Limit</label>
             <div class="col-sm-8">
               <div class="input-group">
+                <span class="input-group-addon">Sec</span>
                 <input type="text" class="form-control" id="time_limit" name="time_limit" value="1" placeholder="Time Limit">
-                <span class="input-group-addon">Sec</span>    
               </div>
             </div>
           </div>
@@ -150,37 +150,161 @@ $("select[name=task_type]").change(showTaskTypeOption);
             <label for="name" class="col-sm-4 control-label" style="text-align:left;">Memory Limit</label>
             <div class="col-sm-8">
               <div class="input-group">
-                <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="512" placeholder="Time Limit">
-                <span class="input-group-addon">MiB</span>    
+                <span class="input-group-addon">MiB</span>
+                <input type="text" class="form-control" id="memory_limit" name="memory_limit" value="512" placeholder="Memory Limit">
               </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="score_type" class="col-sm-4 control-label" style="text-align:left;">Score Type</label>
-            <div class="col-sm-8">
-              <select class="form-control" name="score_type">
-                {% for score_type in score_type_list %}
-                  <option value="{{ score_type.__name__}}">{{ score_type.__name__ }}</option>
-                {% end %}
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group" style="display: none;">
-            <label for="score_type_parameters" class="col-sm-4 control-label" style="text-align:left;">Score Parameters</label>
-            <div class="col-sm-8">
-              <textarea class="form-control" rows="6" name="score_type_parameters" placeholder="Parameters">[]</textarea>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <button id="submit-task" type="submit" class="btn btn-primary">Create</button>
+<input type="hidden" id="num_tests" name="num_tests" value="0">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Tests</h3>
+  </div>
+  <div class="panel-body">
+    <div class="tab-pane fade in active" style="margin-bottom: 10px;">
+      <div class="table-responsive" id="tests">
+        <table class="table table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
+          <col width="40%">
+          <col width="30%">
+          <col width="30%">
+          <col width="70">
+          <col width="60">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Input</th>
+              <th>Output</th>
+              <th>Remove</th>
+              <th>Public</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <button id="addTest" type="button" class="btn btn-success">Add Test</button>    
+  </div>
+</div>
+
+<button id="submit-task" type="submit" class="btn btn-primary">Create</button>
+
 </form>
 {% end %}
 
 {% block scripts %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<script>
+$(document).ready(function() {
+  var newItems = 0;
 
+  function addRow() {
+    $('#tests').find('tbody').append('\
+      <tr> \
+        <td> \
+          <input type="hidden" name="new-action-'+newItems+'" value="add/ignore"> \
+          <input type="text" name="new-codename-'+newItems+'" class="form-control"> \
+        </td> \
+        <td><input type="file" name="new-input-'+newItems+'" class="input-file"></td> \
+        <td><input type="file" name="new-output-'+newItems+'" class="input-file"></td> \
+        <td style="text-align: center;"> \
+          <button class="btn btn-danger btn-xs delete-test" type="button"><i class="fa fa-close fa-fw"></i></button> \
+        </td> \
+        <td><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
+      </tr>');
+    newItems++;
+    $('#num_tests').val(newItems);
+  }
+  $('#addTest').click(addRow);
+    $('#task-form').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            name: {
+                message: 'This name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set names cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set names must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'User set names must only consist of underscores and alphanumeric characters'
+                    }
+                }
+            },
+            title: {
+                message: 'This title is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set titles cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set titles must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                        message: 'User set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                    }
+                }
+            },
+            TaskTypeOptions_Batch_io_0_inputfile: {
+                message: 'Invalid input file name',
+                validators: {
+                    regexp: {
+                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                        message: "Filename must be empty, or alphanumeric with at most one period in it"
+                    }
+                }
+            },
+            TaskTypeOptions_Batch_io_1_outputfile: {
+                message: 'Invalid output file name',
+                validators: {
+                    regexp: {
+                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                        message: "Filename must be empty, or alphanumeric with at most one period in it"
+                    }
+                }
+            },
+            time_limit: {
+                message: "Invalid time timit",
+                validators: {
+                    notEmpty: {
+                        message: "Time limit must not be blank"
+                    },
+                    numeric: {
+                        separator: ".",
+                        message: "Time limit must be numeric"
+                    }
+                }
+            },
+            memory_limit: {
+                message: "Invalid memory timit",
+                validators: {
+                    notEmpty: {
+                        message: "Memory limit must not be blank"
+                    },
+                    numeric: {
+                        separator: ".",
+                        message: "Memory limit must be numeric"
+                    }
+                }
+            }
+        }
+    });
+}); 
+</script>
 {% end %}

@@ -61,7 +61,7 @@ from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
-from cms.grading.scoretypes import get_score_type_class
+from cms.grading.scoretypes import get_score_type_class, get_score_type
 from cms.server import file_handler_gen, get_url_root, \
     CommonRequestHandler
 from cmscommon.datetime import make_datetime, make_timestamp
@@ -126,6 +126,46 @@ def argument_reader(func, empty=None):
         else:
             dest[name] = func(value)
     return helper
+
+
+def send_mail(mime_message):
+    """Sends a MIME message as configured in cms.conf, and will ignore messages if message sending
+    is turned off in the config.
+
+    mime_message (email.mime.*): message to send, must have 'To' field defined.
+
+    return (boolean): True if a message was send, False otherwise
+
+    """
+    if config.training_send_mail:
+        try:
+            mime_message['From'] = config.training_email_address
+            s = smtplib.SMTP(config.training_smtp_server_address, config.training_smtp_server_port)
+            if config.training_smtp_server_use_tls:
+                s.starttls()
+                s.ehlo()
+            if config.training_smtp_server_authenticate:
+                s.login(config.training_smtp_server_username, config.training_smtp_server_password)
+            s.sendmail(mime_message['From'], [mime_message['To']], mime_message.as_string())
+            s.quit()
+            return True
+        except smtplib.SMTPServerDisconnected:
+            logger.exception("SMTP server disconnected while sending message")
+        except smtplib.SMTPSenderRefused:
+            logger.exception("SMTP server refused the sender address")
+        except smtplib.SMTPRecipientsRefused:
+            logger.exception("SMTP server refused the recipient addresses")
+        except smtplib.SMTPDataError:
+            logger.exception("SMTP server refused the message data")
+        except smtplib.SMTPConnectError:
+            logger.exception("SMTP server refused the connection")
+        except smtplib.SMTPHeloError:
+            logger.exception("SMTP server refused our HELO message")
+        except smtplib.SMTPAuthenticationError:
+            logger.exception("SMTP server refused Authentication")
+        except Exception as e:
+            logger.exception("caught: %s" % e.message)
+    return False
 
 
 class BaseHandler(CommonRequestHandler):
@@ -214,6 +254,44 @@ class BaseHandler(CommonRequestHandler):
         self.sql_session.add(individualSet)
 
         self.sql_session.commit()
+
+    def get_task_results(self, user, task):
+        result = {
+            "status": None,
+            "max_score": None,
+            "score": None,
+            "percent": None,
+        }
+        submission = self.sql_session.query(Submission)\
+            .filter(Submission.user == user)\
+            .filter(Submission.task == task)\
+            .order_by(Submission.timestamp.desc()).first()
+        
+        if submission is None:
+            result["status"] = "none"
+        else:
+            sr = submission.get_result(task.active_dataset)
+            score_type = get_score_type(dataset=task.active_dataset)
+
+            if sr is None or not sr.compiled():
+                result['status'] = "compiling"
+            elif sr.compilation_failed():
+                result['status'] = "failed_compilation"
+            elif not sr.evaluated():
+                result['status'] = "evaluating"
+            elif not sr.scored():
+                result['status'] = "scoring"
+            else:
+                result['status'] = "ready"
+
+                if score_type is not None and score_type.max_score != 0:
+                    result['max_score'] = round(score_type.max_score, task.score_precision)
+                else:
+                    result['max_score'] = 0
+                result['score'] = round(sr.score, task.score_precision)
+                result['percent'] = round(result['score'] * 100.0 / result['max_score'])
+
+        return result
         
 
     def prepare(self):
@@ -333,33 +411,6 @@ class BaseHandler(CommonRequestHandler):
                 return task
         raise KeyError
 
-    def get_submission_format(self, dest):
-        """Parse the submission format.
-
-        Using the two arguments "submission_format_choice" and
-        "submission_format" set the "submission_format" item of the
-        given dictionary.
-
-        dest (dict): a place to store the result.
-
-        """
-        choice = self.get_argument("submission_format_choice", "other")
-        if choice == "simple":
-            filename = "%s.%%l" % dest["name"]
-            format_ = [SubmissionFormatElement(filename)]
-        elif choice == "other":
-            value = self.get_argument("submission_format", "[]")
-            if value == "":
-                value = "[]"
-            format_ = []
-            try:
-                for filename in json.loads(value):
-                    format_ += [SubmissionFormatElement(filename)]
-            except ValueError:
-                raise ValueError("Submission format not recognized.")
-        else:
-            raise ValueError("Submission format not recognized.")
-        dest["submission_format"] = format_
 
     def get_task_type(self, dest, name, params):
         """Parse the task type.
@@ -436,33 +487,6 @@ class BaseHandler(CommonRequestHandler):
             if not 0 < value:
                 raise ValueError("Invalid memory limit.")
             dest["memory_limit"] = value
-
-    def get_score_type(self, dest, name, params):
-        """Parse the score type.
-
-        Parse the arguments to get the score type and its parameters,
-        and fill them in the "score_type" and "score_type_parameters"
-        items of the given dictionary.
-
-        dest (dict): a place to store the result.
-        name (string): the name of the argument that holds the score
-            type name.
-        params (string): the name of the argument that hold the
-            parameters.
-
-        """
-        name = self.get_argument(name, None)
-        if name is None:
-            raise ValueError("Score type not found.")
-        try:
-            get_score_type_class(name)
-        except KeyError:
-            raise ValueError("Score type not recognized: %s." % name)
-        params = self.get_argument(params, None)
-        if params is None:
-            raise ValueError("Score type parameters not found.")
-        dest["score_type"] = name
-        dest["score_type_parameters"] = params
 
     def check_edit_user_valid_input(self, attrs):
         assert attrs.get("username") is not None,\
@@ -542,7 +566,16 @@ class MainHandler(BaseHandler):
     """
     @tornado.web.authenticated
     def get(self):
+        statuses = dict()
+        try:
+            for problemset in self.current_user.pinnedSets:
+                for task in problemset.tasks:
+                    statuses[task.id] = self.get_task_results(self.current_user, task)
+        except KeyError:
+            raise tornado.web.HTTPError(404) 
+
         self.r_params["sets"] = self.current_user.pinnedSets
+        self.r_params["statuses"] = statuses
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -556,8 +589,17 @@ class ProblemListHandler(BaseHandler):
         for userset in self.current_user.userSets:
             for problemset in userset.problemSets:
                 accessibleSets.add(problemset)
+        
+        statuses = dict()
+        try:
+            for problemset in accessibleSets:
+                for task in problemset.tasks:
+                    statuses[task.id] = self.get_task_results(self.current_user, task)
+        except KeyError:
+            raise tornado.web.HTTPError(404)        
 
         self.r_params["sets"] = accessibleSets
+        self.r_params["statuses"] = statuses
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -593,6 +635,13 @@ class LoginHandler(BaseHandler):
         self.redirect(next_page)
 
 class SignupHandler(BaseHandler):
+    """Signup handler.
+
+    """
+    def get(self):
+        self.get_string(self.r_params, "error")
+        self.render("signup.html", **self.r_params)
+
     def post(self):
         try:
             attrs = dict()
@@ -633,23 +682,20 @@ class SignupHandler(BaseHandler):
 
         except Exception as error:
             print(error)
-            self.redirect("/login?error=%s&signup=T" % error)
+            self.redirect("/signup?error=%s&signup=T" % error)
             return
 
         # Send the email
-        message = """To confirm your email please use the following verification code: 
-                     %s
-                     If you did not request a new password ignore this email\
-                     and contact an admin.\n""" % user.verification 
+        message = ("To confirm your email please use the following verification code:\n" +
+                   "%s\n" +
+                   "If you did not request a new password ignore this email " +
+                   "and contact an admin.\n") % user.verification
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly email confirmation"
-        msg['From'] = "admin@holly.com"
         msg['To'] = user.email
 
-        s = smtplib.SMTP('localhost')
-        s.sendmail(msg['From'], [msg['To']], msg.as_string())
-        s.quit()
+        send_mail(msg)
 
         self.redirect("/confirm_email/%s" % user.id)
 
@@ -699,6 +745,8 @@ class AddProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def post(self):
+        dataset = None
+        task_id = None
         try:
             attrs = dict()
 
@@ -708,7 +756,10 @@ class AddProblemHandler(BaseHandler):
             assert attrs.get("name") is not None, "No task name specified."
 
             self.get_string(attrs, "primary_statements")
-            self.get_submission_format(attrs)
+
+            filename = "%s.%%l" % attrs["name"]
+            format_ = [SubmissionFormatElement(filename)]
+            attrs["submission_format"] = format_
 
             attrs["token_mode"] = "disabled"
             attrs["score_precision"] = 0
@@ -719,7 +770,7 @@ class AddProblemHandler(BaseHandler):
             attrs["contest"] = self.contest
             task = Task(**attrs)
             self.sql_session.add(task)
-
+            task_id = task.id
         except Exception as error:
             self.redirect("/admin/problem/add")
             print(error)
@@ -731,15 +782,55 @@ class AddProblemHandler(BaseHandler):
             self.get_time_limit(attrs, "time_limit")
             self.get_memory_limit(attrs, "memory_limit")
             self.get_task_type(attrs, "task_type", "TaskTypeOptions_")
-            self.get_score_type(attrs, "score_type", "score_type_parameters")
 
             # Create its first dataset.
             attrs["description"] = "Default"
             attrs["autojudge"] = True
             attrs["task"] = task
+            attrs["score_type"] = "Sum"
+            attrs["score_type_parameters"] = "1"
             dataset = Dataset(**attrs)
             self.sql_session.add(dataset)
 
+        except Exception as error:
+            print(error)
+            self.redirect("/admin/problem/add")
+            return
+
+        numTests = int(self.get_argument("num_tests"))
+        for i in range(0, numTests):
+            
+            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            codename = self.get_argument("new-codename-" + str(i))
+            
+            try:
+                input_ = self.request.files["new-input-" + str(i)][0]
+                output = self.request.files["new-output-" + str(i)][0]
+            except KeyError:
+                print("Couldn't find files for %dth entry" % i)
+                self.redirect("/admin/problem/add")
+                return
+
+            public = self.get_argument("public", None) is not None
+
+            try:
+                input_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        input_["body"],
+                        "Testcase input for task %s" % task.name)
+                output_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        output["body"],
+                        "Testcase output for task %s" % task.name)
+                testcase = Testcase(codename, public, input_digest,
+                                        output_digest, dataset=dataset)
+                self.sql_session.add(testcase)
+            except Exception as error:
+                print(error)
+                self.redirect("/admin/problem/add" % task_id)
+                return
+
+        try:
             # Make the dataset active. Life works better that way.
             task.active_dataset = dataset
             self.sql_session.commit()
@@ -757,15 +848,17 @@ class ProblemHandler(BaseHandler):
     """
 
     @tornado.web.authenticated
-    def get(self, task_id):
+    def get(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
         self.r_params["active_sidebar_item"] = "problems"
-        self.render("task_description.html",
-                    task=task, **self.r_params)
+        self.r_params["task"] = task
+        self.r_params["problemset"] = problemset
+        self.render("task_description.html", **self.r_params)
 
 class AdminProblemHandler(BaseHandler):
     """Shows the data of a task.
@@ -849,8 +942,6 @@ class EditProblemHandler(BaseHandler):
             self.get_string(attrs, "time_limit")
             self.get_string(attrs, "memory_limit")
             self.get_string(attrs, "task_type")
-            self.get_string(attrs, "score_type")
-            self.get_string(attrs, "score_type_parameters")
 
             # save input to task
             task.name = attrs.get("name")
@@ -859,53 +950,73 @@ class EditProblemHandler(BaseHandler):
             task.active_dataset.time_limit = attrs.get("time_limit")
             task.active_dataset.memory_limit = attrs.get("memory_limit")
             task.active_dataset.task_type = attrs.get("task_type")
-            task.active_dataset.score_type = attrs.get("score_type")
-            task.active_dataset.score_type_parameters = attrs.get("score_type_parameters")
-            
-            self.sql_session.commit()
+            task.active_dataset.score_type = "Sum"
+            task.active_dataset.score_type_parameters = "1"
 
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
             print(error)
             return
 
-        self.redirect("/admin/problem/%s" % task_id)
 
-class AddTestHandler(BaseHandler):
-    """Add a testcase to a dataset.
+        #Add New Tests
+        numTests = int(self.get_argument("num_tests"))
+        logger.info("Found %d tests to add" % numTests)
+        for i in range(0, numTests):
+            
+            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            codename = self.get_argument("new-codename-" + str(i))
 
-    """
-    @tornado.web.authenticated
-    @admin_authenticated
-    def get(self, task_id):
-        task = self.get_task_by_id(task_id)
-        dataset = task.active_dataset
+            logger.info("Adding testcase: %s" % codename)
+            try:
+                input_ = self.request.files["new-input-" + str(i)][0]
+                output = self.request.files["new-output-" + str(i)][0]
+            except KeyError:
+                logger.exception("Couldn't find files for %dth entry" % i)
+                self.redirect("/admin/problem/%s/edit" % task_id)
+                return
 
-        self.r_params = self.render_params()
-        self.r_params["task"] = task
-        self.r_params["dataset"] = dataset
-        self.r_params["active_sidebar_item"] = "problems"
-        self.render("add_testcase.html", **self.r_params)
+            public = self.get_argument("public", None) is not None
 
-    @tornado.web.authenticated
-    @admin_authenticated
-    def post(self, task_id):
-        task = self.get_task_by_id(task_id)
-        dataset = task.active_dataset
+            try:
+                input_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        input_["body"],
+                        "Testcase input for task %s" % task.name)
+                output_digest = \
+                    self.application.service.file_cacher.put_file_content(
+                        output["body"],
+                        "Testcase output for task %s" % task.name)
+                logger.info("Adding input digest: %s" % input_digest)
+                logger.info("Adding output digest: %s" % output_digest)
+                testcase = Testcase(codename, public, input_digest,
+                                        output_digest, dataset=task.active_dataset)
+                self.sql_session.add(testcase)
+            except Exception as error:
+                logger.exception(error)
+                self.redirect("/admin/problem/%s/edit" % task_id)
+                return
 
-        codename = self.get_argument("codename")
+        #Delete old tests
+        working = dict()
+        self.get_string(working, "delete_ids")
+        deleteids = working["delete_ids"].strip().split()
 
-        try:
-            input_ = self.request.files["input"][0]
-            output = self.request.files["output"][0]
-        except KeyError:
-            assert attrs.get("codename") is not None, "No test name specified"
+        assert reduce(lambda x, y: x and y.isdigit(), deleteids, True), "Not all problem ids are integers"
 
-            print("Couldn't find files")
-            self.redirect("/admin/problem/%s/test" % task_id)
-            return
+        deleteids = map(int, deleteids)
 
-        public = self.get_argument("public", None) is not None
+        ## TODO: Ensure all problem ids are actually problems.
+
+        for index, deleteid in enumerate(deleteids):
+            test = self.sql_session.query(Testcase).\
+               filter(Testcase.id == deleteid).one()
+            try:
+                self.sql_session.delete(test)
+            except Exception as error:
+                logger.exception(error)
+                self.redirect("/admin/problem/%s/edit" % task_id)
+                return
 
         try:
             input_digest = \
@@ -925,13 +1036,14 @@ class AddTestHandler(BaseHandler):
             testcase = Testcase(codename, public, input_digest,
                                     output_digest, dataset=dataset)
             self.sql_session.add(testcase)
+
             self.sql_session.commit()
         except Exception as error:
-            print(error)
-            self.redirect("/admin/problem/%s/test" % task_id)
+            self.redirect("/admin/problem/%s/edit" % task_id)
+            logger.exception(error)
             return
 
-        self.redirect("/admin/problem/%s" % task.id)
+        self.redirect("/admin/problem/%s" % task_id)
 
 class DeleteTestHandler(BaseHandler):
     """Delete a testcase.
@@ -957,7 +1069,7 @@ class SubmitHandler(BaseHandler):
 
     """
     @tornado.web.authenticated
-    def post(self, task_id):
+    def post(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
         except KeyError:
@@ -1126,13 +1238,15 @@ class SubmitHandler(BaseHandler):
             submission_id=submission.id)
 
 
-        self.redirect("/problem/%s/submissions" % task.id)
+        self.redirect("/problem/%s/%s/submissions" % (set_id, task.id))
 
 class SubmissionsHandler(BaseHandler):
     @tornado.web.authenticated
-    def get(self, task_id):
+    def get(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+            score_type = get_score_type(dataset=task.active_dataset)
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1141,6 +1255,8 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
         self.r_params["task"] = task
+        self.r_params["score_type"] = score_type
+        self.r_params["problemset"] = problemset
         self.r_params["active_sidebar_item"] = "problems"
 
         self.render("task_submissions.html", **self.r_params)
@@ -1149,8 +1265,17 @@ class ProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, set_id):
         problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        statuses = dict()
+        try:
+            for task in problemset.tasks:
+                statuses[task.id] = self.get_task_results(self.current_user, task)
+        except KeyError:
+            raise tornado.web.HTTPError(404)  
+
         self.r_params = self.render_params()
         self.r_params["problemset"] = problemset
+        self.r_params["statuses"] = statuses
+        self.r_params["tasks"] = [(task, self.get_task_results(self.current_user, task)) for task in problemset.tasks]
         self.r_params["active_sidebar_item"] = "problems"
         self.render("problemset.html", **self.r_params)
 
@@ -1387,7 +1512,7 @@ class EditUserHandler(BaseHandler):
             self.get_string(attrs, "first_name")
             self.get_string(attrs, "last_name")
             self.get_string(attrs, "username", empty=None)
-            self.get_string(attrs, "password", empty=None)
+            self.get_string(attrs, "password", empty=user.password)
             self.get_string(attrs, "email")
             
             is_admin_choice = self.get_argument("is_admin", False)
@@ -1701,19 +1826,16 @@ class PasswordRecoveryHandler(BaseHandler):
             return
 
         # Send the email
-        message = """To update your password please use the following verification code: 
-                     %s
-                     If you did not request a new password ignore this email\
-                     and contact an admin.\n""" % code 
+        message = ("To update your password please use the following verification code:\n" +
+                     "%s\n" +
+                     "If you did not request a new password ignore this email "
+                     "and contact an admin.\n") % code
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly password recovery"
-        msg['From'] = "admin@holly.com"
         msg['To'] = user.email
 
-        s = smtplib.SMTP('localhost')
-        s.sendmail(msg['From'], [msg['To']], msg.as_string())
-        s.quit()
+        send_mail(msg)
 
         self.redirect("/change_password/%s" % user.id)
 
@@ -1735,7 +1857,7 @@ class PasswordChangeHandler(BaseHandler):
             self.redirect("/recover_password?error=%s" % error)
             return
 
-        self.render("change_password.html")
+        self.render("change_password.html", **self.r_params)
 
     def post(self, user_id):
         try:
@@ -1754,7 +1876,7 @@ class PasswordChangeHandler(BaseHandler):
         
         if verification != user.verification:
             error = "Invalid verification code"
-            self.redirect("/change_password?error=%s" % error)
+            self.redirect("/change_password/%s?error=%s" % (user_id, error))
             return
 
         try:
@@ -1765,7 +1887,7 @@ class PasswordChangeHandler(BaseHandler):
             user.verification_type = 0 
             self.sql_session.commit()
         except Exception as error:
-            self.redirect("/change_password?error=%s" % error)
+            self.redirect("/change_password/%s?error=%s" % (user_id, error))
             return
 
         self.redirect("/login")
@@ -1788,7 +1910,7 @@ class EmailConfirmationHandler(BaseHandler):
             self.redirect("/login?error=%s" % error)
             return
 
-        self.render("confirm_email.html")
+        self.render("confirm_email.html", **self.r_params)
 
     def post(self, user_id):
         try:
@@ -1807,14 +1929,14 @@ class EmailConfirmationHandler(BaseHandler):
         
         if verification != user.verification:
             error = "Invalid verification code"
-            self.redirect("/confirm_email?error=%s" % error)
+            self.redirect("/confirm_email/%s?error=%s" % (user_id, error))
             return
 
         try:
             user.verification_type = 0 
             self.sql_session.commit()
         except Exception as error:
-            self.redirect("/confirm_email?error=%s" % error)
+            self.redirect("/confirm_email/%s?error=%s" % (user_id, error))
             return
 
         self.set_secure_cookie("login",
@@ -1833,9 +1955,9 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
-    (r"/problem/([0-9]+)", ProblemHandler),
-    (r"/problem/([0-9]+)/submit", SubmitHandler),
-    (r"/problem/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
+    (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
+    (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),
     (r"/problemset/([0-9]+)", ProblemSetHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
@@ -1845,8 +1967,6 @@ _tws_handlers = [
     (r"/admin/problem/add", AddProblemHandler),
     (r"/admin/problem/([0-9]+)/delete", DeleteProblemHandler),
     (r"/admin/problem/([0-9]+)/edit", EditProblemHandler),
-    (r"/admin/problem/([0-9]+)/test/add", AddTestHandler),
-    (r"/admin/problem/([0-9]+)/test/([0-9]+)/delete", DeleteTestHandler),
     (r"/admin/problemsets", AdminProblemSetsHandler),
     (r"/admin/problemset/add", AddProblemSetHandler),
     (r"/admin/problemset/([0-9]+)/delete", DeleteProblemSetHandler),

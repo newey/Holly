@@ -138,7 +138,20 @@
     "training_listen_address": "",
     "training_listen_port":    8891,
 
+    "_help": "Indicates whether or not the training site should send email",
+    "_help": ", if it should then the SMTP server information must be",
+    "_help": "valid.",
+    "training_send_mail": false,
 
+    "_help": "SMTP server information to send emails to users, this is",
+    "_help": "required only when training_send_mail is true.",
+    "training_email_address": "",
+    "training_smtp_server_address": "",
+    "training_smtp_server_port": 587,
+    "training_smtp_server_use_tls": false,
+    "training_smtp_server_authenticate": false,
+    "training_smtp_server_username": "",
+    "training_smtp_server_password": "",
 
     "_section": "ScoringService",
 
