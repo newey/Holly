@@ -72,9 +72,8 @@ logger = logging.getLogger(__name__)
 
 def admin_authenticated(foo):
     def func(self, *args, **kwargs):
-        print('self is %s' % self)
         if not self.current_user.is_training_admin:
-            self.redirect("/")
+            self.redirect("/?error=You are not an admin.")
         else:
             return foo(self, *args, **kwargs)
     return func
@@ -128,6 +127,14 @@ def argument_reader(func, empty=None):
             dest[name] = func(value)
     return helper
 
+def parse_datetime(value):
+    """Parse and validate a datetime (in pseudo-ISO8601)."""
+    if '.' not in value:
+        value += ".0"
+    try:
+        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+    except:
+        raise ValueError("Can't cast %s to datetime." % value)
 
 def send_mail(mime_message):
     """Sends a MIME message as configured in cms.conf, and will ignore messages if message sending
@@ -317,7 +324,7 @@ class BaseHandler(CommonRequestHandler):
                 self.sql_session.add(self.contest)
                 self.sql_session.commit()
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.set_status(500)
                 return
         else:
@@ -401,6 +408,9 @@ class BaseHandler(CommonRequestHandler):
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
+        params["active_sidebar_item"] = ""
+        params["admin_port"] = config.admin_listen_port
+        params["error"] = self.get_argument("error", "")
         return params
 
     def get_task_by_id(self, task_id):
@@ -440,6 +450,8 @@ class BaseHandler(CommonRequestHandler):
 
 
     get_string = argument_reader(lambda a: a, empty="")
+    
+    get_datetime = argument_reader(parse_datetime)
 
     def get_time_limit(self, dest, field):
         """Parse the time limit.
@@ -557,6 +569,11 @@ class TrainingWebServer(WebService):
 
         self.evaluation_service = self.connect_to(
             ServiceCoord("EvaluationService", 0))
+        
+        ranking_enabled = len(config.rankings) > 0
+        self.proxy_service = self.connect_to(
+            ServiceCoord("ProxyService", 0),
+            must_be_present=ranking_enabled)
 
         self.file_cacher = FileCacher(self)
 
@@ -609,7 +626,6 @@ class LoginHandler(BaseHandler):
 
     """
     def get(self):
-        self.get_string(self.r_params, "error")
         self.render("login.html", **self.r_params)
 
     def post(self):
@@ -621,11 +637,11 @@ class LoginHandler(BaseHandler):
             .filter(User.username == username).first()
 
         if user is None:
-            self.redirect("/login?error=Invalid Username&ext=%s" % next_page)
+            self.redirect("/login?error=Invalid username or password&ext=%s" % next_page)
             return
 
         if user.password != password:
-            self.redirect("/login?error=Invalid Password&next=%s" % next_page)
+            self.redirect("/login?error=Invalid username or password&next=%s" % next_page)
             return
 
         self.set_secure_cookie("login",
@@ -640,7 +656,6 @@ class SignupHandler(BaseHandler):
 
     """
     def get(self):
-        self.get_string(self.r_params, "error")
         self.render("signup.html", **self.r_params)
 
     def post(self):
@@ -682,7 +697,7 @@ class SignupHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/signup?error=%s&signup=T" % error)
             return
 
@@ -774,7 +789,7 @@ class AddProblemHandler(BaseHandler):
             task_id = task.id
         except Exception as error:
             self.redirect("/admin/problem/add")
-            print(error)
+            logger.exception(error)
             return
 
         try:
@@ -794,21 +809,21 @@ class AddProblemHandler(BaseHandler):
             self.sql_session.add(dataset)
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problem/add")
             return
 
         numTests = int(self.get_argument("num_tests"))
         for i in range(0, numTests):
             
-            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
             
             try:
                 input_ = self.request.files["new-input-" + str(i)][0]
                 output = self.request.files["new-output-" + str(i)][0]
             except KeyError:
-                print("Couldn't find files for %dth entry" % i)
+                logger.exception("Couldn't find files for %dth entry" % i)
                 self.redirect("/admin/problem/add")
                 return
 
@@ -827,7 +842,7 @@ class AddProblemHandler(BaseHandler):
                                         output_digest, dataset=dataset)
                 self.sql_session.add(testcase)
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.redirect("/admin/problem/add" % task_id)
                 return
 
@@ -837,7 +852,7 @@ class AddProblemHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problem/add")
             return
 
@@ -947,7 +962,7 @@ class EditProblemHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
-            print(error)
+            logger.exception(error)
             return
 
 
@@ -956,7 +971,7 @@ class EditProblemHandler(BaseHandler):
         logger.info("Found %d tests to add" % numTests)
         for i in range(0, numTests):
             
-            attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
+            attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
 
             logger.info("Adding testcase: %s" % codename)
@@ -1032,7 +1047,7 @@ class DeleteTestHandler(BaseHandler):
             self.sql_session.delete(test)
             self.sql_session.commit()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problem/%s" % task_id)
             return
 
@@ -1290,8 +1305,6 @@ class AddProblemSetHandler(BaseHandler):
             attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
-            print(attrs["num"])
-
             problemset = ProblemSet(**attrs)
             self.sql_session.add(problemset)
 
@@ -1313,7 +1326,7 @@ class AddProblemSetHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/problemset/add")
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/problemsets")
@@ -1349,7 +1362,7 @@ class DeleteProblemSetHandler(BaseHandler):
             self.sql_session.delete(problemset)
             self.sql_session.commit()
         except Exception as error:
-            print(error)
+            logger.exception(error)
         self.redirect("/admin/problemsets")
 
 class EditProblemSetHandler(BaseHandler):
@@ -1378,7 +1391,7 @@ class EditProblemSetHandler(BaseHandler):
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problemset/%d/edit" % set_id)
         try:
             attrs = dict()
@@ -1409,7 +1422,7 @@ class EditProblemSetHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/problemset/%d/edit" % set_id)
 
         self.redirect("/admin/problemsets")
@@ -1501,7 +1514,7 @@ class EditUserHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/user/%s/edit" % user_id)
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/users")
@@ -1616,7 +1629,7 @@ class AddUserSetHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/userset/add")
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/users")
@@ -1651,7 +1664,7 @@ class EditUserSetHandler(BaseHandler):
         try:
             userset = self.sql_session.query(UserSet).filter(UserSet.id==set_id).one()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/userset/%d/edit" % set_id)
         try:
             attrs = dict()
@@ -1700,7 +1713,7 @@ class EditUserSetHandler(BaseHandler):
 
         except Exception as error:
             self.redirect("/admin/userset/%s/edit" % userset_id)
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/users")
@@ -1718,7 +1731,7 @@ class DeleteUserSetHandler(BaseHandler):
             self.sql_session.delete(userset)
             self.sql_session.commit()
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/admin/userset/%s" % userset_id)
             return
 
@@ -1758,7 +1771,7 @@ class UserInfoHandler(BaseHandler):
             self.sql_session.commit()
 
         except Exception as error:
-            print(error)
+            logger.exception(error)
             self.redirect("/user")
             return
 
@@ -1916,6 +1929,136 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class AddContestHandler(BaseHandler):
+    """Adds a new contest.
+
+    """
+    
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self):
+        self.r_params = self.render_params()
+        self.r_params["usersets"] = self.sql_session.query(UserSet)
+        self.r_params["problemsets"] = self.sql_session.query(ProblemSet)
+        self.render("add_contest.html", **self.r_params)
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def post(self):
+        try:
+            attrs = dict()
+
+            self.get_string(attrs, "name", empty=None)
+            self.get_string(attrs, "description")
+
+            assert attrs.get("name") is not None, "No contest name specified."
+
+            attrs["allowed_localizations"] = []
+            attrs["languages"] = self.get_arguments("languages", [])
+
+            attrs["token_mode"] = "disabled"
+            self.get_datetime(attrs, "start")
+            self.get_datetime(attrs, "stop")
+            attrs["score_precision"] = 0
+
+            # Create the contest.
+            contest = Contest(**attrs)
+            self.sql_session.add(contest)
+
+            attrs = dict()
+            self.get_string(attrs, "problemsetids")
+            problemsetids = attrs["problemsetids"].strip().split()
+
+            assert reduce(lambda x, y: x and y.isdigit(), problemsetids, True), "Not all problem ids are integers"
+
+            problemsetids = map(int, problemsetids)
+
+            ## TODO: Ensure all problem ids are actually problems.
+
+            for problemsetid in problemsetids:
+                problemset = self.sql_session.query(ProblemSet).\
+                                              filter(ProblemSet.id==problemsetid).one()
+                
+                for task in problemset.tasks:
+                    attrs = dict()
+                    attrs["name"] = task.name
+                    attrs["title"] = task.title
+                    attrs["primary_statements"] = task.primary_statements
+                    attrs["submission_format"] = task.submission_format
+                    attrs["token_mode"] = task.token_mode
+                    attrs["score_precision"] = task.score_precision
+                    #TODO: CHANGE AFTER DEMO
+                    random.seed()
+                    attrs["num"] = random.randint(1,1000000000)
+                    attrs["contest"] = contest
+                    new_task = Task(**attrs)
+                    self.sql_session.add(new_task)
+
+                    attrs = dict()
+                    dataset = task.active_dataset
+                    attrs["time_limit"] = dataset.time_limit
+                    attrs["memory_limit"] = dataset.memory_limit
+                    attrs["task_type"] = dataset.task_type
+                    attrs["task_type_parameters"] = dataset.task_type_parameters
+                    attrs["description"] = dataset.description 
+                    attrs["autojudge"] = dataset.autojudge
+                    attrs["task"] = new_task
+                    attrs["score_type"] = dataset.score_type
+                    attrs["score_type_parameters"] = dataset.score_type_parameters
+                    new_dataset = Dataset(**attrs)
+                    self.sql_session.add(new_dataset)
+
+                    for codename, test in dataset.testcases.iteritems():
+                        attrs = dict()
+                        attrs["codename"] = codename
+                        attrs["public"] = test.public
+                        attrs["input"] = test.input
+                        attrs["output"] = test.output
+                        attrs["dataset"] = new_dataset 
+                        new_test = Testcase(**attrs)
+                        self.sql_session.add(new_test)
+
+                    new_task.active_dataset = new_dataset
+
+            attrs = dict()
+            self.get_string(attrs, "usersetids")
+            usersetids = attrs["usersetids"].strip().split()
+
+            assert reduce(lambda x, y: x and y.isdigit(), usersetids, True), "Not all problem ids are integers"
+
+            usersetids = map(int, usersetids)
+
+            ## TODO: Ensure all problem ids are actually problems.
+
+            for usersetid in usersetids:
+                userset = self.sql_session.query(UserSet).\
+                                           filter(UserSet.id==usersetid).one()
+                for user in userset.users:
+                    attrs = dict()
+                    attrs["first_name"] = user.first_name
+                    attrs["last_name"] = user.last_name
+                    attrs["username"] = user.username
+                    attrs["password"] = ''.join(random.choice(string.ascii_uppercase + 
+                                                string.digits) for _ in range(8))
+                    attrs["email"] = user.email
+
+                    # Create the user.
+                    attrs["contest"] = contest
+                    attrs["verification_type"] = 0
+
+                    new_user = User(**attrs)
+                    self.sql_session.add(new_user)
+                    
+ 
+            self.sql_session.commit()
+            self.application.service.proxy_service.reinitialize()
+        except Exception as error:
+            self.redirect("/admin/contest/add")
+            print(error)
+            return
+            
+        self.redirect("/admin/contest/%s" % contest.id)
+
 class HallOfFameHandler(BaseHandler):
     """Show the users with the most problems solved on the site.
 
@@ -1966,6 +2109,7 @@ _tws_handlers = [
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),
+    (r"/admin/contest/add", AddContestHandler),
     (r"/admin/problems", AdminProblemsHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),

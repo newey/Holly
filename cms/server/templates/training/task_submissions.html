@@ -13,7 +13,8 @@
 <h1 class="page-header">Submissions</h1>
 
 <div class="panel-group" id="accordion">
-  {% set count = submissions.count()+1 %}
+  {% set submissionsCount = submissions.count() %}
+  {% set count = submissionsCount+1 %}
   {% for submission in submissions %}
   {% for result in submission.results %}
   <div class="panel panel-default">
@@ -24,7 +25,7 @@
         </a>
       </h4>
     </div>
-    <div id="collapse{{ count }}" class="panel-collapse collapse {% if (count == 1) %}out{% else %}in{% end %}">
+    <div id="collapse{{ count }}" class="panel-collapse collapse {% if (count == submissionsCount) %}out{% else %}in{% end %}">
       <div class="panel-body">
         <div class="row">
           <div class="col-md-6">
