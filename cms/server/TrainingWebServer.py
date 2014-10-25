@@ -408,8 +408,9 @@ class BaseHandler(CommonRequestHandler):
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
         params["active_sidebar_item"] = ""
-        params["admin_port"] = config.admin_listen_port
         params["error"] = self.get_argument("error", "")
+        
+        params["admin_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.admin_listen_port)
         return params
 
     def get_task_by_id(self, task_id):
@@ -1928,6 +1929,19 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class AdminContestsHandler(BaseHandler):
+    """Show all contests
+
+    """
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self):
+        self.r_params["contests"] = self.sql_session.query(Contest).\
+                                        filter(Contest.id != self.contest.id)           
+        self.render("contests.html", **self.r_params)
+        
+ 
 class AddContestHandler(BaseHandler):
     """Adds a new contest.
 
@@ -2074,6 +2088,7 @@ _tws_handlers = [
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),
+    (r"/admin/contests", AdminContestsHandler),
     (r"/admin/contest/add", AddContestHandler),
     (r"/admin/problems", AdminProblemsHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
