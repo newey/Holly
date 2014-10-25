@@ -332,15 +332,13 @@ $(document).ready(function() {
         ['fontsize', ['fontsize']],
         ['para', ['ul', 'ol', 'paragraph']],
         ['insert', ['table']],
-      ]
-    });
+        ['misc', ['codeview']]
+      ],
 
-    $('#summernote').summernote({
       onChange: function(contents, $editable) {
         $('#primary_statements').val(contents);
       }
     });
-
 }); 
 </script>
 {% end %}

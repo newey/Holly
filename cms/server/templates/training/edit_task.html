@@ -266,113 +266,111 @@ $(document).ready(function() {
   addOldRow({{ test.id }}, "{{ test.codename }}", false);
   {% end %}
 
-    $('#task-form').bootstrapValidator({
-        message: 'This value is not valid',
-        feedbackIcons: {
-            valid: 'glyphicon glyphicon-ok',
-            invalid: 'glyphicon glyphicon-remove',
-            validating: 'glyphicon glyphicon-refresh'
-        },
-        fields: {
-            name: {
-                message: 'This name is not valid',
-                validators: {
-                    notEmpty: {
-                        message: 'Problem names cannot be empty'
-                    },
-                    stringLength: {
-                        max: 80,
-                        message: 'Problem names must be no more than 80 characters long'
-                    },
-                    regexp: {
-                        regexp: /^[a-zA-Z0-9_]+$/,
-                        message: 'Problem names must only consist of underscores and alphanumeric characters'
-                    }
-                }
-            },
-            title: {
-                message: 'This title is not valid',
-                validators: {
-                    notEmpty: {
-                        message: 'Problem titles cannot be empty'
-                    },
-                    stringLength: {
-                        max: 80,
-                        message: 'Problem titles must be no more than 80 characters long'
-                    },
-                    regexp: {
-                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
-                        message: 'Problem titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
-                    }
-                }
-            },
-            TaskTypeOptions_Batch_io_0_inputfile: {
-                message: 'Invalid input file name',
-                validators: {
-                    regexp: {
-                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
-                        message: "Filename must be empty, or alphanumeric with at most one period in it"
-                    }
-                }
-            },
-            TaskTypeOptions_Batch_io_1_outputfile: {
-                message: 'Invalid output file name',
-                validators: {
-                    regexp: {
-                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
-                        message: "Filename must be empty, or alphanumeric with at most one period in it"
-                    }
-                }
-            },
-            time_limit: {
-                message: "Invalid time timit",
-                validators: {
-                    notEmpty: {
-                        message: "Time limit must not be blank"
-                    },
-                    numeric: {
-                        separator: ".",
-                        message: "Time limit must be numeric"
-                    }
-                }
-            },
-            memory_limit: {
-                message: "Invalid memory timit",
-                validators: {
-                    notEmpty: {
-                        message: "Memory limit must not be blank"
-                    },
-                    numeric: {
-                        separator: ".",
-                        message: "Memory limit must be numeric"
-                    }
-                }
-            }
-        }
-    });
-
-    $('#summernote').summernote({
-      height: 200,
-
-      minHeight: 100,
-      maxHeight: 200,
-
-      toolbar: [
-        ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
-        ['fontsize', ['fontsize']],
-        ['para', ['ul', 'ol', 'paragraph']],
-        ['insert', ['table']],
-        ['misc', ['codeview']]
-      ]
-    });
-
-    $('#summernote').code("{% raw task.primary_statements %}");
-
-    $('#summernote').summernote({
-      onChange: function(contents, $editable) {
-        $('#primary_statements').val(contents);
+  $('#task-form').bootstrapValidator({
+      message: 'This value is not valid',
+      feedbackIcons: {
+          valid: 'glyphicon glyphicon-ok',
+          invalid: 'glyphicon glyphicon-remove',
+          validating: 'glyphicon glyphicon-refresh'
+      },
+      fields: {
+          name: {
+              message: 'This name is not valid',
+              validators: {
+                  notEmpty: {
+                      message: 'Problem names cannot be empty'
+                  },
+                  stringLength: {
+                      max: 80,
+                      message: 'Problem names must be no more than 80 characters long'
+                  },
+                  regexp: {
+                      regexp: /^[a-zA-Z0-9_]+$/,
+                      message: 'Problem names must only consist of underscores and alphanumeric characters'
+                  }
+              }
+          },
+          title: {
+              message: 'This title is not valid',
+              validators: {
+                  notEmpty: {
+                      message: 'Problem titles cannot be empty'
+                  },
+                  stringLength: {
+                      max: 80,
+                      message: 'Problem titles must be no more than 80 characters long'
+                  },
+                  regexp: {
+                      regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                      message: 'Problem titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                  }
+              }
+          },
+          TaskTypeOptions_Batch_io_0_inputfile: {
+              message: 'Invalid input file name',
+              validators: {
+                  regexp: {
+                      regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                      message: "Filename must be empty, or alphanumeric with at most one period in it"
+                  }
+              }
+          },
+          TaskTypeOptions_Batch_io_1_outputfile: {
+              message: 'Invalid output file name',
+              validators: {
+                  regexp: {
+                      regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                      message: "Filename must be empty, or alphanumeric with at most one period in it"
+                  }
+              }
+          },
+          time_limit: {
+              message: "Invalid time timit",
+              validators: {
+                  notEmpty: {
+                      message: "Time limit must not be blank"
+                  },
+                  numeric: {
+                      separator: ".",
+                      message: "Time limit must be numeric"
+                  }
+              }
+          },
+          memory_limit: {
+              message: "Invalid memory timit",
+              validators: {
+                  notEmpty: {
+                      message: "Memory limit must not be blank"
+                  },
+                  numeric: {
+                      separator: ".",
+                      message: "Memory limit must be numeric"
+                  }
+              }
+          }
       }
-    });
+  });
+
+  $('#summernote').summernote({
+    height: 200,
+
+    minHeight: 100,
+    maxHeight: 200,
+
+    toolbar: [
+      ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
+      ['fontsize', ['fontsize']],
+      ['para', ['ul', 'ol', 'paragraph']],
+      ['insert', ['table']],
+      ['misc', ['codeview']]
+    ],
+      
+    onChange: function(contents, $editable) {
+      $('#primary_statements').val(contents);
+    }
+  });
+
+  $('#summernote').code('{% raw (task.primary_statements.replace("\n","").replace("\r","\\\r")) %}');
 }); 
 </script>
 {% end %}
