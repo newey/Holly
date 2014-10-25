@@ -1,0 +1,26 @@
+{% if (s["status"] == "failed_compilation") %}
+<div>
+  <h3><i class="fa text-danger fa-times fa-2x fa-fw"></i>Failed Compilation</h3>
+  <p>Your code failed compilation, ouput below.</p>
+</div>
+{% elif (s["status"] != "ready") %}
+<div class="processing">
+  <h3><i class="fa text-info fa-spinner fa-2x fa-fw fa-spin"></i>Processing Submission</h3>
+  <p>{{ s["status"] }}</p>
+</div>
+{% elif (s["score"] == s["max_score"]) %}
+<div>
+  <h3><i class="fa text-success fa-check fa-2x fa-fw"></i>Correct Solution</h3>
+  <p>You passed all the tests, well done.</p>
+</div>
+{% else %}
+<div>
+  <h3><i class="fa text-warning fa-warning fa-2x fa-fw"></i>Partial Solution</h3>
+  <p>Your passed {{ s['score'] }} / {{ s['max_score'] }} tests.</p>
+  <div class="progress">
+    <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="{{s['percent']}}" aria-valuemin="0" aria-valuemax="100" style="width: {{s['percent']}}%;">
+      <span class="sr-only">s['percent'] Complete</span>
+    </div>
+  </div>   
+</div>
+{% end %}
