@@ -73,7 +73,7 @@ def admin_authenticated(foo):
     def func(self, *args, **kwargs):
         print('self is %s' % self)
         if not self.current_user.is_training_admin:
-            self.redirect("/")
+            self.redirect("/?error=You are not an admin.")
         else:
             return foo(self, *args, **kwargs)
     return func
@@ -408,9 +408,9 @@ class BaseHandler(CommonRequestHandler):
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
-        self.get_string(params, "error")
         params["active_sidebar_item"] = ""
         params["admin_port"] = config.admin_listen_port
+        params["error"] = self.get_argument("error", "")
         return params
 
     def get_task_by_id(self, task_id):
