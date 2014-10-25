@@ -745,6 +745,8 @@ class AddProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def post(self):
+        dataset = None
+        task_id = None
         try:
             attrs = dict()
 
@@ -768,7 +770,7 @@ class AddProblemHandler(BaseHandler):
             attrs["contest"] = self.contest
             task = Task(**attrs)
             self.sql_session.add(task)
-
+            task_id = task.id
         except Exception as error:
             self.redirect("/admin/problem/add")
             print(error)
@@ -950,16 +952,18 @@ class EditProblemHandler(BaseHandler):
 
         #Add New Tests
         numTests = int(self.get_argument("num_tests"))
+        logger.info("Found %d tests to add" % numTests)
         for i in range(0, numTests):
             
             attrs.get("new-codename-" + str(i)) is not None, print("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
-            
+
+            logger.info("Adding testcase: %s" % codename)
             try:
                 input_ = self.request.files["new-input-" + str(i)][0]
                 output = self.request.files["new-output-" + str(i)][0]
             except KeyError:
-                print("Couldn't find files for %dth entry" % i)
+                logger.exception("Couldn't find files for %dth entry" % i)
                 self.redirect("/admin/problem/%s/edit" % task_id)
                 return
 
@@ -974,11 +978,13 @@ class EditProblemHandler(BaseHandler):
                     self.application.service.file_cacher.put_file_content(
                         output["body"],
                         "Testcase output for task %s" % task.name)
+                logger.info("Adding input digest: %s" % input_digest)
+                logger.info("Adding output digest: %s" % output_digest)
                 testcase = Testcase(codename, public, input_digest,
-                                        output_digest, dataset=dataset)
+                                        output_digest, dataset=task.active_dataset)
                 self.sql_session.add(testcase)
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.redirect("/admin/problem/%s/edit" % task_id)
                 return
 
@@ -995,11 +1001,11 @@ class EditProblemHandler(BaseHandler):
 
         for index, deleteid in enumerate(deleteids):
             test = self.sql_session.query(Testcase).\
-               filter(Testcase.id == test_id).one()
+               filter(Testcase.id == deleteid).one()
             try:
                 self.sql_session.delete(test)
             except Exception as error:
-                print(error)
+                logger.exception(error)
                 self.redirect("/admin/problem/%s/edit" % task_id)
                 return
 
@@ -1007,7 +1013,7 @@ class EditProblemHandler(BaseHandler):
             self.sql_session.commit()
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
-            print(error)
+            logger.exception(error)
             return
 
         self.redirect("/admin/problem/%s" % task_id)
