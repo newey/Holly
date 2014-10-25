@@ -513,14 +513,10 @@ class BaseHandler(CommonRequestHandler):
         fname_len = len(attrs["first_name"])
         assert fname_len < 56,\
             "First name must be below 56 chars."
-        assert re.match(r'^[\w-]*$', attrs["first_name"]),\
-            "First name can only contain alphanumeric characters and dashes."
 
         lname_len = len(attrs["last_name"])
         assert lname_len < 56,\
             "Last name must be below 56 chars."
-        assert re.match(r'^[\w-]*$', attrs["last_name"]),\
-            "Last name can only contain alphanumeric characters and dashes."
 
     def check_signup_valid_input(self, attrs):
         self.check_edit_user_valid_input(attrs)
