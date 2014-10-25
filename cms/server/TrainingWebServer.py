@@ -619,11 +619,11 @@ class LoginHandler(BaseHandler):
             .filter(User.username == username).first()
 
         if user is None:
-            self.redirect("/login?error=Invalid Username&ext=%s" % next_page)
+            self.redirect("/login?error=Invalid username or password&ext=%s" % next_page)
             return
 
         if user.password != password:
-            self.redirect("/login?error=Invalid Password&next=%s" % next_page)
+            self.redirect("/login?error=Invalid username or password&next=%s" % next_page)
             return
 
         self.set_secure_cookie("login",
