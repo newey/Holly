@@ -260,19 +260,15 @@ class BaseHandler(CommonRequestHandler):
         individualSet = UserSet(**attrs)
         self.sql_session.add(individualSet)
 
-        self.sql_session.commit()
+        self.sql_session.commit() 
 
-    def get_task_results(self, user, task):
+    def get_submission_results(self, user, submission, task):
         result = {
             "status": None,
             "max_score": None,
             "score": None,
             "percent": None,
         }
-        submission = self.sql_session.query(Submission)\
-            .filter(Submission.user == user)\
-            .filter(Submission.task == task)\
-            .order_by(Submission.timestamp.desc()).first()
         
         if submission is None:
             result["status"] = "none"
@@ -300,6 +296,13 @@ class BaseHandler(CommonRequestHandler):
 
         return result
         
+    def get_task_results(self, user, task):
+        submission = self.sql_session.query(Submission)\
+            .filter(Submission.user == user)\
+            .filter(Submission.task == task)\
+            .order_by(Submission.timestamp.desc()).first()
+
+        return self.get_submission_results(user, submission, task)      
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -1082,8 +1085,9 @@ class SubmitHandler(BaseHandler):
         # Ensure that the user did not submit multiple files with the
         # same name.
         if any(len(filename) != 1 for filename in self.request.files.values()):
-            error = "Multiple files with the same name"
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "Multiple files with the same name";
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # This ensure that the user sent one file for every name in
@@ -1094,8 +1098,9 @@ class SubmitHandler(BaseHandler):
         provided = set(self.request.files.keys())
         if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
                                          and required.issuperset(provided))):
-            error = "More than one file for every name."
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "More than one file for every name."; 
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # Add submitted files. After this, files is a dictionary indexed
@@ -1166,14 +1171,17 @@ class SubmitHandler(BaseHandler):
                     submission_lang = lang
         if error is not None:
             error = "Incorrect language extension"
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "Incorrect language extension"; 
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # Check if submitted files are small enough.
         if any([len(f[1]) > config.max_submission_length
                 for f in files.values()]):
-            error = "Files are too big"
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "Files are too big";
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # All checks done, submission accepted.
@@ -1214,7 +1222,9 @@ class SubmitHandler(BaseHandler):
 
         # In case of error, the server aborts the submission
         except Exception as error:
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = submission.id
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         submission = Submission(self.timestamp,
@@ -1229,8 +1239,19 @@ class SubmitHandler(BaseHandler):
         self.application.service.evaluation_service.new_submission(
             submission_id=submission.id)
 
+        self.r_params["message"] = submission.id; 
+        self.render("return_message.html", **self.r_params)
 
-        self.redirect("/problem/%s/%s/submissions" % (set_id, task.id))
+class SubmissionStatusHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self, submission_id):
+        submission = self.sql_session.query(Submission).filter(Submission.id == submission_id).one()
+        task = submission.task
+
+        self.r_params["result"] = submission.results[0]
+        self.r_params["s"] = self.get_submission_results(self.current_user, submission, task)
+        self.render("submit_status.html", **self.r_params)
+
 
 class SubmissionsHandler(BaseHandler):
     @tornado.web.authenticated
@@ -2136,6 +2157,7 @@ _tws_handlers = [
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problem/([0-9]+)/submission_status", SubmissionStatusHandler),
     (r"/problemset/([0-9]+)", ProblemSetHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
