@@ -783,16 +783,9 @@ class AdminProblemHandler(BaseHandler):
         inputs = dict()
         outputs = dict()
 
-        # TODO: covert digest
         for testcase in task.active_dataset.testcases.itervalues():
-            # print("testcase.codename: "+testcase.codename)
-            # print("testcase.input: "+testcase.input)
-            # print("input_digest decoded: "+self.application.service.file_cacher.get_file_content(testcase.input))
             inputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.input)
             outputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.output)
-            print("inputs[testcase.codename]: "+inputs[testcase.codename])
-            print("outputs[testcase.codename]: "+outputs[testcase.codename])
-
 
         self.r_params["active_sidebar_item"] = "problems"
         self.r_params["inputs"] = inputs

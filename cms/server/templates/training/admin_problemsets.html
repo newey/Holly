@@ -34,8 +34,10 @@
             <form action="/admin/problemset/{{ set.id }}/edit" method="get" style="display: inline;">
               <button class="btn btn-success btn-xs" type="submit" value="Edit"><i class="fa fa-edit fa-fw"></i></button>
             </form>
-<button class="btn btn-danger btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm"><i class="fa fa-trash fa-fw"></i></button>
-<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+
+<button class="btn btn-danger btn-xs" data-toggle="modal" data-target="#basicModal{{ set.id }}"><i class="fa fa-trash fa-fw"></i></button>
+
+<div class="modal fade" id="basicModal{{ set.id }}" tabindex="-1" role="dialog" aria-labelledby="basicModal{{ set.id }}" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header">
