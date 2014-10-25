@@ -9,7 +9,7 @@
 {% elif (s["status"] != "ready") %}
 <div class="processing">
   <h3><i class="fa text-info fa-spinner fa-2x fa-fw fa-spin"></i>Processing Submission</h3>
-  <p>{{ s["status"] }}</p>
+  <p>{{ s["status"].capitalize() }}</p>
 </div>
 {% elif (s["score"] == s["max_score"]) %}
 <div>
