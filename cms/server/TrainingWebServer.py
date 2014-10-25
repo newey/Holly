@@ -1451,7 +1451,7 @@ class AdminUserHandler(BaseHandler):
         self.r_params = self.render_params()
         self.r_params["specialSets"] = self.sql_session.query(UserSet).filter(UserSet.setType==2)
         self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType==0)
-        self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["users"] = self.sql_session.query(User).filter(User.contest == self.contest)
         self.r_params["active_sidebar_item"] = "users"
         self.render("admin_users.html", **self.r_params)
 
@@ -1555,7 +1555,8 @@ class DeleteUserHandler(BaseHandler):
     def post(self, user_id):
         try:
             user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            .filter(User.id==user_id)\
+            .filter(User.contest == self.contest).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
@@ -1589,7 +1590,7 @@ class AddUserSetHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
-        self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["users"] = self.sql_session.query(User).filter(User.contest == self.contest)
         self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
         self.r_params["active_sidebar_item"] = "users"
         self.render("add_userset.html", **self.r_params)
@@ -1635,7 +1636,8 @@ class AddUserSetHandler(BaseHandler):
             ## TODO: Ensure all problem ids are actually problems.
 
             for index, userid in enumerate(userids):
-                user = self.sql_session.query(User).filter(User.id==userid).one()
+                user = self.sql_session.query(User).filter(User.id==userid)\
+                        .filter(User.contest == self.contest.one())
                 userset.users.append(user)
 
 
@@ -1660,7 +1662,7 @@ class EditUserSetHandler(BaseHandler):
         all_sets = self.sql_session.query(ProblemSet).all()
         unselected_sets = filter(lambda x: x not in userset.problemSets, all_sets)
 
-        all_users = self.sql_session.query(User).all()
+        all_users = self.sql_session.query(User).filter(User.contest == self.contest).all()
         unselected_users = filter(lambda x: x not in userset.users, all_users)
 
         self.r_params["userset"] = userset
@@ -1720,7 +1722,8 @@ class EditUserSetHandler(BaseHandler):
                 ## TODO: Ensure all problem ids are actually problems.
 
                 for index, userid in enumerate(userids):
-                    user = self.sql_session.query(User).filter(User.id==userid).one()
+                    user = self.sql_session.query(User).filter(User.id==userid)\
+                            .filter(User.contest == self.contest).one()
                     userset.users.append(user)
 
             self.sql_session.commit()
