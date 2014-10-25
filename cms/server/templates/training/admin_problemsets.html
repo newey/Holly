@@ -26,7 +26,7 @@
       {% for set in sets %}
         <tr>
           <td>{{ set.id }}</td>
-          <td>{{ set.name }}</td>
+          <td><a href="/admin/problemset/{{ set.id }}">{{ set.name }}</a></td>
           <td style="text-align: center;">
             <form action="/admin/problemset/{{ set.id }}" method="get" style="display: inline;">
               <button class="btn btn-primary btn-xs" type="submit" value="Stats"><i class="fa fa-bar-chart fa-fw"></i></button>

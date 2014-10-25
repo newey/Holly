@@ -868,13 +868,30 @@ class AdminProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self, task_id):
-        try:
-            task = self.get_task_by_id(task_id)
-        except KeyError:
-            raise tornado.web.HTTPError(404)
+        # def get(self, set_id):
+        # problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        # try:
+        #     for task in problemset.tasks:
+        # except KeyError:
+        #     raise tornado.web.HTTPError(404)  
+
+# LOOK IN "SubmissionResult" FOR DATA
+# compilation_tries
 
         inputs = dict()
         outputs = dict()
+        try:
+            task = self.get_task_by_id(task_id)
+            status = self.get_task_results(self.current_user, task)
+            print("<status> "+status["status"])
+
+            num_tests = 0
+            if status["status"] == "ready":
+                num_tests = int(status["percent"])
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        print("<num_tests> "+str(num_tests))
 
         for testcase in task.active_dataset.testcases.itervalues():
             inputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.input)
@@ -1215,10 +1232,6 @@ class SubmitHandler(BaseHandler):
                         filename, self.current_user.username,
                         make_timestamp(self.timestamp)))
                 file_digests[filename] = digest
-
-                ##############################################
-                # print("text/plain: "+self.fetch(digest, "text/plain", filename))
-                ##############################################
 
         # In case of error, the server aborts the submission
         except Exception as error:

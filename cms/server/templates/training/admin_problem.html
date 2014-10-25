@@ -132,7 +132,6 @@
               <th>Name</th>
               <th>Input</th>
               <th>Output</th>
-              <th>Score</th>
               <th>Passed</th>
             </tr>
           </thead>
@@ -152,7 +151,7 @@
         <h4 class="modal-title" id="myModalLabel">{{ testcase.codename }} Input</h4>
       </div>
       <div class="modal-body">
-        {{ inputs[testcase.codename] }}
+          <pre>{{ inputs[testcase.codename] }}</pre>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -173,7 +172,7 @@
         <h4 class="modal-title" id="myModalLabel">{{ testcase.codename }} Output</h4>
       </div>
       <div class="modal-body">
-        {{ outputs[testcase.codename] }}
+          <pre>{{ outputs[testcase.codename] }}</pre>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -182,7 +181,6 @@
   </div>
 </div>
               </td>
-              <td>1</td>
               <td>2/2</td>
             </tr>
             {% end %}
