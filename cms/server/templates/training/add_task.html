@@ -89,7 +89,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
             </div>
           
             <div class="TaskTypeOptions bordered" id="TaskTypeBatchOptions" style="display: none;">
-                <div class="form-group">
+                <div class="form-group" style="display: none;">
                   <label for="name" class="col-sm-4 control-label" style="text-align:left;">Compilation</label>
                   <div class="col-sm-8">
                     <select class="form-control" name="TaskTypeOptions_Batch_compilation">
@@ -105,7 +105,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
                     <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_1_outputfile" value="" placeholder="Leave blank for STDOUT">
                   </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="display: none;">
                   <label for="TaskTypeOptions_Batch_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evaluation</label>
                   <div class="col-sm-8">
                     <select class="form-control" name="TaskTypeOptions_Batch_output_eval">
@@ -117,7 +117,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
             </div>
 
             <div class="TaskTypeOptions bordered" id="TaskTypeOutputOnlyOptions" style="display: none;">
-                <div class="form-group">
+                <div class="form-group" style="display: none;">
                   <label for="TaskTypeOptions_OutputOnly_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evalutaion</label>
                   <div class="col-sm-8">
                     <select class="form-control" name="TaskTypeOptions_OutputOnly_output_eval">
@@ -173,14 +173,14 @@ $("select[name=task_type]").change(showTaskTypeOption);
         <col width="30%">
         <col width="30%">
         <col width="70">
-        <col width="60">
+        <col width="0">
         <thead>
           <tr>
             <th>Name</th>
             <th>Input</th>
             <th>Output</th>
             <th>Remove</th>
-            <th>Public</th>
+            <th style="display: none;">Public</th>
           </tr>
         </thead>
         <tbody>
@@ -214,7 +214,7 @@ $(document).ready(function() {
         <td style="text-align: center;"> \
           <button id="ignore-test-'+newItems+'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
         </td> \
-        <td><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
+        <td style="display: none;"><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
       </tr>');
 
     $('#ignore-test-'+newItems).click(function() {
