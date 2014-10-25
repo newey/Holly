@@ -68,11 +68,11 @@ $(document).ready(function() {
       }
 
       if (selectedUsers.row().length > 0) {
-        $("#userids").val(selectedUsers.column(0).data().reduce(function (a,b) {
+        $("#usersetids").val(selectedUsers.column(0).data().reduce(function (a,b) {
               return a.concat(" ").concat(b);
           }), "");
       } else {
-        $("#userids").val("");
+        $("#usersetids").val("");
       }
     }
     updateIds();
@@ -122,9 +122,7 @@ $(document).ready(function() {
     }
 
     $('.add-problem').click(addProblem);
-    $('.remove-problem').click(removeProblem);
     $('.add-user').click(addUser);
-    $('.remove-user').click(removeUser);
 
     $('#unselectedproblemSets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
     $('#selectedproblemSets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
@@ -138,13 +136,10 @@ $(document).ready(function() {
     $('#unselectedusers_length').find("label").empty().append('<label><select name="unselectedusers_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
     $('#selectedusers_length').find("label").empty().append('<label><select name="selectedusers_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
 
-
     var navListItems = $('ul.setup-panel li a');
     var allWells = $('.setup-content');
 
-    {% if userset.setType == 0 %}
     allWells.hide();
-    {% end %}
 
     navListItems.click(function(e)
     {
@@ -162,8 +157,7 @@ $(document).ready(function() {
     
     $('ul.setup-panel li.active a').trigger('click');
 
-
-    $('.editusersetform').bootstrapValidator({
+    $('.addusersetform').bootstrapValidator({
         message: 'This value is not valid',
         feedbackIcons: {
             valid: 'glyphicon glyphicon-ok',
@@ -210,36 +204,52 @@ $(document).ready(function() {
 {% end %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit User Set</h1>
+<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New User Set</h1>
 <ol class="breadcrumb">
   <li><a href="/admin/users">Users</a></li>
-  <li><a href="/admin/user/{{ userset.id }}">{{ userset.name }}</a></li>
-  <li class="active">Edit User Set</li>
+  <li class="active">New User Set</li>
 </ol>
-
-<form class="form-horizontal editusersetform" role="form" method="post">
+<form class="form-horizontal addusersetform" role="form" method="post">
 <div class="panel panel-default">
   <div class="panel-body">
       <div class="form-group">
-        <label for="name" class="col-sm-2 control-label" style="text-align:left;">Name</label>
+        <label for="name" class="col-sm-2 control-label" style="text-align:left;">name</label>
         <div class="col-sm-7">
-          <input type="text" class="form-control" id="name" name="name" value="{{ userset.name }}">
+          <input type="text" class="form-control" id="name" name="name" placeholder="name">
         </div>
       </div>
       <div class="form-group">
-        <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
+        <label for="description" class="col-sm-2 control-label" style="text-align:left;">Description</label>
         <div class="col-sm-7">
-          <input type="text" class="form-control" id="title" name="title" value="{{ userset.title }}">
+          <input type="text" class="form-control" id="description" name="description" placeholder="Description">
         </div>
       </div>
- 
+      <div class="form-group">
+        <label for="languages" class="col-sm-2 control-label" style="text-align:left;">Languages allowed</label>
+        <div class="col-sm-7">
+            {% for lang in LANGUAGES %}
+            <label><input type="checkbox" name="languages" value="{{ lang }}" {{ "checked" if lang in DEFAULT_LANGUAGES else "" }}>{{ LANGUAGE_NAMES[lang] }}</label>
+            {% end %}<br>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="start" class="col-sm-2 control-label" style="text-align:left;">Start (in UTC)</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="start" name="start" value="{{ str(timestamp) }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="stop" class="col-sm-2 control-label" style="text-align:left;">End (in UTC)</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="stop" name="stop" value="{{ str(timestamp)  }}">
+        </div>
+      </div>
+
       <input type="hidden" id="problemsetids" name="problemsetids">
-      <input type="hidden" id="userids" name="userids">
-    
+      <input type="hidden" id="usersetids" name="usersetids">
   </div>
 </div>
 
-{% if userset.setType == 0 %}
 <div class="row form-group">
       <div class="col-xs-12">
           <ul class="nav nav-pills nav-justified thumbnail setup-panel">
@@ -252,8 +262,6 @@ $(document).ready(function() {
           </ul>
       </div>
 </div>
-{% end %}
-{% if userset.setType == 0 %}
 <div class="row setup-content" id="step-1">
   <div class="col-md-6">
     <div class="panel panel-default">
@@ -273,17 +281,6 @@ $(document).ready(function() {
             </tr>
           </thead>
           <tbody>
-            {% for user in selected_users %}
-            <tr>
-              <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td>
-              <td>
-                <div style="width: 100%;text-align: center;">
-                  <button class="btn btn-danger btn-xs remove-user" type="button"><i class="fa fa-close fa-fw"></i></button>
-                </div>
-              </td>
-            </tr>
-            {% end %}
           </tbody>
         </table>
       </div>
@@ -307,10 +304,10 @@ $(document).ready(function() {
             </tr>
           </thead>
           <tbody>
-            {% for user in unselected_users %}
+            {% for userset in usersets %}
             <tr>
-              <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td>
+              <td>{{ userset.id }}</td>
+              <td>{{ userset.name }}</td>
               <td>
                 <div style="width: 100%;text-align: center;">
                   <button class="btn btn-success btn-xs add-user" type="button"><i class="fa fa-plus fa-fw"></i></button>
@@ -324,7 +321,6 @@ $(document).ready(function() {
     </div>
   </div>  
 </div>
-{% end %}
 <div class="row setup-content" id="step-2">
   <div class="col-md-6">
     <div class="panel panel-default">
@@ -344,17 +340,6 @@ $(document).ready(function() {
             </tr>
           </thead>
           <tbody>
-          {% for problemset in selected_sets %}
-            <tr>
-              <td>{{ problemset.id }}</td>
-              <td>{{ problemset.name }}</td>
-              <td>
-                <div style="width: 100%;text-align: center;">
-                  <button class="btn btn-danger btn-xs remove-problem" type="button"><i class="fa fa-close fa-fw"></i></button>
-                </div>
-              </td>
-            </tr>
-            {% end %}
           </tbody>
         </table>
       </div>
@@ -378,7 +363,7 @@ $(document).ready(function() {
             </tr>
           </thead>
           <tbody>
-            {% for problemset in unselected_sets %}
+            {% for problemset in problemsets %}
             <tr>
               <td>{{ problemset.id }}</td>
               <td>{{ problemset.name }}</td>

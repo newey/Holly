@@ -47,6 +47,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
   </div>
       
   <div class="form-group" style="display: none;">
+    <input type="hidden" name="submission_format_choice" value="simple">
     <label for="name" class="col-sm-4 control-label" style="text-align:left;">Submission Format</label>
     <div class="col-sm-8">
       <div class="radio">
@@ -233,15 +234,15 @@ $(document).ready(function() {
                 message: 'This name is not valid',
                 validators: {
                     notEmpty: {
-                        message: 'User set names cannot be empty'
+                        message: 'Problem names cannot be empty'
                     },
                     stringLength: {
                         max: 80,
-                        message: 'User set names must be no more than 80 characters long'
+                        message: 'Problem names must be no more than 80 characters long'
                     },
                     regexp: {
                         regexp: /^[a-zA-Z0-9_]+$/,
-                        message: 'User set names must only consist of underscores and alphanumeric characters'
+                        message: 'Problem names must only consist of underscores and alphanumeric characters'
                     }
                 }
             },
@@ -249,15 +250,15 @@ $(document).ready(function() {
                 message: 'This title is not valid',
                 validators: {
                     notEmpty: {
-                        message: 'User set titles cannot be empty'
+                        message: 'Problem titles cannot be empty'
                     },
                     stringLength: {
                         max: 80,
-                        message: 'User set titles must be no more than 80 characters long'
+                        message: 'Problem titles must be no more than 80 characters long'
                     },
                     regexp: {
                         regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
-                        message: 'User set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                        message: 'Problem titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
                     }
                 }
             },

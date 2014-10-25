@@ -23,7 +23,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
   <li class="active">Edit</li>
 </ol>
 
-<form id="task-form" class="form-horizontal" role="form" method="post">
+<form id="task-form" class="form-horizontal" enctype="multipart/form-data" role="form" method="post">
   <div class="panel panel-default">
     <div class="panel-body">
       <div class="form-group">
@@ -51,6 +51,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
     <div class="col-sm-8">
       <div class="radio">
         <label>
+          <input type="hidden" name="submission_format_choice" value="simple">
           <input type="radio" name="submission_format_choice" id="submission_format_choice1" value="simple">
           task_name.%l
         </label>
@@ -271,15 +272,15 @@ $(document).ready(function() {
                 message: 'This name is not valid',
                 validators: {
                     notEmpty: {
-                        message: 'User set names cannot be empty'
+                        message: 'Problem names cannot be empty'
                     },
                     stringLength: {
                         max: 80,
-                        message: 'User set names must be no more than 80 characters long'
+                        message: 'Problem names must be no more than 80 characters long'
                     },
                     regexp: {
                         regexp: /^[a-zA-Z0-9_]+$/,
-                        message: 'User set names must only consist of underscores and alphanumeric characters'
+                        message: 'Problem names must only consist of underscores and alphanumeric characters'
                     }
                 }
             },
@@ -287,15 +288,15 @@ $(document).ready(function() {
                 message: 'This title is not valid',
                 validators: {
                     notEmpty: {
-                        message: 'User set titles cannot be empty'
+                        message: 'Problem titles cannot be empty'
                     },
                     stringLength: {
                         max: 80,
-                        message: 'User set titles must be no more than 80 characters long'
+                        message: 'Problem titles must be no more than 80 characters long'
                     },
                     regexp: {
                         regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
-                        message: 'User set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                        message: 'Problem titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
                     }
                 }
             },
