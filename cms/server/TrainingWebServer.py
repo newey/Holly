@@ -678,6 +678,16 @@ class SignupHandler(BaseHandler):
             individualSet = UserSet(**attrs)
             self.sql_session.add(individualSet)
 
+            # Add any default pinned problem sets
+            accessibleSets = set()
+            for userset in user.userSets:
+                for problemset in userset.problemSets:
+                    accessibleSets.add(problemset)
+
+            for problem_set in accessibleSets:
+                if problem_set.pinned_by_default:
+                    user.pinnedSets.append(problem_set)
+
             self.sql_session.commit()
 
         except Exception as error:
@@ -1276,7 +1286,14 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
             self.get_string(attrs, "num")
+            self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
+
+            if "pinned_by_default" in attrs:
+                attrs["pinned_by_default"] = True
+            else:
+                attrs["pinned_by_default"] = False
+
             #attrs["contest_id"] = self.contest.id
             #TODO: CHANGE AFTER DEMO
             random.seed()
@@ -1304,9 +1321,9 @@ class AddProblemSetHandler(BaseHandler):
 
             self.sql_session.commit()
 
-        except Exception as error:
+        except:
             self.redirect("/admin/problemset/add")
-            print(error)
+            logger.error(traceback.format_exc())
             return
 
         self.redirect("/admin/problemsets")
@@ -1370,14 +1387,15 @@ class EditProblemSetHandler(BaseHandler):
         set_id = int(set_id)
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
-        except Exception as error:
-            print(error)
+        except:
+            logger.error(traceback.format_exc())
             self.redirect("/admin/problemset/%d/edit" % set_id)
         try:
             attrs = dict()
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title", empty=None)
             self.get_string(attrs, "problemids", empty=None)
+            self.get_string(attrs, "pinned_by_default", empty=None)
 
 
             if attrs["name"] is not None:
@@ -1385,6 +1403,11 @@ class EditProblemSetHandler(BaseHandler):
 
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
+
+            if "pinned_by_default" in attrs:
+                problemset.pinned_by_default = True
+            else:
+                problemset.pinned_by_default = False
 
             problemset.tasks = []
             if attrs["problemids"] is not None:
@@ -1401,8 +1424,8 @@ class EditProblemSetHandler(BaseHandler):
 
             self.sql_session.commit()
 
-        except Exception as error:
-            print(error)
+        except:
+            logger.error(traceback.format_exc())
             self.redirect("/admin/problemset/%d/edit" % set_id)
 
         self.redirect("/admin/problemsets")
