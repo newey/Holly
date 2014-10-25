@@ -102,6 +102,7 @@
   </nav>
 
   <div id="page-wrapper">
+    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% end %}
     {% block core %}{% end %}
   </div>
   <!-- /#page-wrapper -->
