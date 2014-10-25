@@ -1939,6 +1939,8 @@ class AddContestHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
+        self.r_params["usersets"] = self.sql_session.query(UserSet)
+        self.r_params["problemsets"] = self.sql_session.query(ProblemSet)
         self.render("add_contest.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -1963,6 +1965,92 @@ class AddContestHandler(BaseHandler):
             # Create the contest.
             contest = Contest(**attrs)
             self.sql_session.add(contest)
+
+            attrs = dict()
+            self.get_string(attrs, "problemsetids")
+            problemsetids = attrs["problemsetids"].strip().split()
+
+            assert reduce(lambda x, y: x and y.isdigit(), problemsetids, True), "Not all problem ids are integers"
+
+            problemsetids = map(int, problemsetids)
+
+            ## TODO: Ensure all problem ids are actually problems.
+
+            for problemsetid in problemsetids:
+                problemset = self.sql_session.query(ProblemSet).\
+                                              filter(ProblemSet.id==problemsetid).one()
+                
+                for task in problemset.tasks:
+                    attrs = dict()
+                    attrs["name"] = task.name
+                    attrs["title"] = task.title
+                    attrs["primary_statements"] = task.primary_statements
+                    attrs["submission_format"] = task.submission_format
+                    attrs["token_mode"] = task.token_mode
+                    attrs["score_precision"] = task.score_precision
+                    #TODO: CHANGE AFTER DEMO
+                    random.seed()
+                    attrs["num"] = random.randint(1,1000000000)
+                    attrs["contest"] = contest
+                    new_task = Task(**attrs)
+                    self.sql_session.add(new_task)
+
+                    attrs = dict()
+                    dataset = task.active_dataset
+                    attrs["time_limit"] = dataset.time_limit
+                    attrs["memory_limit"] = dataset.memory_limit
+                    attrs["task_type"] = dataset.task_type
+                    attrs["task_type_parameters"] = dataset.task_type_parameters
+                    attrs["description"] = dataset.description 
+                    attrs["autojudge"] = dataset.autojudge
+                    attrs["task"] = new_task
+                    attrs["score_type"] = dataset.score_type
+                    attrs["score_type_parameters"] = dataset.score_type_parameters
+                    new_dataset = Dataset(**attrs)
+                    self.sql_session.add(new_dataset)
+
+                    for codename, test in dataset.testcases.iteritems():
+                        attrs = dict()
+                        attrs["codename"] = codename
+                        attrs["public"] = test.public
+                        attrs["input"] = test.input
+                        attrs["output"] = test.output
+                        attrs["dataset"] = new_dataset 
+                        new_test = Testcase(**attrs)
+                        self.sql_session.add(new_test)
+
+                    new_task.active_dataset = new_dataset
+
+            attrs = dict()
+            self.get_string(attrs, "usersetids")
+            usersetids = attrs["usersetids"].strip().split()
+
+            assert reduce(lambda x, y: x and y.isdigit(), usersetids, True), "Not all problem ids are integers"
+
+            usersetids = map(int, usersetids)
+
+            ## TODO: Ensure all problem ids are actually problems.
+
+            for usersetid in usersetids:
+                userset = self.sql_session.query(UserSet).\
+                                           filter(UserSet.id==usersetid).one()
+                for user in userset.users:
+                    attrs = dict()
+                    attrs["first_name"] = user.first_name
+                    attrs["last_name"] = user.last_name
+                    attrs["username"] = user.username
+                    attrs["password"] = ''.join(random.choice(string.ascii_uppercase + 
+                                                string.digits) for _ in range(8))
+                    attrs["email"] = user.email
+
+                    # Create the user.
+                    attrs["contest"] = contest
+                    attrs["verification_type"] = 0
+
+                    new_user = User(**attrs)
+                    self.sql_session.add(new_user)
+                    
+ 
             self.sql_session.commit()
             self.application.service.proxy_service.reinitialize()
         except Exception as error:
@@ -1970,7 +2058,7 @@ class AddContestHandler(BaseHandler):
             print(error)
             return
             
-        self.redirect("/contest/%s" % contest.id)
+        self.redirect("/admin/contest/%s" % contest.id)
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -1988,7 +2076,7 @@ _tws_handlers = [
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),
-    (r"/admin/contests", AdminContestsHandler),
+    (r"/admin/contest/add", AddContestHandler),
     (r"/admin/problems", AdminProblemsHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),
     (r"/admin/problem/add", AddProblemHandler),

@@ -1,28 +1,387 @@
 {% extends admin_base.html %}
 
-{% block js %}
+{% block scripts %}
+<script src="/static/js/plugins/dataTables/jquery.dataTables.js"></script>
+<script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    var unselectedproblemSets = $('#unselectedproblemSets').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
 
+    var selectedproblemSets = $('#selectedproblemSets').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+    var unselectedUsers = $('#unselectedusers').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+
+    var selectedUsers = $('#selectedusers').DataTable({
+      "aoColumnDefs": [
+          { 'bSortable': false, 'aTargets': [ 2 ] }
+       ],
+      "oLanguage": {
+        "oPaginate": {
+          "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
+          "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
+        },
+        "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
+       }
+    });
+
+    function updateIds() {
+      if (selectedproblemSets.row().length > 0) {
+        $("#problemsetids").val(selectedproblemSets.column(0).data().reduce(function (a,b) {
+              return a.concat(" ").concat(b);
+          }), "");
+      } else {
+        $("#problemsetids").val("");
+      }
+
+      if (selectedUsers.row().length > 0) {
+        $("#usersetids").val(selectedUsers.column(0).data().reduce(function (a,b) {
+              return a.concat(" ").concat(b);
+          }), "");
+      } else {
+        $("#usersetids").val("");
+      }
+    }
+    updateIds();
+
+    function addProblem () {
+      $(this).parents("tr").addClass('move');
+      var items = unselectedproblemSets.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-problem new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
+      selectedproblemSets.row.add(items).draw(false);
+      unselectedproblemSets.row('.move').remove().draw( false );
+      updateIds();
+      $('.remove-problem.new').click(removeProblem);
+      $('.remove-problem').removeClass("new");
+    }
+
+    function removeProblem () {
+      $(this).parents("tr").addClass('move');
+      var items = selectedproblemSets.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-problem new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
+      unselectedproblemSets.row.add(items).draw(false);
+      selectedproblemSets.row('.move').remove().draw( false );
+      updateIds();
+      $('.add-problem.new').click(addProblem);
+      $('.add-problem').removeClass("new");
+    }
+
+    function addUser () {
+      $(this).parents("tr").addClass('move');
+      var items = unselectedUsers.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-danger btn-xs remove-user new" type="button"><i class="fa fa-close fa-fw"></i></button></div>';
+      selectedUsers.row.add(items).draw(false);
+      unselectedUsers.row('.move').remove().draw( false );
+      updateIds();
+      $('.remove-user.new').click(removeUser);
+      $('.remove-user').removeClass("new");
+    }
+
+    function removeUser () {
+      $(this).parents("tr").addClass('move');
+      var items = selectedUsers.row('.move').data();
+      items[2] = '<div style="width: 100%;text-align: center;"><button class="btn btn-success btn-xs add-user new" type="button"><i class="fa fa-plus fa-fw"></i></button></div>';
+      unselectedUsers.row.add(items).draw(false);
+      selectedUsers.row('.move').remove().draw( false );
+      updateIds();
+      $('.add-user.new').click(addUser);
+      $('.add-user').removeClass("new");
+    }
+
+    $('.add-problem').click(addProblem);
+    $('.add-user').click(addUser);
+
+    $('#unselectedproblemSets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+    $('#selectedproblemSets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+
+    $('#unselectedproblemSets_length').find("label").empty().append('<label><select name="unselectedproblemSets_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+    $('#selectedproblemSets_length').find("label").empty().append('<label><select name="selectedproblemSets_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    $('#unselectedusers_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+    $('#selectedusers_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="users"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div>');
+
+    $('#unselectedusers_length').find("label").empty().append('<label><select name="unselectedusers_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+    $('#selectedusers_length').find("label").empty().append('<label><select name="selectedusers_length" aria-controls="users" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
+
+    var navListItems = $('ul.setup-panel li a');
+    var allWells = $('.setup-content');
+
+    allWells.hide();
+
+    navListItems.click(function(e)
+    {
+        e.preventDefault();
+        var $target = $($(this).attr('href')),
+            $item = $(this).closest('li');
+        
+        if (!$item.hasClass('disabled')) {
+            navListItems.closest('li').removeClass('active');
+            $item.addClass('active');
+            allWells.hide();
+            $target.show();
+        }
+    });
+    
+    $('ul.setup-panel li.active a').trigger('click');
+
+    $('.addusersetform').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            name: {
+                message: 'This name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set names cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set names must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'User set names must only consist of underscores and alphanumeric characters'
+                    }
+                }
+            },
+            title: {
+                message: 'This title is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'User set titles cannot be empty'
+                    },
+                    stringLength: {
+                        max: 80,
+                        message: 'User set titles must be no more than 80 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                        message: 'User set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 {% end %}
 
 {% block core %}
-<h1>New contest</h1>
+<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New User Set</h1>
+<ol class="breadcrumb">
+  <li><a href="/admin/users">Users</a></li>
+  <li class="active">New User Set</li>
+</ol>
+<form class="form-horizontal addusersetform" role="form" method="post">
+<div class="panel panel-default">
+  <div class="panel-body">
+      <div class="form-group">
+        <label for="name" class="col-sm-2 control-label" style="text-align:left;">name</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="name" name="name" placeholder="name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="description" class="col-sm-2 control-label" style="text-align:left;">Description</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="description" name="description" placeholder="Description">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="languages" class="col-sm-2 control-label" style="text-align:left;">Languages allowed</label>
+        <div class="col-sm-7">
+            {% for lang in LANGUAGES %}
+            <label><input type="checkbox" name="languages" value="{{ lang }}" {{ "checked" if lang in DEFAULT_LANGUAGES else "" }}>{{ LANGUAGE_NAMES[lang] }}</label>
+            {% end %}<br>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="start" class="col-sm-2 control-label" style="text-align:left;">Start (in UTC)</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="start" name="start" value="{{ str(timestamp) }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="stop" class="col-sm-2 control-label" style="text-align:left;">End (in UTC)</label>
+        <div class="col-sm-7">
+          <input type="text" class="form-control" id="stop" name="stop" value="{{ str(timestamp)  }}">
+        </div>
+      </div>
 
-<!-- We use "multipart/form-data" to have Tornado distinguish between missing and empty values. -->
-<form enctype="multipart/form-data" action="{{ url_root }}/admin/contest/add" method="POST">
-  Name
-  <input type="text" name="name"><br>
-  Description
-  <textarea name="description"></textarea><br>
-  Languages allowed
-  {% for lang in LANGUAGES %}
-    <label><input type="checkbox" name="languages" value="{{ lang }}" {{ "checked" if lang in DEFAULT_LANGUAGES else "" }}>{{ LANGUAGE_NAMES[lang] }}</label>
-  {% end %}<br>
-  Start (in UTC)
-  <input type="text" name="start" value="{{ str(timestamp) }}"><br>
-  End (in UTC)
-  <input type="text" name="stop" value="{{ str(timestamp) }}"><br>
+      <input type="hidden" id="problemsetids" name="problemsetids">
+      <input type="hidden" id="usersetids" name="usersetids">
+  </div>
+</div>
 
-  <input type="submit"><input type="reset" value="Reset">
+<div class="row form-group">
+      <div class="col-xs-12">
+          <ul class="nav nav-pills nav-justified thumbnail setup-panel">
+              <li class="active"><a href="#step-1">
+                  <p class="list-group-item-text">Add User</p>
+              </a></li>
+              <li><a href="#step-2">
+                  <p class="list-group-item-text">Add Problem Sets</p>
+              </a></li>
+          </ul>
+      </div>
+</div>
+<div class="row setup-content" id="step-1">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Selected Users</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="selectedusers" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Unselected Users</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="unselectedusers" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for userset in usersets %}
+            <tr>
+              <td>{{ userset.id }}</td>
+              <td>{{ userset.name }}</td>
+              <td>
+                <div style="width: 100%;text-align: center;">
+                  <button class="btn btn-success btn-xs add-user" type="button"><i class="fa fa-plus fa-fw"></i></button>
+                </div>
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>  
+</div>
+<div class="row setup-content" id="step-2">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Selected Problem Sets</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="selectedproblemSets" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Unselected Problem Sets</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="unselectedproblemSets" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for problemset in problemsets %}
+            <tr>
+              <td>{{ problemset.id }}</td>
+              <td>{{ problemset.name }}</td>
+              <td>
+                <div style="width: 100%;text-align: center;">
+                  <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+                </div>
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>  
+</div>
+
+<input type="submit" value="Submit" class="btn btn-primary">
+
 </form>
 {% end %}
-
