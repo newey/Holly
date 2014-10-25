@@ -262,15 +262,13 @@ class BaseHandler(CommonRequestHandler):
 
         self.sql_session.commit() 
 
-    def get_submission_results(self, user, submission):
+    def get_submission_results(self, user, submission, task):
         result = {
             "status": None,
             "max_score": None,
             "score": None,
             "percent": None,
         }
-
-        task = submission.task
         
         if submission is None:
             result["status"] = "none"
@@ -304,7 +302,7 @@ class BaseHandler(CommonRequestHandler):
             .filter(Submission.task == task)\
             .order_by(Submission.timestamp.desc()).first()
 
-        return self.get_submission_results(user, submission)      
+        return self.get_submission_results(user, submission, task)      
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -1248,9 +1246,10 @@ class SubmissionStatusHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self, submission_id):
         submission = self.sql_session.query(Submission).filter(Submission.id == submission_id).one()
+        task = submission.task
 
         self.r_params["result"] = submission.results[0]
-        self.r_params["s"] = self.get_submission_results(self.current_user, submission)
+        self.r_params["s"] = self.get_submission_results(self.current_user, submission, task)
         self.render("submit_status.html", **self.r_params)
 
 
