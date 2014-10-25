@@ -1670,7 +1670,7 @@ class AddUserSetHandler(BaseHandler):
 
             for index, userid in enumerate(userids):
                 user = self.sql_session.query(User).filter(User.id==userid)\
-                        .filter(User.contest == self.contest.one())
+                        .filter(User.contest == self.contest).one()
                 userset.users.append(user)
 
 
