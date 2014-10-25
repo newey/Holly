@@ -39,6 +39,7 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 import traceback
+from sqlalchemy import func
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
@@ -57,7 +58,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, UserSet
+    Testcase, Submission, User, File, ProblemSet, UserSet, SubmissionResult
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -1922,6 +1923,29 @@ class HallOfFameHandler(BaseHandler):
 
     def get(self):
         self.r_params["active_sidebar_item"] = "fame"
+        self.r_params["hofusers"] = self.sql_session.query(User.username)\
+            .filter(User.contest == self.contest)
+
+        scoretuples = self.sql_session.query(func.max(SubmissionResult.score), User.username, Task)\
+            .join(Submission)\
+            .join(User)\
+            .join(Task)\
+            .filter(User.contest_id == self.contest.id)\
+            .filter(SubmissionResult.dataset_id == Task.active_dataset_id)\
+            .group_by(User.username, Task).all()
+
+        logger.warn(str(scoretuples))
+
+        scoretuples = filter(lambda x: x[0] == get_score_type(dataset=x[2].active_dataset).max_score, scoretuples)
+
+        usercountsdict = {}
+        for foo, user, baz in scoretuples:
+            usercountsdict[user] = usercountsdict.setdefault(user, 0) + 1
+
+        usercounts = sorted([x[::-1] for x in usercountsdict.items()])[:-11:-1]
+
+        self.r_params["hofusers"] = usercounts
+
         self.render("hall_of_fame.html", **self.r_params)
 
 
