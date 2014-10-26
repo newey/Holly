@@ -1491,7 +1491,7 @@ class AddProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
-        tasks = self.sql_session.query(Task.id, Task.title).all()
+        tasks = self.sql_session.query(Task.id, Task.title).filter(Task.contest_id == self.contest.id)
         self.r_params['taskdata'] = tasks
         self.r_params["active_sidebar_item"] = "problemsets"
         self.render("add_problemset.html", **self.r_params)
@@ -1534,7 +1534,7 @@ class AddProblemSetHandler(BaseHandler):
             ## TODO: Ensure all problem ids are actually problems.
 
             for index, problemid in enumerate(problemids):
-                task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                task = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id).filter(Task.id==problemid).one()
                 problemset.tasks.append(task)
 
             self.sql_session.commit()
@@ -1589,7 +1589,7 @@ class EditProblemSetHandler(BaseHandler):
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
 
-        all_tasks = self.sql_session.query(Task).all()
+        all_tasks = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id)
         unselected_tasks = filter(lambda x: x not in problemSet.tasks, all_tasks)
 
         self.r_params["problemset"] = problemSet
@@ -1641,7 +1641,7 @@ class EditProblemSetHandler(BaseHandler):
                 problemids = map(int, problemids)
 
                 for index, problemid in enumerate(problemids):
-                    task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                    task = self.sql_session.query(Task).filter(Task.contest_id == contest.id).filter(Task.id==problemid).one()
                     problemset.tasks.append(task)
 
             # If necessary add or remove this userSet from the allUsers group
