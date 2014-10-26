@@ -1,3 +1,7 @@
-{% for contest in contests %}
-  <a href="{{ admin_url  }}/contest/{{ contest.id }}">{{ contest.name }}</a>
+{% for contest, user in finished_contests %}
+  <a href="{{ admin_url  }}/contest/{{ contest.id }}">{{ contest.name }}</a><br>
+  Username: {{ user.username }}<br>
+  Password: {{ user.password }}<br>
+  Start time: {{ contest.start }}<br>
+  End time: {{ contest.stop }} <br><br><br>
 {% end %}

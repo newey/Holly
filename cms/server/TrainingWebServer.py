@@ -413,7 +413,7 @@ class BaseHandler(CommonRequestHandler):
         params["all_users"] = self.all_users
         params["active_sidebar_item"] = ""
         params["error"] = self.get_argument("error", "")
-        
+        params["contest_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.contest_listen_port[0]) 
         params["admin_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.admin_listen_port)
         return params
 
@@ -2002,6 +2002,22 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class ContestsHandler(BaseHandler):
+    """Show all contests
+
+    """
+
+    @tornado.web.authenticated
+    def get(self):
+        contests = self.sql_session.query(Contest).\
+                   filter(Contest.id != self.contest.id).\
+                   filter(Contest.users.any(User.username == self.current_user.username)).\
+                   order_by(Contest.start.asc())
+        finished_contests = contests.filter(Contest.stop < self.timestamp)
+        self.r_params["finished_contests"] = [(contest, user) for contest in finished_contests for user in contest.users if user.username == self.current_user.username]
+        self.r_params["future_contests"] = contests.filter(Contest.stop >= self.timestamp)           
+        self.render("contests.html", **self.r_params)
+
 class AdminContestsHandler(BaseHandler):
     """Show all contests
 
@@ -2012,7 +2028,7 @@ class AdminContestsHandler(BaseHandler):
     def get(self):
         self.r_params["contests"] = self.sql_session.query(Contest).\
                                         filter(Contest.id != self.contest.id)           
-        self.render("contests.html", **self.r_params)
+        self.render("admin_contests.html", **self.r_params)
         
  
 class AddContestHandler(BaseHandler):
@@ -2154,6 +2170,7 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
+    (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),
