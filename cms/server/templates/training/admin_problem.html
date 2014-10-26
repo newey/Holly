@@ -77,6 +77,7 @@
       </div>
       <div class="table-responsive">
         <table class="table table-striped" id ="users">
+          
           <thead>
             <tr>
               <th>Status</th>
@@ -87,6 +88,33 @@
             </tr>
           </thead>
           <tbody>
+            {% for user in users %}
+
+            <tr>
+
+              {% if user_submission_stats[user.username]["status"] == "ready" %}
+              
+                {% if user_submission_stats[user.username]["percent"] == 100 %}
+                  <td><span class="label label-success">Accepted</span></td>
+                {% else %}
+                  <td><span class="label label-warning">{{ user_submission_stats[user.username]["percent"] }}%</span></td>
+                {% end %}
+
+              {% elif user_submission_stats[user.username]["status"] == "failed_compilation" %}
+                <td><span class="label label-danger">Compilation failed</span></td>
+              {% elif user_submission_stats[user.username]["status"] == "none" %}
+                <td><span class="label label-default">Inactive</span></td>
+              {% else %}
+                <td><span class="label label-danger">Error</span></td>
+              {% end %}
+              <td>{{ user.username }}</td>
+              <td>0</td>
+              <td>0</td>
+              <td>-</td>
+            </tr>
+
+            {% end %}
+<!--             
             <tr>
               <td><span class="label label-default">Inactive</span></td>
               <td>admin</td>
@@ -115,7 +143,8 @@
               <td>1</td>
               <td>-</td>
             </tr>
-          </tbody>
+ -->
+           </tbody>
         </table>
       </div>
     </div>
@@ -181,7 +210,7 @@
   </div>
 </div>
               </td>
-              <td>2/2</td>
+              <td>{{ submission_stats["tests_passed"][testcase.codename] }}/{{ submission_stats["num_submissions"] }}</td>
             </tr>
             {% end %}
           </tbody>
