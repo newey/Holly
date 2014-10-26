@@ -1,0 +1,32 @@
+{% extends contestant_base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block core %}
+  <h1 class="page-header">Hall of Fame</h1>
+
+  <div class="responsive-table">
+
+      <table class="table">
+          <col width="80">
+          <col width="200">
+          <col width="80">
+          <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Solved</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for index, data in enumerate(hofusers) %}
+            <tr>
+                <td>{{ index + 1 }}</td>
+                <td>{{ data[1] }}</td>
+                <td>{{ data[0] }}</td>
+            </tr>
+            {% end %}
+          </tbody>
+      </table>
+  </div>
+{% end %}
