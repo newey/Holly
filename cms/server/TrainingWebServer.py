@@ -1642,7 +1642,7 @@ class EditProblemSetHandler(BaseHandler):
                 problemids = map(int, problemids)
 
                 for index, problemid in enumerate(problemids):
-                    task = self.sql_session.query(Task).filter(Task.contest_id == contest.id).filter(Task.id==problemid).one()
+                    task = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id).filter(Task.id==problemid).one()
                     problemset.tasks.append(task)
 
             # If necessary add or remove this userSet from the allUsers group
