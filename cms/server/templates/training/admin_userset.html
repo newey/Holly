@@ -58,123 +58,6 @@
     </div>
   </div>
 </div>
-
-<div class="row">
-  <div class="col-md-8">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Problems</h3>
-        <span class="pull-right">
-          <!-- Tabs -->
-          <ul class="nav panel-tabs">
-            <li class="active"><a href="#tab1" data-toggle="tab">Single</a></li>
-            <li><a href="#tab2" data-toggle="tab">Set</a></li>
-          </ul>
-      </span>
-    </div>
-    <div class="tab-content">
-      <div class="table-responsive tab-pane active" id="tab1">
-          <table class="table table-striped" id ="problems">
-            <thead>
-              <tr>
-                <th>Problem</th>
-                <th>Test Passed</th>
-                <th>No. Submissions</th>
-                <th>Submissions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for problemset in selected_sets %}
-                {% for task in problemset.tasks %}
-                  <tr>
-                    <td><a href="/admin/problem/{{ task.id }}/" data-toggle="tab">{{ task.title }}</a></td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>-</td>
-                  </tr>
-                {% end %}
-              {% end %}
-            </tbody>
-          </table>
-        </div>
-        <div class="table-responsive tab-pane" id="tab2">
-          <table class="table table-striped" id ="problems">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Problem</th>
-                <th>Test Passed</th>
-                <th>No. Submissions</th>
-                <th>Submissions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><span class="label label-default">Inactive</span></td>
-                <td>aio10</td>
-                <td>0</td>
-                <td>0</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td><span class="label label-danger">Error</span></td>
-                <td>aio11</td>
-                <td>0</td>
-                <td>0</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td><span class="label label-success">Accepted</span></td>
-                <td>aio12</td>
-                <td>9/9</td>
-                <td>2</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td><span class="label label-warning">72%</span></td>
-                <td>aio13</td>
-                <td>5/9</td>
-                <td>1</td>
-                <td>-</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Users</h3>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped" id ="users">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Input</th>
-              <th>Output</th>
-              <th>Score</th>
-              <th>Passed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for user in userset.users %}
-            <tr>
-              <td>{{ user.username }}</td>
-              <td></td>
-              <td></td>
-              <td>1</td>
-              <td>2/2</td>
-            </tr>
-            {% end %}
-          </tbody>
-        </table>
-      </div>
-    </div> 
-  </div>
-</div>
 {% end %}
 
 {% block scripts %}
@@ -193,7 +76,7 @@ $(document).ready(function() {
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
-            data: [1,2]
+            data: {{ graph_data1 }}
 
         },
         {
@@ -204,10 +87,10 @@ $(document).ready(function() {
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(151,187,205,1)",
-            data: [1,2]
+            data: {{ graph_data2 }}
         }
     ],
-    labels: [1,2]
+    labels: {{ labels }}
   }
   var options = {
     bezierCurve : false,

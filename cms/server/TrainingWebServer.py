@@ -1792,19 +1792,44 @@ class AdminUserSetHandler(BaseHandler):
         try:
             userset = self.sql_session.query(UserSet).\
                     filter(UserSet.id == userset_id).one()
+
+            users = self.sql_session.query(User).filter(User.contest == self.contest)
         except KeyError:
             raise tornado.web.HTTPError(404)
         self.r_params["userset"] = userset
         self.r_params["active_sidebar_item"] = "users"
 
-        all_sets = self.sql_session.query(ProblemSet).all()
-        unselected_sets = filter(lambda x: x not in userset.problemSets, all_sets)
+        labels = []
+        data1 = []
+        data2 = []
+
+        for problemSet in userset.problemSets:
+            print("problemSet.title "+str(problemSet.title))
+            
+            
+            for task in problemSet.tasks:
+                total_submissions = self.sql_session.query(Submission)\
+                                        .filter(Submission.task == task)\
+                                        .order_by(Submission.timestamp.desc())
+
+                num_users_passed = 0
+                for user in users:
+                    submission = total_submissions.filter(Submission.user == user).first()
+                    status = self.get_submission_results(user, submission, task)
+                    if status['score'] == status['max_score']:
+                        num_users_passed += 1
+
+                data1.append(num_users_passed)
+                data2.append(int(total_submissions.count()) - num_users_passed)
+
+                print("task.title "+str(task.title))
+                labels.append(tornado.escape.utf8(str(task.title)))
 
         self.r_params["selected_sets"] = userset.problemSets
 
-        self.r_params["graph_data1"] = []
-        self.r_params["graph_data2"] = []
-        self.r_params["labels"] = []
+        self.r_params["graph_data1"] = data1
+        self.r_params["graph_data2"] = data2
+        self.r_params["labels"] = labels
 
         self.render("admin_userset.html", **self.r_params)
 
