@@ -963,7 +963,11 @@ class AdminProblemHandler(BaseHandler):
                 user_submission_stats[user.username]["tests_passed"] = "0"
                 user_submission_stats[user.username]["num_submissions"] = 0
 
-        # get test table data
+        data1 = [0]*total_tests
+        data2 = [num_submissions]*total_tests
+        labels = [""]*total_tests
+
+        # get test table and graph data
         for user in users:
             for submission in total_submissions.filter(Submission.user == user):
                 result = self.get_submission_results(user, submission, task)
@@ -974,6 +978,8 @@ class AdminProblemHandler(BaseHandler):
                     for idx,score_detail in enumerate(score_details):
                         if str(score_detail['outcome']) == "Correct":
                             tests_passed[score_detail['idx']] += 1
+                            data1[idx] = tests_passed[score_detail['idx']]
+                        labels[idx] = tornado.escape.utf8(str(score_detail['idx']))
 
         submission_stats["num_submissions"] = num_submissions
         submission_stats["tests_passed"] = tests_passed
@@ -989,6 +995,10 @@ class AdminProblemHandler(BaseHandler):
         self.r_params["inputs"] = inputs
         self.r_params["outputs"] = outputs
         self.r_params["submission_stats"] = submission_stats
+
+        self.r_params["graph_data1"] = data1
+        self.r_params["graph_data2"] = data2
+        self.r_params["labels"] = labels
 
         self.render("admin_problem.html",
                     task=task, **self.r_params)
