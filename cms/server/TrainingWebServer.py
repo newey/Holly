@@ -2014,8 +2014,13 @@ class ContestsHandler(BaseHandler):
                    filter(Contest.users.any(User.username == self.current_user.username)).\
                    order_by(Contest.start.asc())
         finished_contests = contests.filter(Contest.stop < self.timestamp)
-        self.r_params["finished_contests"] = [(contest, user) for contest in finished_contests for user in contest.users if user.username == self.current_user.username]
-        self.r_params["future_contests"] = contests.filter(Contest.stop >= self.timestamp)           
+        self.r_params["finished_contests"] = [(contest, user) for contest in finished_contests
+                                              for user in contest.users 
+                                              if user.username == self.current_user.username]
+        future_contests = contests.filter(Contest.stop >= self.timestamp)           
+        self.r_params["future_contests"] = [(contest, user) for contest in future_contests
+                                            for user in contest.users 
+                                            if user.username == self.current_user.username]
         self.render("contests.html", **self.r_params)
 
 class AdminContestsHandler(BaseHandler):
