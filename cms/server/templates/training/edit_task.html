@@ -374,7 +374,8 @@ $(document).ready(function() {
     }
   });
 
-  $('#summernote').code('{% raw (task.primary_statements.replace("\n","").replace("\r","\\\r")) %}');
+  {% import json %}
+  $('#summernote').code({% raw json.dumps(task.primary_statements) %});
 }); 
 </script>
 {% end %}

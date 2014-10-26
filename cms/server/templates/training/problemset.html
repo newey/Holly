@@ -10,7 +10,36 @@
 {% end %}
 
 {% block core %}
-  <h1 class="page-header">{{ problemset.title }}</h1>
+  <script>
+    $(document).on('click', '.pinned', function() {
+      var $pin = $(this)
+      $.post("/problemset/{{ problemset.id }}/unpin", function() {
+        $pin.children().removeClass("text-danger");
+        $pin.removeClass("pinned");
+        $pin.addClass("unpinned");
+      })
+    });
+
+    $(document).on('click', '.unpinned', function() {
+      var $pin = $(this)
+      $.post("/problemset/{{ problemset.id }}/pin", function() {
+        $pin.children().addClass("text-danger");
+        $pin.removeClass("unpinned");
+        $pin.addClass("pinned");
+      })
+    });
+  </script>
+  <div class="row">
+    <div class="col-md-9">
+      <h1 class="page-header">{{ problemset.title }}</h1>
+    </div>
+    <div class="col-md-3" style="padding-top: 20px; text-align: right">
+      <button type="button" class="btn {% if is_pinned %} pinned{% else %} unpinned{% end %}">
+         <span class="glyphicon glyphicon-pushpin{% if is_pinned %} text-danger{% end %}" style="font-size:24px">
+         </span>
+      </button>
+    </div>
+  </div>
   <div>
     {% raw problemset.description %}
   </div>
