@@ -261,19 +261,15 @@ class BaseHandler(CommonRequestHandler):
         individualSet = UserSet(**attrs)
         self.sql_session.add(individualSet)
 
-        self.sql_session.commit()
+        self.sql_session.commit() 
 
-    def get_task_results(self, user, task):
+    def get_submission_results(self, user, submission, task):
         result = {
             "status": None,
             "max_score": None,
             "score": None,
             "percent": None,
         }
-        submission = self.sql_session.query(Submission)\
-            .filter(Submission.user == user)\
-            .filter(Submission.task == task)\
-            .order_by(Submission.timestamp.desc()).first()
         
         if submission is None:
             result["status"] = "none"
@@ -301,6 +297,13 @@ class BaseHandler(CommonRequestHandler):
 
         return result
         
+    def get_task_results(self, user, task):
+        submission = self.sql_session.query(Submission)\
+            .filter(Submission.user == user)\
+            .filter(Submission.task == task)\
+            .order_by(Submission.timestamp.desc()).first()
+
+        return self.get_submission_results(user, submission, task)      
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -408,9 +411,11 @@ class BaseHandler(CommonRequestHandler):
         params["timestamp"] = make_datetime()
         params["url_root"] = get_url_root(self.request.path)
         params["current_user"] = self.current_user
+        params["all_users"] = self.all_users
         params["active_sidebar_item"] = ""
-        params["admin_port"] = config.admin_listen_port
         params["error"] = self.get_argument("error", "")
+        params["contest_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.contest_listen_port[0]) 
+        params["admin_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.admin_listen_port)
         return params
 
     def get_task_by_id(self, task_id):
@@ -525,14 +530,10 @@ class BaseHandler(CommonRequestHandler):
         fname_len = len(attrs["first_name"])
         assert fname_len < 56,\
             "First name must be below 56 chars."
-        assert re.match(r'^[\w-]*$', attrs["first_name"]),\
-            "First name can only contain alphanumeric characters and dashes."
 
         lname_len = len(attrs["last_name"])
         assert lname_len < 56,\
             "Last name must be below 56 chars."
-        assert re.match(r'^[\w-]*$', attrs["last_name"]),\
-            "Last name can only contain alphanumeric characters and dashes."
 
     def check_signup_valid_input(self, attrs):
         self.check_edit_user_valid_input(attrs)
@@ -693,6 +694,16 @@ class SignupHandler(BaseHandler):
             }
             individualSet = UserSet(**attrs)
             self.sql_session.add(individualSet)
+
+            # Add any default pinned problem sets
+            accessibleSets = set()
+            for userset in user.userSets:
+                for problemset in userset.problemSets:
+                    accessibleSets.add(problemset)
+
+            for problem_set in accessibleSets:
+                if problem_set.pinned_by_default:
+                    user.pinnedSets.append(problem_set)
 
             self.sql_session.commit()
 
@@ -1075,8 +1086,9 @@ class SubmitHandler(BaseHandler):
         # Ensure that the user did not submit multiple files with the
         # same name.
         if any(len(filename) != 1 for filename in self.request.files.values()):
-            error = "Multiple files with the same name"
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "Multiple files with the same name";
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # This ensure that the user sent one file for every name in
@@ -1087,8 +1099,9 @@ class SubmitHandler(BaseHandler):
         provided = set(self.request.files.keys())
         if not (required == provided or (task_type.ALLOW_PARTIAL_SUBMISSION
                                          and required.issuperset(provided))):
-            error = "More than one file for every name."
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "More than one file for every name."; 
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # Add submitted files. After this, files is a dictionary indexed
@@ -1159,14 +1172,17 @@ class SubmitHandler(BaseHandler):
                     submission_lang = lang
         if error is not None:
             error = "Incorrect language extension"
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "Incorrect language extension"; 
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # Check if submitted files are small enough.
         if any([len(f[1]) > config.max_submission_length
                 for f in files.values()]):
-            error = "Files are too big"
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = "Files are too big";
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         # All checks done, submission accepted.
@@ -1207,7 +1223,9 @@ class SubmitHandler(BaseHandler):
 
         # In case of error, the server aborts the submission
         except Exception as error:
-            self.redirect("/problem/%s?error=%s" % (task.id, error))
+            self.r_params["message"] = submission.id
+            self.set_status(400)
+            self.render("return_message.html", **self.r_params)
             return
 
         submission = Submission(self.timestamp,
@@ -1222,8 +1240,19 @@ class SubmitHandler(BaseHandler):
         self.application.service.evaluation_service.new_submission(
             submission_id=submission.id)
 
+        self.r_params["message"] = submission.id; 
+        self.render("return_message.html", **self.r_params)
 
-        self.redirect("/problem/%s/%s/submissions" % (set_id, task.id))
+class SubmissionStatusHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self, submission_id):
+        submission = self.sql_session.query(Submission).filter(Submission.id == submission_id).one()
+        task = submission.task
+
+        self.r_params["result"] = submission.results[0]
+        self.r_params["s"] = self.get_submission_results(self.current_user, submission, task)
+        self.render("submit_status.html", **self.r_params)
+
 
 class SubmissionsHandler(BaseHandler):
     @tornado.web.authenticated
@@ -1298,7 +1327,16 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
             self.get_string(attrs, "num")
+            self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
+
+            public = self.get_argument("public", default=None)
+
+            if "pinned_by_default" in attrs:
+                attrs["pinned_by_default"] = True
+            else:
+                attrs["pinned_by_default"] = False
+
             #attrs["contest_id"] = self.contest.id
             #TODO: CHANGE AFTER DEMO
             random.seed()
@@ -1307,6 +1345,9 @@ class AddProblemSetHandler(BaseHandler):
 
             problemset = ProblemSet(**attrs)
             self.sql_session.add(problemset)
+
+            if public:
+                self.all_users.problemSets.append(problemset)
 
             working = dict()
             self.get_string(working, "problemids")
@@ -1324,9 +1365,9 @@ class AddProblemSetHandler(BaseHandler):
 
             self.sql_session.commit()
 
-        except Exception as error:
+        except:
             self.redirect("/admin/problemset/add")
-            logger.exception(error)
+            logger.exception(traceback.format_exc())
             return
 
         self.redirect("/admin/problemsets")
@@ -1390,21 +1431,28 @@ class EditProblemSetHandler(BaseHandler):
         set_id = int(set_id)
         try:
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
-        except Exception as error:
-            logger.exception(error)
+        except:
+            logger.exception(traceback.format_exc())
             self.redirect("/admin/problemset/%d/edit" % set_id)
         try:
             attrs = dict()
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title", empty=None)
             self.get_string(attrs, "problemids", empty=None)
+            self.get_string(attrs, "pinned_by_default", empty=None)
 
+            public = self.get_argument("public", default=None)
 
             if attrs["name"] is not None:
                 problemset.name = attrs["name"]
 
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
+
+            if public and "pinned_by_default" in attrs:
+                problemset.pinned_by_default = True
+            else:
+                problemset.pinned_by_default = False
 
             problemset.tasks = []
             if attrs["problemids"] is not None:
@@ -1418,11 +1466,16 @@ class EditProblemSetHandler(BaseHandler):
                     task = self.sql_session.query(Task).filter(Task.id==problemid).one()
                     problemset.tasks.append(task)
 
+            # If necessary add or remove this userSet from the allUsers group
+            if public and problemset not in self.all_users.problemSets:
+                self.all_users.problemSets.append(problemset)
+            if not public and problemset in self.all_users.problemSets:
+                self.all_users.problemSets.remove(problemset)
 
             self.sql_session.commit()
 
-        except Exception as error:
-            logger.exception(error)
+        except:
+            logger.exception(traceback.format_exc())
             self.redirect("/admin/problemset/%d/edit" % set_id)
 
         self.redirect("/admin/problemsets")
@@ -1437,7 +1490,7 @@ class AdminUserHandler(BaseHandler):
         self.r_params = self.render_params()
         self.r_params["specialSets"] = self.sql_session.query(UserSet).filter(UserSet.setType==2)
         self.r_params["sets"] = self.sql_session.query(UserSet).filter(UserSet.setType==0)
-        self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["users"] = self.sql_session.query(User).filter(User.contest == self.contest)
         self.r_params["active_sidebar_item"] = "users"
         self.render("admin_users.html", **self.r_params)
 
@@ -1508,7 +1561,14 @@ class EditUserHandler(BaseHandler):
             user.username = attrs.get("username")
             user.password = attrs.get("password")
             user.email = attrs.get("email")
-            user.is_training_admin = is_admin_choice
+
+            if user.is_training_admin and not is_admin_choice and self.sql_session.query(User)\
+                    .filter(User.contest == self.contest,
+                            User.is_training_admin == True).count() == 1:
+                # Can't delete the last admin...
+                self.redirect("/admin/users?error=You cannot stop being an administrator because you are the only administrator.") # TODO inform user
+            else:
+                user.is_training_admin = is_admin_choice
 
             self.sql_session.commit()
 
@@ -1526,10 +1586,15 @@ class DeleteAccountHandler(BaseHandler):
 
     @tornado.web.authenticated
     def post(self):
-        self.sql_session.delete(self.current_user)
-        self.sql_session.commit()
-
-        self.redirect("/login")
+        if self.current_user.is_training_admin and self.sql_session.query(User)\
+            .filter(User.contest == self.contest,
+                    User.is_training_admin == True).count() == 1:
+            # Can't delete the last admin...
+            self.redirect("/admin/problems?error=You cannot delete your account because you are the only administrator.") # TODO inform user
+        else:
+            self.sql_session.delete(self.current_user)
+            self.sql_session.commit()
+            self.redirect("/login")
 
 class DeleteUserHandler(BaseHandler):
     """Deletes a user.
@@ -1541,14 +1606,20 @@ class DeleteUserHandler(BaseHandler):
     def post(self, user_id):
         try:
             user = self.sql_session.query(User)\
-            .filter(User.id==user_id).one()
+            .filter(User.id==user_id)\
+            .filter(User.contest == self.contest).one()
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        self.sql_session.delete(user)
-        self.sql_session.commit()
-
-        self.redirect("/admin/users")
+        if user.is_training_admin and self.sql_session.query(User)\
+            .filter(User.contest == self.contest,
+                    User.is_training_admin == True).count() == 1:
+            # Can't delete the last admin...
+            self.redirect("/admin/users?error=You cannot delete your account because you are the only administrator.") # TODO inform user
+        else:
+            self.sql_session.delete(user)
+            self.sql_session.commit()
+            self.redirect("/admin/users")
 
 class AdminUserSetHandler(BaseHandler):
     """Shows the data of a task.
@@ -1575,7 +1646,7 @@ class AddUserSetHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
-        self.r_params["users"] = self.sql_session.query(User)
+        self.r_params["users"] = self.sql_session.query(User).filter(User.contest == self.contest)
         self.r_params["problem_sets"] = self.sql_session.query(ProblemSet)
         self.r_params["active_sidebar_item"] = "users"
         self.render("add_userset.html", **self.r_params)
@@ -1621,7 +1692,8 @@ class AddUserSetHandler(BaseHandler):
             ## TODO: Ensure all problem ids are actually problems.
 
             for index, userid in enumerate(userids):
-                user = self.sql_session.query(User).filter(User.id==userid).one()
+                user = self.sql_session.query(User).filter(User.id==userid)\
+                        .filter(User.contest == self.contest).one()
                 userset.users.append(user)
 
 
@@ -1646,7 +1718,7 @@ class EditUserSetHandler(BaseHandler):
         all_sets = self.sql_session.query(ProblemSet).all()
         unselected_sets = filter(lambda x: x not in userset.problemSets, all_sets)
 
-        all_users = self.sql_session.query(User).all()
+        all_users = self.sql_session.query(User).filter(User.contest == self.contest).all()
         unselected_users = filter(lambda x: x not in userset.users, all_users)
 
         self.r_params["userset"] = userset
@@ -1696,7 +1768,7 @@ class EditUserSetHandler(BaseHandler):
 
 
             userset.users = []
-            if attrs["userids"] is not None:
+            if attrs["userids"] is not None and userset.setType == 0:
                 userids = attrs["userids"].strip().split()
 
                 assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
@@ -1706,7 +1778,8 @@ class EditUserSetHandler(BaseHandler):
                 ## TODO: Ensure all problem ids are actually problems.
 
                 for index, userid in enumerate(userids):
-                    user = self.sql_session.query(User).filter(User.id==userid).one()
+                    user = self.sql_session.query(User).filter(User.id==userid)\
+                            .filter(User.contest == self.contest).one()
                     userset.users.append(user)
 
             self.sql_session.commit()
@@ -1726,7 +1799,8 @@ class DeleteUserSetHandler(BaseHandler):
     @admin_authenticated
     def post(self, userset_id):
         userset = self.sql_session.query(UserSet).\
-               filter(UserSet.id == userset_id).one()
+               filter(UserSet.id == userset_id,
+                      UserSet.setType == 0).one()
         try:
             self.sql_session.delete(userset)
             self.sql_session.commit()
@@ -1929,6 +2003,40 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class ContestsHandler(BaseHandler):
+    """Show all contests
+
+    """
+
+    @tornado.web.authenticated
+    def get(self):
+        contests = self.sql_session.query(Contest).\
+                   filter(Contest.id != self.contest.id).\
+                   filter(Contest.users.any(User.username == self.current_user.username)).\
+                   order_by(Contest.start.asc())
+        finished_contests = contests.filter(Contest.stop < self.timestamp)
+        self.r_params["finished_contests"] = [(contest, user) for contest in finished_contests
+                                              for user in contest.users 
+                                              if user.username == self.current_user.username]
+        future_contests = contests.filter(Contest.stop >= self.timestamp)           
+        self.r_params["future_contests"] = [(contest, user) for contest in future_contests
+                                            for user in contest.users 
+                                            if user.username == self.current_user.username]
+        self.render("contests.html", **self.r_params)
+
+class AdminContestsHandler(BaseHandler):
+    """Show all contests
+
+    """
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self):
+        self.r_params["contests"] = self.sql_session.query(Contest).\
+                                        filter(Contest.id != self.contest.id)           
+        self.render("admin_contests.html", **self.r_params)
+        
+ 
 class AddContestHandler(BaseHandler):
     """Adds a new contest.
 
@@ -2102,13 +2210,16 @@ _tws_handlers = [
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
     (r"/hof", HallOfFameHandler),
+    (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),
+    (r"/problem/([0-9]+)/submission_status", SubmissionStatusHandler),
     (r"/problemset/([0-9]+)", ProblemSetHandler),
     (r"/problemset/([0-9]+)/((un)?pin)", ProblemSetPinHandler),
     (r"/user", UserInfoHandler),
     (r"/user/delete", DeleteAccountHandler),
+    (r"/admin/contests", AdminContestsHandler),
     (r"/admin/contest/add", AddContestHandler),
     (r"/admin/problems", AdminProblemsHandler),
     (r"/admin/problem/([0-9]+)", AdminProblemHandler),

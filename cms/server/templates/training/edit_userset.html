@@ -142,7 +142,9 @@ $(document).ready(function() {
     var navListItems = $('ul.setup-panel li a');
     var allWells = $('.setup-content');
 
+    {% if userset.setType == 0 %}
     allWells.hide();
+    {% end %}
 
     navListItems.click(function(e)
     {
@@ -237,6 +239,7 @@ $(document).ready(function() {
   </div>
 </div>
 
+{% if userset.setType == 0 %}
 <div class="row form-group">
       <div class="col-xs-12">
           <ul class="nav nav-pills nav-justified thumbnail setup-panel">
@@ -249,6 +252,8 @@ $(document).ready(function() {
           </ul>
       </div>
 </div>
+{% end %}
+{% if userset.setType == 0 %}
 <div class="row setup-content" id="step-1">
   <div class="col-md-6">
     <div class="panel panel-default">
@@ -319,6 +324,7 @@ $(document).ready(function() {
     </div>
   </div>  
 </div>
+{% end %}
 <div class="row setup-content" id="step-2">
   <div class="col-md-6">
     <div class="panel panel-default">

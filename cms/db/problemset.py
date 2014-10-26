@@ -131,6 +131,12 @@ class ProblemSet(Base):
         secondary=accessible_problemsets,
         backref="problemSets")
 
+    # Whether new users who have access to this problem set should have
+    # it pinned by default
+    pinned_by_default = Column(
+        Boolean,
+        default=False)
+
     # The users who havve pinned this problem set
     usersWhoPinned = relationship("User",
         secondary=pinned_problemsets,
