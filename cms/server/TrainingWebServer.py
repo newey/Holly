@@ -1020,7 +1020,11 @@ class AdminProblemHandler(BaseHandler):
                 user_submission_stats[user.username]["tests_passed"] = "0"
                 user_submission_stats[user.username]["num_submissions"] = 0
 
-        # get test table data
+        data1 = [0]*total_tests
+        data2 = [0]*total_tests
+        labels = [""]*total_tests
+
+        # get test table and graph data
         for user in users:
             for submission in total_submissions.filter(Submission.user == user):
                 result = self.get_submission_results(user, submission, task)
@@ -1031,6 +1035,9 @@ class AdminProblemHandler(BaseHandler):
                     for idx,score_detail in enumerate(score_details):
                         if score_detail['idx'] in tests_passed and str(score_detail['outcome']) == "Correct":
                             tests_passed[score_detail['idx']] += 1
+                            data1[idx] = tests_passed[score_detail['idx']]
+                        data2[idx] = num_submissions - data1[idx]
+                        labels[idx] = tornado.escape.utf8(str(score_detail['idx']))
 
         submission_stats["num_submissions"] = num_submissions
         submission_stats["tests_passed"] = tests_passed
@@ -1046,6 +1053,10 @@ class AdminProblemHandler(BaseHandler):
         self.r_params["inputs"] = inputs
         self.r_params["outputs"] = outputs
         self.r_params["submission_stats"] = submission_stats
+
+        self.r_params["graph_data1"] = data1
+        self.r_params["graph_data2"] = data2
+        self.r_params["labels"] = labels
 
         self.render("admin_problem.html",
                     task=task, **self.r_params)
@@ -1220,6 +1231,12 @@ class SubmitHandler(BaseHandler):
             task = self.get_task_by_id(task_id)
         except:
             raise tornado.web.HTTPError(404)
+
+        # Pin the problemset
+        problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        if problemset not in self.current_user.pinnedSets:
+            self.current_user.pinnedSets.append(problemset)
+            self.sql_session.commit()
 
         # Alias for easy access
         contest = self.contest
@@ -1448,6 +1465,7 @@ class ProblemSetHandler(BaseHandler):
 
         self.r_params = self.render_params()
         self.r_params["problemset"] = problemset
+        self.r_params["is_pinned"] = problemset in self.current_user.pinnedSets
         self.r_params["statuses"] = statuses
         self.r_params["tasks"] = [(task, self.get_task_results(self.current_user, task)) for task in problemset.tasks]
         self.r_params["active_sidebar_item"] = "problems"
@@ -1462,7 +1480,8 @@ class ProblemSetPinHandler(BaseHandler):
                 self.current_user.pinnedSets.remove(problem_set)
 
         elif action == "pin":
-            self.current_user.pinnedSets.append(problem_set)
+            if problem_set not in self.current_user.pinnedSets:
+                self.current_user.pinnedSets.append(problem_set)
 
         self.sql_session.commit()
 
@@ -1473,7 +1492,7 @@ class AddProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
-        tasks = self.sql_session.query(Task.id, Task.title).all()
+        tasks = self.sql_session.query(Task.id, Task.title).filter(Task.contest_id == self.contest.id).all()
         self.r_params['taskdata'] = tasks
         self.r_params["active_sidebar_item"] = "problemsets"
         self.render("add_problemset.html", **self.r_params)
@@ -1516,7 +1535,7 @@ class AddProblemSetHandler(BaseHandler):
             ## TODO: Ensure all problem ids are actually problems.
 
             for index, problemid in enumerate(problemids):
-                task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                task = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id).filter(Task.id==problemid).one()
                 problemset.tasks.append(task)
 
             self.sql_session.commit()
@@ -1571,7 +1590,7 @@ class EditProblemSetHandler(BaseHandler):
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
 
-        all_tasks = self.sql_session.query(Task).all()
+        all_tasks = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id).all()
         unselected_tasks = filter(lambda x: x not in problemSet.tasks, all_tasks)
 
         self.r_params["problemset"] = problemSet
@@ -1623,7 +1642,7 @@ class EditProblemSetHandler(BaseHandler):
                 problemids = map(int, problemids)
 
                 for index, problemid in enumerate(problemids):
-                    task = self.sql_session.query(Task).filter(Task.id==problemid).one()
+                    task = self.sql_session.query(Task).filter(Task.contest_id == contest.id).filter(Task.id==problemid).one()
                     problemset.tasks.append(task)
 
             # If necessary add or remove this userSet from the allUsers group
@@ -1786,17 +1805,47 @@ class AdminUserSetHandler(BaseHandler):
 
     """
 
-
     @tornado.web.authenticated
     @admin_authenticated
     def get(self, userset_id):
         try:
             userset = self.sql_session.query(UserSet).\
                     filter(UserSet.id == userset_id).one()
+
+            users = self.sql_session.query(User).filter(User.contest == self.contest)
         except:
             raise tornado.web.HTTPError(404)
         self.r_params["userset"] = userset
         self.r_params["active_sidebar_item"] = "users"
+
+        labels = []
+        data1 = []
+        data2 = []
+
+        for problemSet in userset.problemSets:
+            for task in problemSet.tasks:
+                total_submissions = self.sql_session.query(Submission)\
+                                        .filter(Submission.task == task)\
+                                        .order_by(Submission.timestamp.desc())
+
+                num_users_passed = 0
+                for user in users:
+                    submission = total_submissions.filter(Submission.user == user).first()
+                    status = self.get_submission_results(user, submission, task)
+                    if status['score'] == status['max_score']:
+                        num_users_passed += 1
+
+                data1.append(num_users_passed)
+                data2.append(int(total_submissions.count()) - num_users_passed)
+
+                labels.append(tornado.escape.utf8(str(task.title)))
+
+        self.r_params["selected_sets"] = userset.problemSets
+
+        self.r_params["graph_data1"] = data1
+        self.r_params["graph_data2"] = data2
+        self.r_params["labels"] = labels
+
         self.render("admin_userset.html", **self.r_params)
 
 class AddUserSetHandler(BaseHandler):
