@@ -904,28 +904,85 @@ class AdminProblemHandler(BaseHandler):
 # LOOK IN "SubmissionResult" FOR DATA
 # compilation_tries
 
+
+# task = self.get_task_by_id(task_id)
+#             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+#             score_type = get_score_type(dataset=task.active_dataset)
+#         except KeyError:
+#             raise tornado.web.HTTPError(404)
+
+        # self.r_params["submissions"] = self.sql_session.query(Submission)\
+        #                               .filter(Submission.task == task)\
+        #                               .filter(Submission.user == self.current_user)\
+        #                               .order_by(Submission.timestamp.desc())
+
         inputs = dict()
         outputs = dict()
+        tests_passed = dict()
+        submission_stats = dict()
+
         try:
             task = self.get_task_by_id(task_id)
-            status = self.get_task_results(self.current_user, task)
-            print("<status> "+status["status"])
+            # status = self.get_task_results(self.current_user, task)
+            score_type = get_score_type(dataset=task.active_dataset)
 
-            num_tests = 0
-            if status["status"] == "ready":
-                num_tests = int(status["percent"])
+            submissions = self.sql_session.query(Submission)\
+                         .filter(Submission.task == task)\
+                         .filter(Submission.user == self.current_user)\
+                         .order_by(Submission.timestamp.desc())
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        print("<num_tests> "+str(num_tests))
+
+
+        # print("<score_type.max_score> "+str(score_type.max_score))
+        print("<submissions.count()> "+str(submissions.count()))
+        num_submissions = int(submissions.count())
+        total_tests = int(score_type.max_score)
+        
+        for i in xrange(0,total_tests):
+            print("<tests_passed[i] = 0> "+str(i))
+            tests_passed[i] = 0
+        
+        # total_tests = 0
+        # tests_passed = 0
+        for submission in submissions:
+            result = self.get_submission_results(self.current_user, submission, task)
+                
+            num_tests = 0
+            if result["status"] == "ready":
+                print("<ready max_score> "+str(result["max_score"]))
+                print("<ready score> "+str(result["score"]))
+                # tests_passed = int(result["score"])
+                # num_tests = int(result["percent"])
+            
+            for result in submission.results:
+            #     print("<result.compilation_tries> "+str(result.compilation_tries))
+            #     print("<result.score> "+str(result.score))
+                print("<result.score_details> "+str(result.score_details))
+                score_details = json.loads(result.score_details)
+                for idx,score_detail in enumerate(score_details):
+                    
+                    print("<score_detail['outcome']> "+str(score_detail['outcome']))
+                    print("<score_detail['idx']> "+str(score_detail['idx']))
+                    if str(score_detail['outcome']) == "Correct":
+                        tests_passed[idx] += 1
+
+        for i in xrange(0,total_tests):
+            print("<Test "+str(i)+"> "+str(tests_passed[i])+"/"+str(num_submissions))
+
+        submission_stats["num_submissions"] = num_submissions
+        submission_stats["tests_passed"] = tests_passed
 
         for testcase in task.active_dataset.testcases.itervalues():
             inputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.input)
             outputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.output)
 
+        self.r_params["inputs"] = inputs
         self.r_params["active_sidebar_item"] = "problems"
         self.r_params["inputs"] = inputs
         self.r_params["outputs"] = outputs
+        self.r_params["submission_stats"] = submission_stats
         self.render("admin_problem.html",
                     task=task, **self.r_params)
 
