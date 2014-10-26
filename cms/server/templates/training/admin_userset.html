@@ -87,7 +87,7 @@
               {% for problemset in selected_sets %}
                 {% for task in problemset.tasks %}
                   <tr>
-                    <td>{{ task.title }}</td>
+                    <td><a href="/admin/problem/{{ task.id }}/" data-toggle="tab">{{ task.title }}</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>-</td>
