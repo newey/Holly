@@ -39,6 +39,7 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 import traceback
+from sqlalchemy import func
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
@@ -57,7 +58,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, UserSet
+    Testcase, Submission, User, File, ProblemSet, UserSet, SubmissionResult
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -213,13 +214,15 @@ class BaseHandler(CommonRequestHandler):
             }
             allUsersSet = UserSet(**attrs)
             self.sql_session.add(allUsersSet)
+        else:
+            allUsersSet = userSets[0]
 
-            # Ensure that each user has their own userset and is in the all users set
-            for user in self.contest.users:
-                self.createIndividualUserSet(user)
+        # Ensure that each user has their own userset and is in the all users set
+        for user in self.contest.users:
+            self.createIndividualUserSet(user)
 
-                if user not in allUsersSet.users:
-                    allUsersSet.users.append(user)
+            if user not in allUsersSet.users:
+                allUsersSet.users.append(user)
 
             self.sql_session.commit()
 
@@ -413,7 +416,7 @@ class BaseHandler(CommonRequestHandler):
         params["all_users"] = self.all_users
         params["active_sidebar_item"] = ""
         params["error"] = self.get_argument("error", "")
-        
+        params["contest_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.contest_listen_port[0]) 
         params["admin_url"] = "http://%s:%s" % (self.request.host.split(':')[0], config.admin_listen_port)
         return params
 
@@ -607,6 +610,9 @@ class ProblemListHandler(BaseHandler):
         for userset in self.current_user.userSets:
             for problemset in userset.problemSets:
                 accessibleSets.add(problemset)
+
+        accessibleSets = [problemset for problemset in accessibleSets]
+        accessibleSets.sort(key=lambda problemset: problemset.title.lower())
         
         statuses = dict()
         try:
@@ -1399,6 +1405,7 @@ class AddProblemSetHandler(BaseHandler):
 
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
+            self.get_string(attrs, "description")
             self.get_string(attrs, "num")
             self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
@@ -1511,6 +1518,7 @@ class EditProblemSetHandler(BaseHandler):
             attrs = dict()
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title", empty=None)
+            self.get_string(attrs, "description", empty=None)
             self.get_string(attrs, "problemids", empty=None)
             self.get_string(attrs, "pinned_by_default", empty=None)
 
@@ -1521,6 +1529,9 @@ class EditProblemSetHandler(BaseHandler):
 
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
+
+            if attrs["description"] is not None:
+                problemset.description = attrs["description"]
 
             if public and "pinned_by_default" in attrs:
                 problemset.pinned_by_default = True
@@ -1887,20 +1898,21 @@ class EditUserSetHandler(BaseHandler):
                     userset.problemSets.append(problemset)
 
 
-            userset.users = []
-            if attrs["userids"] is not None and userset.setType == 0:
-                userids = attrs["userids"].strip().split()
+            if userset.setType == 0:
+                userset.users = []
+                if attrs["userids"] is not None:
+                    userids = attrs["userids"].strip().split()
 
-                assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
+                    assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
 
-                userids = map(int, userids)
+                    userids = map(int, userids)
 
-                ## TODO: Ensure all problem ids are actually problems.
+                    ## TODO: Ensure all problem ids are actually problems.
 
-                for index, userid in enumerate(userids):
-                    user = self.sql_session.query(User).filter(User.id==userid)\
-                            .filter(User.contest == self.contest).one()
-                    userset.users.append(user)
+                    for index, userid in enumerate(userids):
+                        user = self.sql_session.query(User).filter(User.id==userid)\
+                                .filter(User.contest == self.contest).one()
+                        userset.users.append(user)
 
             self.sql_session.commit()
 
@@ -1988,6 +2000,10 @@ class PasswordRecoveryHandler(BaseHandler):
         # Check if the user exists
         if user is None:
             self.redirect("/recover_password?error=Invalid username")
+            return
+
+        if user.verification_type == 2:
+            self.redirect("/confirm_email/%s?error=You must confirm your email" % user.id)
             return
 
         # Generate a new random verification code
@@ -2123,6 +2139,27 @@ class EmailConfirmationHandler(BaseHandler):
                                expires_days=None)
         self.redirect("/")
 
+class ContestsHandler(BaseHandler):
+    """Show all contests
+
+    """
+
+    @tornado.web.authenticated
+    def get(self):
+        contests = self.sql_session.query(Contest).\
+                   filter(Contest.id != self.contest.id).\
+                   filter(Contest.users.any(User.username == self.current_user.username)).\
+                   order_by(Contest.start.asc())
+        finished_contests = contests.filter(Contest.stop < self.timestamp)
+        self.r_params["finished_contests"] = [(contest, user) for contest in finished_contests
+                                              for user in contest.users 
+                                              if user.username == self.current_user.username]
+        future_contests = contests.filter(Contest.stop >= self.timestamp)           
+        self.r_params["future_contests"] = [(contest, user) for contest in future_contests
+                                            for user in contest.users 
+                                            if user.username == self.current_user.username]
+        self.render("contests.html", **self.r_params)
+
 class AdminContestsHandler(BaseHandler):
     """Show all contests
 
@@ -2133,7 +2170,7 @@ class AdminContestsHandler(BaseHandler):
     def get(self):
         self.r_params["contests"] = self.sql_session.query(Contest).\
                                         filter(Contest.id != self.contest.id)           
-        self.render("contests.html", **self.r_params)
+        self.render("admin_contests.html", **self.r_params)
         
  
 class AddContestHandler(BaseHandler):
@@ -2266,6 +2303,39 @@ class AddContestHandler(BaseHandler):
             
         self.redirect("/admin/contest/%s" % contest.id)
 
+class HallOfFameHandler(BaseHandler):
+    """Show the users with the most problems solved on the site.
+
+    """
+
+    def get(self):
+        self.r_params["active_sidebar_item"] = "fame"
+        self.r_params["hofusers"] = self.sql_session.query(User.username)\
+            .filter(User.contest == self.contest)
+
+        scoretuples = self.sql_session.query(func.max(SubmissionResult.score), User.username, Task)\
+            .join(Submission)\
+            .join(User)\
+            .join(Task)\
+            .filter(User.contest_id == self.contest.id)\
+            .filter(SubmissionResult.dataset_id == Task.active_dataset_id)\
+            .group_by(User.username, Task).all()
+
+        logger.warn(str(scoretuples))
+
+        scoretuples = filter(lambda x: x[0] == get_score_type(dataset=x[2].active_dataset).max_score, scoretuples)
+
+        usercountsdict = {}
+        for foo, user, baz in scoretuples:
+            usercountsdict[user] = usercountsdict.setdefault(user, 0) + 1
+
+        usercounts = sorted([x[::-1] for x in usercountsdict.items()])[:-11:-1]
+
+        self.r_params["hofusers"] = usercounts
+
+        self.render("hall_of_fame.html", **self.r_params)
+
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -2275,6 +2345,8 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
+    (r"/hof", HallOfFameHandler),
+    (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submissions", SubmissionsHandler),

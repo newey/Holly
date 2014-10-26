@@ -1,5 +1,10 @@
 {% extends admin_base.html %}
 
+{% block headextension %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
+<link href="/static/css/summernote.css" rel="stylesheet">
+{% end %}
+
 {% block js_init %}
 function showTaskTypeOption() {
     var selector = $("select[name=task_type]")[0];
@@ -40,8 +45,11 @@ $("select[name=task_type]").change(showTaskTypeOption);
       </div>
       <div class="form-group">
         <label for="primary_statements" class="col-sm-2 control-label" style="text-align:left;">Decripition</label>
-        <div class="col-sm-10">
-          <textarea class="form-control" rows="6" name="primary_statements" placeholder="Description">{{ task.primary_statements }}</textarea>
+        <div class="col-sm-7">
+          <div style="display: none;">
+            <textarea id="primary_statements" class="form-control" rows="6" name="primary_statements" placeholder="Description">{{ task.primary_statements }}</textarea>
+          </div>
+          <div id="summernote"></div>
         </div>
       </div>
     </div>
@@ -93,7 +101,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
           </div>
         
           <div class="TaskTypeOptions bordered" id="TaskTypeBatchOptions" style="display: none;">
-              <div class="form-group">
+              <div class="form-group" style="display: none;">
                 <label for="name" class="col-sm-4 control-label" style="text-align:left;">Compilation</label>
                 <div class="col-sm-8">
                   <select class="form-control" name="TaskTypeOptions_Batch_compilation">
@@ -109,7 +117,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
                   <input type="text" class="form-control" name="TaskTypeOptions_Batch_io_1_outputfile" value="" placeholder="Leave blank for STDOUT">
                 </div>
               </div>
-              <div class="form-group">
+              <div class="form-group" style="display: none;">
                 <label for="TaskTypeOptions_Batch_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evaluation</label>
                 <div class="col-sm-8">
                   <select class="form-control" name="TaskTypeOptions_Batch_output_eval">
@@ -121,7 +129,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
           </div>
 
           <div class="TaskTypeOptions bordered" id="TaskTypeOutputOnlyOptions" style="display: none;">
-              <div class="form-group">
+              <div class="form-group" style="display: none;">
                 <label for="TaskTypeOptions_OutputOnly_output_eval" class="col-sm-4 control-label" style="text-align:left;">Output Evalutaion</label>
                 <div class="col-sm-8">
                   <select class="form-control" name="TaskTypeOptions_OutputOnly_output_eval">
@@ -172,29 +180,27 @@ $("select[name=task_type]").change(showTaskTypeOption);
     <h3 class="panel-title">Tests</h3>
   </div>
   <div class="panel-body">
-    <div class="tab-pane fade in active" style="margin-bottom: 10px;">
-      <div class="table-responsive" id="tests">
-        <table class="table table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
-          <col width="40%">
-          <col width="30%">
-          <col width="30%">
-          <col width="70">
-          <col width="60">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Input</th>
-              <th>Output</th>
-              <th>Remove</th>
-              <th>Public</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <button id="addTest" type="button" class="btn btn-success">Add Test</button>    
+    <button id="addTest" type="button" class="btn btn-success pull-right" style="margin-bottom: 10px;">Add Test Row</button> 
+    <div class="table-responsive" id="tests">
+      <table class="table table-bordered" id="tests" style="margin-bottom: 0px; table-layout: fixed;">
+        <col width="40%">
+        <col width="30%">
+        <col width="30%">
+        <col width="70">
+        <col width="0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Remove</th>
+            <th style="display: none;">Public</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>   
   </div>
 </div>
  
@@ -203,8 +209,8 @@ $("select[name=task_type]").change(showTaskTypeOption);
 {% end %}
 
 {% block scripts %}
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<script src="/static/js/summernote.js"></script>
 <script>
 $(document).ready(function() {
   var newItems = 0;
@@ -222,7 +228,7 @@ $(document).ready(function() {
         <td style="text-align: center;"> \
           <button id="ignore-test-'+newItems+'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
         </td> \
-        <td><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
+        <td style="display: none;"><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
       </tr>');
 
     $('#ignore-test-'+newItems).click(function() {
@@ -245,7 +251,7 @@ $(document).ready(function() {
         <td style="text-align: center;"> \
           <button id="delete-test-'+ oldItems +'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
         </td> \
-        <td>false</td> \
+        <td style="display: none;">false</td> \
       </tr>');
 
     $('#delete-test-'+ oldItems).click(function() {
@@ -260,90 +266,111 @@ $(document).ready(function() {
   addOldRow({{ test.id }}, "{{ test.codename }}", false);
   {% end %}
 
-    $('#task-form').bootstrapValidator({
-        message: 'This value is not valid',
-        feedbackIcons: {
-            valid: 'glyphicon glyphicon-ok',
-            invalid: 'glyphicon glyphicon-remove',
-            validating: 'glyphicon glyphicon-refresh'
-        },
-        fields: {
-            name: {
-                message: 'This name is not valid',
-                validators: {
-                    notEmpty: {
-                        message: 'Problem names cannot be empty'
-                    },
-                    stringLength: {
-                        max: 80,
-                        message: 'Problem names must be no more than 80 characters long'
-                    },
-                    regexp: {
-                        regexp: /^[a-zA-Z0-9_]+$/,
-                        message: 'Problem names must only consist of underscores and alphanumeric characters'
-                    }
-                }
-            },
-            title: {
-                message: 'This title is not valid',
-                validators: {
-                    notEmpty: {
-                        message: 'Problem titles cannot be empty'
-                    },
-                    stringLength: {
-                        max: 80,
-                        message: 'Problem titles must be no more than 80 characters long'
-                    },
-                    regexp: {
-                        regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
-                        message: 'Problem titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
-                    }
-                }
-            },
-            TaskTypeOptions_Batch_io_0_inputfile: {
-                message: 'Invalid input file name',
-                validators: {
-                    regexp: {
-                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
-                        message: "Filename must be empty, or alphanumeric with at most one period in it"
-                    }
-                }
-            },
-            TaskTypeOptions_Batch_io_1_outputfile: {
-                message: 'Invalid output file name',
-                validators: {
-                    regexp: {
-                        regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
-                        message: "Filename must be empty, or alphanumeric with at most one period in it"
-                    }
-                }
-            },
-            time_limit: {
-                message: "Invalid time timit",
-                validators: {
-                    notEmpty: {
-                        message: "Time limit must not be blank"
-                    },
-                    numeric: {
-                        separator: ".",
-                        message: "Time limit must be numeric"
-                    }
-                }
-            },
-            memory_limit: {
-                message: "Invalid memory timit",
-                validators: {
-                    notEmpty: {
-                        message: "Memory limit must not be blank"
-                    },
-                    numeric: {
-                        separator: ".",
-                        message: "Memory limit must be numeric"
-                    }
-                }
-            }
-        }
-    });
+  $('#task-form').bootstrapValidator({
+      message: 'This value is not valid',
+      feedbackIcons: {
+          valid: 'glyphicon glyphicon-ok',
+          invalid: 'glyphicon glyphicon-remove',
+          validating: 'glyphicon glyphicon-refresh'
+      },
+      fields: {
+          name: {
+              message: 'This name is not valid',
+              validators: {
+                  notEmpty: {
+                      message: 'Problem names cannot be empty'
+                  },
+                  stringLength: {
+                      max: 80,
+                      message: 'Problem names must be no more than 80 characters long'
+                  },
+                  regexp: {
+                      regexp: /^[a-zA-Z0-9_]+$/,
+                      message: 'Problem names must only consist of underscores and alphanumeric characters'
+                  }
+              }
+          },
+          title: {
+              message: 'This title is not valid',
+              validators: {
+                  notEmpty: {
+                      message: 'Problem titles cannot be empty'
+                  },
+                  stringLength: {
+                      max: 80,
+                      message: 'Problem titles must be no more than 80 characters long'
+                  },
+                  regexp: {
+                      regexp: /^[a-zA-Z0-9_ ()#-,]+$/,
+                      message: 'Problem titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
+                  }
+              }
+          },
+          TaskTypeOptions_Batch_io_0_inputfile: {
+              message: 'Invalid input file name',
+              validators: {
+                  regexp: {
+                      regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                      message: "Filename must be empty, or alphanumeric with at most one period in it"
+                  }
+              }
+          },
+          TaskTypeOptions_Batch_io_1_outputfile: {
+              message: 'Invalid output file name',
+              validators: {
+                  regexp: {
+                      regexp: /^(|[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?)$/,
+                      message: "Filename must be empty, or alphanumeric with at most one period in it"
+                  }
+              }
+          },
+          time_limit: {
+              message: "Invalid time timit",
+              validators: {
+                  notEmpty: {
+                      message: "Time limit must not be blank"
+                  },
+                  numeric: {
+                      separator: ".",
+                      message: "Time limit must be numeric"
+                  }
+              }
+          },
+          memory_limit: {
+              message: "Invalid memory timit",
+              validators: {
+                  notEmpty: {
+                      message: "Memory limit must not be blank"
+                  },
+                  numeric: {
+                      separator: ".",
+                      message: "Memory limit must be numeric"
+                  }
+              }
+          }
+      }
+  });
+
+  $('#summernote').summernote({
+    height: 200,
+
+    minHeight: 100,
+    maxHeight: 360,
+
+    toolbar: [
+      ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
+      ['fontsize', ['fontsize']],
+      ['para', ['paragraph']],
+      ['insert', ['table']],
+      ['misc', ['codeview']]
+    ],
+      
+    onChange: function(contents, $editable) {
+      $('#primary_statements').val(contents);
+    }
+  });
+
+  $('#summernote').code('{% raw (task.primary_statements.replace("\n","").replace("\r","\\\r")) %}');
 }); 
 </script>
 {% end %}

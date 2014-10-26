@@ -5,6 +5,8 @@
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<link href="/static/css/summernote.css" rel="stylesheet">
+<script src="/static/js/summernote.js"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
@@ -115,8 +117,27 @@ $(document).ready(function() {
                         message: 'Problem set titles must only consist of underscores, parentheses, hashes, hyphens, commas, spaces and alphanumeric characters'
                     }
                 }
-            }
+            },
         }
+    });
+
+    $('#summernote').summernote({
+      height: 200,                 // set editor height
+
+      minHeight: 100,             // set minimum height of editor
+      maxHeight: 360,             // set maximum height of editor
+
+      toolbar: [
+        ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
+        ['fontsize', ['fontsize']],
+        ['para', ['paragraph']],
+        ['insert', ['table']],
+        ['misc', ['codeview']]
+      ],
+
+      onChange: function(contents, $editable) {
+        $('.admin-description-field').val(contents);
+      }
     });
 });
 </script>
@@ -149,7 +170,18 @@ $(document).ready(function() {
           </div>
 
           <div class="form-group">
-            <div class="col-sm-7 col-sm-offset-2">
+            <label for="title" class="col-sm-2 control-label" style="text-align:left;">Description</label>
+            <div class="col-sm-7">
+              <textarea style="display:none" type="text" class="admin-description-field form-control" id="description" name="description" placeholder="Enter a detailed description in HTML...">
+                {{ problemset.description }}
+              </textarea>
+              <div id="summernote"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="title" class="col-sm-2 control-label" style="text-align:left;">Permissions</label>
+            <div class="col-sm-7">
               <div class="checkbox" style="text-align:left;">
                 <label>
                   <input type="checkbox" class="admin-problemset-public-checkbox" id="public" name="public" placeholder="Public" {% if all_users in problemset.userSets %}checked{% end %}>Public
