@@ -11,7 +11,7 @@
       {% set ss = set_statuses[set.id] %}
       {% if ss["status"] == "ready" %}
         {% if ss["percent"] == 100 %}
-            <td class="status">{{ ss["percent"] }} {{ ss["max_score"] }} {{ ss["score"] }}<i class="fa fa-check fa-fw text-success"></i></td>
+            <td class="status"><i class="fa fa-check fa-fw text-success"></i></td>
         {% else %}
             {% set percent = ss["percent"] %}
             {% if ss["percent"] < 15 %}
