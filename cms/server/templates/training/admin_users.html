@@ -153,7 +153,7 @@
             <tr>
               <td>{{ user.id }}</td>
               <td>{{ user.username }}</td>
-              <td>
+              <td style="min-width:120px">
                 <form action="/admin/user/{{ user.id }}" method="get" style="display: inline;">
                   <button class="btn btn-primary btn-xs" type="submit" value="Stats"><i class="fa fa-bar-chart fa-fw"></i></button>
                 </form>
@@ -161,24 +161,24 @@
                   <button class="btn btn-success btn-xs" type="submit" value="Edit"><i class="fa fa-edit fa-fw"></i></button>
                 </form>
 
-<button class="btn btn-danger btn-xs" data-toggle="modal" data-target="#basicModal{{ user.id }}"><i class="fa fa-trash fa-fw"></i></button>
+                <button class="btn btn-danger btn-xs" data-toggle="modal" data-target="#basicModal{{ user.id }}"><i class="fa fa-trash fa-fw"></i></button>
 
-<div class="modal fade" id="basicModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="basicModal{{ user.id }}" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title modal-delete-title" id="myModalLabel">Are you sure you want to delete {{ user.username }}?</h4>
-      </div>
-      <div class="modal-footer">
-        <form action="/admin/user/{{ user.id }}/delete" method="post" style="display: inline;">
-          <button class="btn btn-default" type="submit" value="Delete">Yes</button>
-        </form>
-        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
-      </div>
-    </div>
-  </div>
-</div>
+                <div class="modal fade" id="basicModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="basicModal{{ user.id }}" aria-hidden="true">
+                  <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title modal-delete-title" id="myModalLabel">Are you sure you want to delete {{ user.username }}?</h4>
+                      </div>
+                      <div class="modal-footer">
+                        <form action="/admin/user/{{ user.id }}/delete" method="post" style="display: inline;">
+                          <button class="btn btn-default" type="submit" value="Delete">Yes</button>
+                        </form>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </td>
               <td style="display: none;">
                 {% for set in user.userSets %}{{ set.name }};{% end %}
