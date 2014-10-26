@@ -60,17 +60,13 @@
         <div>
           <canvas id="example-chart" style="display: block;"></canvas>
         </div>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default">Problem</button>
-          <button type="button" class="btn btn-default">Tests</button>
-        </div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-12">
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Users</h3>
@@ -84,7 +80,6 @@
               <th>Username</th>
               <th>Test Passed</th>
               <th>No. Submissions</th>
-              <th>Submissions</th>
             </tr>
           </thead>
           <tbody>
@@ -108,46 +103,17 @@
               <td>{{ user.username }}</td>
               <td>{{ user_submission_stats[user.username]["tests_passed"] }}</td>
               <td>{{ user_submission_stats[user.username]["num_submissions"] }}</td>
-              <td><a href="/admin/user/{{ user.id }}/submissions">Past Submissions</a></td>
             </tr>
 
             {% end %}
-<!--             
-            <tr>
-              <td><span class="label label-default">Inactive</span></td>
-              <td>admin</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-danger">Error</span></td>
-              <td>daniel</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-success">Accepted</span></td>
-              <td>krauth</td>
-              <td>9/9</td>
-              <td>2</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-warning">72%</span></td>
-              <td>peacock</td>
-              <td>5/9</td>
-              <td>1</td>
-              <td>-</td>
-            </tr>
- -->
            </tbody>
         </table>
       </div>
     </div>
   </div>
-  <div class="col-md-6">
+</div>
+<div class="row">
+  <div class="col-md-12">
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Tests</h3>
@@ -226,29 +192,30 @@ $(document).ready(function() {
 
   var crt = $("#example-chart").get(0).getContext("2d");
   var data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: [
         {
-            label: "My First dataset",
-            fillColor: "rgba(220,220,220,0.2)",
-            strokeColor: "rgba(220,220,220,1)",
-            pointColor: "rgba(220,220,220,1)",
+            label: "Total passes",
+            fillColor: "rgba(67,227,9,0.2)",
+            strokeColor: "rgba(67,227,9,1)",
+            pointColor: "rgba(67,227,9,1)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
-            data: [65, 59, 80, 81, 56, 55, 40]
+            data: {{ graph_data1 }}
+
         },
         {
-            label: "My Second dataset",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
+            label: "Total fails",
+            fillColor: "rgba(242,7,11,0.2)",
+            strokeColor: "rgba(242,7,11,1)",
+            pointColor: "rgba(242,7,11,1)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(151,187,205,1)",
-            data: [28, 48, 40, 19, 86, 27, 90]
+            data: {{ graph_data2 }}
         }
-    ]
+    ],
+    labels: {{ labels }}
   }
   var options = {
     bezierCurve : false,

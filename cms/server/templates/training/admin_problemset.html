@@ -24,156 +24,26 @@
         <a href="/admin/problemset/{{ problemset.id }}/edit" class="pull-left" style="margin-right: 10px;">
           <button type="button" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
         </a>
-<button class="btn btn-danger"data-toggle="modal"data-target="#basicModal"><i class="fa fa-trash fa-fw"></i> Delete</button>
+        <button class="btn btn-danger"data-toggle="modal"data-target="#basicModal"><i class="fa fa-trash fa-fw"></i> Delete</button>
 
-<div class="modal fade" id="basicModal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title modal-delete-title" id="myModalLabel">Are you sure you want to delete {{ problemset.name }}?</h4>
-      </div>
-      <div class="modal-footer">
-        <form action="/admin/problemset/{{ problemset.id }}/delete" method="post" style="display: inline;">
-          <button class="btn btn-default" type="submit" value="Delete">Yes</button>
-        </form>
-        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
-      </div>
-    </div>
-  </div>
-</div>
-      </div>
-      <div class="col-md-6">
-        <div>
-          <canvas id="example-chart" style="display: block;"></canvas>
-        </div>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default">Problem</button>
-          <button type="button" class="btn btn-default">Tests</button>
+        <div class="modal fade" id="basicModal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title modal-delete-title" id="myModalLabel">Are you sure you want to delete {{ problemset.name }}?</h4>
+            </div>
+            <div class="modal-footer">
+              <form action="/admin/problemset/{{ problemset.id }}/delete" method="post" style="display: inline;">
+                <button class="btn btn-default" type="submit" value="Delete">Yes</button>
+              </form>
+              <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            </div>
+          </div>
         </div>
       </div>
+      
     </div>
   </div>
 </div>
-
-<div class="row">
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Users</h3>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped" id ="users">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Username</th>
-              <th>Test Passed</th>
-              <th>No. Submissions</th>
-              <th>Submissions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span class="label label-default">Inactive</span></td>
-              <td>admin</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-danger">Error</span></td>
-              <td>daniel</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-success">Accepted</span></td>
-              <td>krauth</td>
-              <td>9/9</td>
-              <td>2</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-warning">72%</span></td>
-              <td>peacock</td>
-              <td>5/9</td>
-              <td>1</td>
-              <td>-</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Problems</h3>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped" id ="users">
-          <thead>
-            <tr>
-              <th>Id</th>
-              <th>Name</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for task in problemset.tasks %}
-            <tr>
-              <td>{{ task.id }}</td>
-              <td>{{ task.name }}</td>
-              <td></td>
-            </tr>
-            {% end %}
-          </tbody>
-        </table>
-      </div>
-    </div>      
-  </div>
-</div>
-{% end %}
-
-{% block scripts %}
-<script src="/static/js/plugins/chartjs/Chart.Core.js"></script>
-<script src="/static/js/plugins/chartjs/Chart.Line.js"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-
-  var crt = $("#example-chart").get(0).getContext("2d");
-  var data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-        {
-            label: "My First dataset",
-            fillColor: "rgba(220,220,220,0.2)",
-            strokeColor: "rgba(220,220,220,1)",
-            pointColor: "rgba(220,220,220,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,220,220,1)",
-            data: [65, 59, 80, 81, 56, 55, 40]
-        },
-        {
-            label: "My Second dataset",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(151,187,205,1)",
-            data: [28, 48, 40, 19, 86, 27, 90]
-        }
-    ]
-  }
-  var options = {
-    bezierCurve : false,
-    responsive: true
-  }
-  var exampleChart = new Chart(crt).Line(data, options);
-});
-</script>
 {% end %}
