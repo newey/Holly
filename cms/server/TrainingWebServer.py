@@ -2355,6 +2355,11 @@ class NotFoundHandler(BaseHandler):
     def post(self):
         self.write_error(404)
 
+class HelpHandler(BaseHandler):
+    def get(self):
+        self.r_params["active_sidebar_item"] = "help"  
+        self.render("help.html", **self.r_params)
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -2364,6 +2369,8 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
+    (r"/hof", HallOfFameHandler),
+    (r"/help", HelpHandler),
     (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
