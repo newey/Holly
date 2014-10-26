@@ -189,13 +189,14 @@ body {
   margin-top: 20px;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
-  border-radius: 4px; 
+  border-radius: 4px;
 }
 
 #page-wrapper {
   min-height: 568px;
   padding: 0 15px;
   background-color: #fff;
+  padding-bottom: 10px; 
 }
 
 #page-breadcrumbs .breadcrumb {
