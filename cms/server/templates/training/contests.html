@@ -1,10 +1,13 @@
+{% import datetime %}
+
 <h1>Old contests</h1>
 {% for contest, user in finished_contests %}
   <a href="{{ admin_url  }}/contest/{{ contest.id }}">{{ contest.name }}</a><br>
   Username: {{ user.username }}<br>
   Password: {{ user.password }}<br>
-  Start time: {{ contest.start }}<br>
-  End time: {{ contest.stop }} <br><br><br>
+  {% if contest.per_user_time is not None %}Duration: {{ str(contest.per_user_time) }}<br>{% end %}
+  Start time: {{ contest.start.strftime('%d/%m/%Y - %H:%M') }}<br>
+  End time: {{ contest.stop.strftime('%d/%m/%Y - %H:%M') }} <br><br><br>
 {% end %}
 
 <h1>Upcoming contests</h1>
@@ -12,7 +15,8 @@
   <a href="{{ admin_url  }}/contest/{{ contest.id }}">{{ contest.name }}</a><br>
   Username: {{ user.username }}<br>
   Password: {{ user.password }}<br>
-  Start time: {{ contest.start }}<br>
-  End time: {{ contest.stop }} <br><br><br>
+  {% if contest.per_user_time is not None %}Duration: {{ str(contest.per_user_time) }}<br>{% end %}
+  Start time: {{ contest.start.strftime('%d/%m/%Y - %H:%M') }}<br>
+  End time: {{ contest.stop.strftime('%d/%m/%Y - %H:%M') }} <br><br><br>
 {% end %}
 
