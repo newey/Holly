@@ -1219,6 +1219,12 @@ class SubmitHandler(BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        # Pin the problemset
+        problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+        if problemset not in self.current_user.pinnedSets:
+            self.current_user.pinnedSets.append(problemset)
+            self.sql_session.commit()
+
         # Alias for easy access
         contest = self.contest
         last_submission_t = self.sql_session.query(Submission)\
@@ -1460,7 +1466,8 @@ class ProblemSetPinHandler(BaseHandler):
                 self.current_user.pinnedSets.remove(problem_set)
 
         elif action == "pin":
-            self.current_user.pinnedSets.append(problem_set)
+            if problem_set not in self.current_user.pinnedSets:
+                self.current_user.pinnedSets.append(problem_set)
 
         self.sql_session.commit()
 
