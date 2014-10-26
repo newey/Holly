@@ -19,7 +19,7 @@
 {% else %}
 <div>
   <h3><i class="fa text-warning fa-warning fa-2x fa-fw"></i>Partial Solution</h3>
-  <p>Your passed {{ s['score'] }} / {{ s['max_score'] }} tests.</p>
+  <p>You scored {{ s['score'] }} out of {{ s['max_score'] }}.</p>
   <div class="progress">
     <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="{{s['percent']}}" aria-valuemin="0" aria-valuemax="100" style="width: {{s['percent']}}%;">
       <span class="sr-only">s['percent'] Complete</span>

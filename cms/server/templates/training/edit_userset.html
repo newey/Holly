@@ -210,11 +210,11 @@ $(document).ready(function() {
 {% end %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit User Set</h1>
+<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit Group</h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/users">Users</a></li>
-  <li><a href="/admin/user/{{ userset.id }}">{{ userset.title }}</a></li>
-  <li class="active">Edit User Set</li>
+  <li><a href="/admin/users">Users and Groups</a></li>
+  <li>Group: <a href="/admin/userset/{{ userset.id }}">{{ userset.title }}</a></li>
+  <li class="active">Edit Group</li>
 </ol>
 
 <form class="form-horizontal editusersetform" role="form" method="post">
@@ -230,6 +230,12 @@ $(document).ready(function() {
         <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
         <div class="col-sm-7">
           <input type="text" class="form-control" id="title" name="title" value="{{ userset.title }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-md-2 control-label" for="submitbtn"></label>
+        <div class="col-md-7">
+          <input id="submitbtn" type="submit" value="Save Group" class="btn btn-primary">
         </div>
       </div>
  
@@ -254,7 +260,7 @@ $(document).ready(function() {
 </div>
 {% end %}
 {% if userset.setType == 0 %}
-<div class="row setup-content" id="step-1">
+<div class="row setup-content admin-select-row" id="step-1">
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -325,7 +331,7 @@ $(document).ready(function() {
   </div>  
 </div>
 {% end %}
-<div class="row setup-content" id="step-2">
+<div class="row setup-content admin-select-row" id="step-2">
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -395,8 +401,6 @@ $(document).ready(function() {
     </div>
   </div>  
 </div>
-
-<input type="submit" value="Submit" class="btn btn-primary">
 
 </form>
 {% end %}

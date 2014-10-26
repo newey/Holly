@@ -142,7 +142,7 @@ $(document).ready(function() {
 <h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New Problem Set</h1>
 <ol class="breadcrumb">
   <li><a href="/admin/problemsets">Problem Sets</a></li>
-  <li class="active">New Set</li>
+  <li class="active">New Problem Set</li>
 </ol>
 
 <div class="panel panel-default">
@@ -196,70 +196,70 @@ $(document).ready(function() {
       <div class="form-group">
         <label class="col-md-2 control-label" for="submitbtn"></label>
         <div class="col-md-7">
-          <input id="submitbtn" type="submit" value="Submit" class="btn btn-primary">
+          <input id="submitbtn" type="submit" value="Create Problem Set" class="btn btn-primary">
         </div>
       </div>
     </form>
   </div>
 </div>
 
-<div class="row">
-<div class="col-md-6">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Selected Problems</h3>
-    </div>
-    <div class="table-responsive">
-      <table id="selectedproblems" class="table table-striped">
-        <col>
-        <col>
-        <col width="60">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-<div class="col-md-6">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Unselected Problems</h3>
-    </div>
-    <div class="table-responsive">
-      <table id="unselectedproblems" class="table table-striped">
-        <col>
-        <col>
-        <col width="60">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for id, name in taskdata %}
-          <tr>
-            <td>{{ id }}</td>
-            <td>{{ name }}</td>
-            <td>
-              <div style="width: 100%;text-align: center;">
-                <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
-              </div>
-            </td>
-          </tr>
-          {% end %}
-        </tbody>
-      </table>
+<div class="row admin-select-row">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Selected Problems</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="selectedproblems" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Unselected Problems</h3>
+      </div>
+      <div class="table-responsive">
+        <table id="unselectedproblems" class="table table-striped">
+          <col>
+          <col>
+          <col width="60">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for id, name in taskdata %}
+            <tr>
+              <td>{{ id }}</td>
+              <td>{{ name }}</td>
+              <td>
+                <div style="width: 100%;text-align: center;">
+                  <button class="btn btn-success btn-xs add-problem" type="button"><i class="fa fa-plus fa-fw"></i></button>
+                </div>
+              </td>
+            </tr>
+            {% end %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 {% end %}

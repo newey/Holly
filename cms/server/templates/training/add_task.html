@@ -22,7 +22,7 @@ $("select[name=task_type]").change(showTaskTypeOption);
 {% set task_type_list = plugin_list("cms.grading.tasktypes", "tasktypes") %}
 {% set score_type_list = plugin_list("cms.grading.scoretypes", "scoretypes") %}
 
-<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New Problems</h1>
+<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New Problem</h1>
 <ol class="breadcrumb page-breadcrumb">
   <li><a href="/admin/problems">Problems</a></li>
   <li class="active">New Problem</li>
@@ -50,6 +50,12 @@ $("select[name=task_type]").change(showTaskTypeOption);
             <textarea id="primary_statements" class="form-control" rows="6" name="primary_statements" placeholder="Description"></textarea>
           </div>
           <div id="summernote"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-md-2 control-label" for="submitbtn"></label>
+        <div class="col-md-7">
+          <input id="submitbtn" type="submit" value="Create Problem" class="btn btn-primary">
         </div>
       </div>
     </div>
@@ -198,8 +204,6 @@ $("select[name=task_type]").change(showTaskTypeOption);
     </div>  
   </div>
 </div>
-
-<button id="submit-task" type="submit" class="btn btn-primary">Create</button>
 
 </form>
 {% end %}

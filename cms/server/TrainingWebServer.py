@@ -271,6 +271,7 @@ class BaseHandler(CommonRequestHandler):
             "max_score": None,
             "score": 0,
             "percent": 0,
+            "description": None
         }
         
         if submission is None:
@@ -281,12 +282,16 @@ class BaseHandler(CommonRequestHandler):
 
             if sr is None or not sr.compiled():
                 result['status'] = "compiling"
+                result['description'] = "Compiling"
             elif sr.compilation_failed():
                 result['status'] = "failed_compilation"
+                result['description'] = "Failed Compilation"
             elif not sr.evaluated():
                 result['status'] = "evaluating"
+                result['description'] = "Evaluating"
             elif not sr.scored():
                 result['status'] = "scoring"
+                result['description'] = "Scoring"
             else:
                 result['status'] = "ready"
 
@@ -296,6 +301,7 @@ class BaseHandler(CommonRequestHandler):
                     result['max_score'] = 0
                 result['score'] = round(sr.score, task.score_precision)
                 result['percent'] = round(result['score'] * 100.0 / result['max_score'])
+                result['description'] = "%d%% correct" % result['percent']
 
         return result
         
@@ -1397,6 +1403,20 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.task == task)\
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
+
+
+        submittedFileDigests = self.sql_session.query(Submission.id, File.digest)\
+            .filter(Submission.task == task, Submission.user == self.current_user)\
+            .join(File.submission)
+        submittedFiles = {}
+        for submissionId in self.sql_session.query(Submission.id).filter(Submission.task == task, Submission.user == self.current_user):
+            submittedFiles[submissionId] = []
+        for submissionId, fileDigest in submittedFileDigests:
+            submittedFiles.setdefault(submissionId, [])\
+                .append(self.application.service.file_cacher.get_file_content(fileDigest))
+
+        self.r_params["submittedFiles"] = submittedFiles
+        self.r_params["results"] = [self.get_submission_results(sub.user, sub, sub.task) for sub in self.r_params["submissions"]]
         self.r_params["task"] = task
         self.r_params["score_type"] = score_type
         self.r_params["problemset"] = problemset
@@ -1456,7 +1476,6 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
             self.get_string(attrs, "description")
-            self.get_string(attrs, "num")
             self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
 
@@ -1467,10 +1486,6 @@ class AddProblemSetHandler(BaseHandler):
             else:
                 attrs["pinned_by_default"] = False
 
-            #attrs["contest_id"] = self.contest.id
-            #TODO: CHANGE AFTER DEMO
-            random.seed()
-            attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
             problemset = ProblemSet(**attrs)
