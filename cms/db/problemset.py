@@ -86,7 +86,6 @@ class ProblemSet(Base):
     """
     __tablename__ = 'problemsets'
     __table_args__ = (
-        UniqueConstraint('contest_id', 'num'),
         UniqueConstraint('contest_id', 'name'),
     )
 
@@ -97,26 +96,6 @@ class ProblemSet(Base):
         # Needed to enable autoincrement on integer primary keys that
         # are referenced by a foreign key defined on this table.
         autoincrement='ignore_fk')
-
-    # Number of the problem set for sorting.
-    num = Column(
-        Integer,
-        nullable=False)
-
-    # Contest (id and object) owning the problem set.
-    contest_id = Column(
-        Integer,
-        ForeignKey(Contest.id,
-                   onupdate="CASCADE", ondelete="CASCADE"),
-                   nullable=False,
-                   index=True)
-    contest = relationship(
-        Contest,
-        backref=backref('problemsets',
-                        collection_class=ordering_list('num'),
-                        order_by=[num],
-                        cascade="all, delete-orphan",
-                        passive_deletes=True))
 
     # Short name and longer human readable title of the problem set.
     name = Column(
@@ -130,6 +109,19 @@ class ProblemSet(Base):
     description = Column(
         Unicode,
         default="")
+
+    # Contest (id and object) owning the problem set.
+    contest_id = Column(
+        Integer,
+        ForeignKey(Contest.id,
+                   onupdate="CASCADE", ondelete="CASCADE"),
+                   nullable=False,
+                   index=True)
+    contest = relationship(
+        Contest,
+        backref=backref('problemsets',
+                        cascade="all, delete-orphan",
+                        passive_deletes=True))
 
     # The user sets who have access to this problem set
     userSets = relationship("UserSet",

@@ -15,13 +15,13 @@
 <div class="panel-group" id="accordion">
   {% set submissionsCount = submissions.count() %}
   {% set count = submissionsCount+1 %}
-  {% for submission in submissions %}
+  {% for resultdescription, submission in zip(results, submissions) %}
   {% for result in submission.results %}
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ count = count - 1 }}">
-          Submission #{{ count }} <span class="pull-right">{{ submission.timestamp.strftime('%d/%m/%Y - %H:%M') }}</span>
+          Submission #{{ count }}, {{ resultdescription['description'] }}<span class="pull-right">{{ submission.timestamp.strftime('%d/%m/%Y - %H:%M') }}</span>
         </a>
       </h4>
     </div>
@@ -35,7 +35,7 @@
                 <td>Compiled:</td>
                 <td>
                   {% if result.compilation_failed() %}
-                  <i class="fa fa-times text-danger fa-fw"></i> Failed <button class="btn btn-xs btn-danger pull-right">View</button>{% else %}
+                  <i class="fa fa-times text-danger fa-fw"></i> Failed{% else %}
                   <i class="fa fa-check text-success fa-fw"></i> Correctly {% end %}
                 </td>
               </tr>
@@ -72,6 +72,25 @@
             </table>
           </div>
         </div>
+        <div>
+        {% if result.compilation_failed() %}
+          <h4>Compile error:</h4>
+          <pre>{{ result.compilation_stderr }}</pre>
+        {% elif result.needs_scoring() %}
+          <h4>Yet to be scored</h4>
+        {% else %}
+          <h4>Results:</h4>
+          {% raw score_type.get_html_details(result.score_details) %}
+        {% end %}
+        </div>
+
+          {% for sourcecode in submittedFiles[submission.id] %}
+          <button class="sourcecodebttn" style="margin-bottom: 10px">Show code</button>
+          <div class="sourcecode" style="display: none">
+            <pre>{{ sourcecode }}</pre>
+          </div>
+          {% end %}
+
       </div>
     </div>
   </div>
@@ -84,6 +103,14 @@
 <script>
   $(document).ready(function(){
     $('.collapse').collapse();
+    $('.sourcecodebttn').click(function(){
+        $(this).next().toggle();
+        if ($(this).text() === "Show code"){
+            $(this).text("Hide code");
+        } else {
+            $(this).text("Show code");
+        }
+    });
   });
 </script>
 {% end %}

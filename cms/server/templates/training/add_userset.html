@@ -204,10 +204,10 @@ $(document).ready(function() {
 {% end %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New User Set</h1>
+<h1 class="page-header"><i class="fa fa-plus fa-fw"></i> New Group</h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/users">Users</a></li>
-  <li class="active">New User Set</li>
+  <li><a href="/admin/users">Users and Groups</a></li>
+  <li class="active">New Group</li>
 </ol>
 <form class="form-horizontal addusersetform" role="form" method="post">
 <div class="panel panel-default">
@@ -218,10 +218,18 @@ $(document).ready(function() {
           <input type="text" class="form-control" id="name" name="name" placeholder="Name">
         </div>
       </div>
+
       <div class="form-group">
         <label for="title" class="col-sm-2 control-label" style="text-align:left;">Title</label>
         <div class="col-sm-7">
           <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-md-2 control-label" for="submitbtn"></label>
+        <div class="col-md-7">
+          <input id="submitbtn" type="submit" value="Create Group" class="btn btn-primary">
         </div>
       </div>
  
@@ -242,7 +250,7 @@ $(document).ready(function() {
           </ul>
       </div>
 </div>
-<div class="row setup-content" id="step-1">
+<div class="row setup-content admin-select-row" id="step-1">
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -301,7 +309,7 @@ $(document).ready(function() {
     </div>
   </div>  
 </div>
-<div class="row setup-content" id="step-2">
+<div class="row setup-content admin-select-row" id="step-2">
   <div class="col-md-6">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -360,8 +368,6 @@ $(document).ready(function() {
     </div>
   </div>  
 </div>
-
-<input type="submit" value="Submit" class="btn btn-primary">
 
 </form>
 {% end %}

@@ -79,7 +79,6 @@ def admin_authenticated(foo):
             return foo(self, *args, **kwargs)
     return func
 
-
 def xstr(src):
     if src:
         return str(src)
@@ -270,8 +269,9 @@ class BaseHandler(CommonRequestHandler):
         result = {
             "status": None,
             "max_score": None,
-            "score": None,
-            "percent": None,
+            "score": 0,
+            "percent": 0,
+            "description": None
         }
         
         if submission is None:
@@ -282,12 +282,16 @@ class BaseHandler(CommonRequestHandler):
 
             if sr is None or not sr.compiled():
                 result['status'] = "compiling"
+                result['description'] = "Compiling"
             elif sr.compilation_failed():
                 result['status'] = "failed_compilation"
+                result['description'] = "Failed Compilation"
             elif not sr.evaluated():
                 result['status'] = "evaluating"
+                result['description'] = "Evaluating"
             elif not sr.scored():
                 result['status'] = "scoring"
+                result['description'] = "Scoring"
             else:
                 result['status'] = "ready"
 
@@ -297,6 +301,7 @@ class BaseHandler(CommonRequestHandler):
                     result['max_score'] = 0
                 result['score'] = round(sr.score, task.score_precision)
                 result['percent'] = round(result['score'] * 100.0 / result['max_score'])
+                result['description'] = "%d%% correct" % result['percent']
 
         return result
         
@@ -307,6 +312,39 @@ class BaseHandler(CommonRequestHandler):
             .order_by(Submission.timestamp.desc()).first()
 
         return self.get_submission_results(user, submission, task)      
+
+    def get_problemset_results(self, user, problemset):
+        total = 0.0;
+        edited = False
+
+        for task in problemset.tasks:
+            status = self.get_task_results(user, task)
+            if (status['status'] != None):
+                edited = True
+
+            if (status['status'] == "ready"):
+                total += float(status['percent'] / 100.0)
+
+        result = {
+            "status": None,
+            "max_score": 0,
+            "score": 0,
+            "percent": 0
+        }
+        result['max_score'] = len(problemset.tasks)
+
+        if (edited == False):
+            result['status'] = None
+        elif (total == result['max_score']):
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = 100
+        else:
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = total / float(result['max_score']) * 100.0
+
+        return result
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -598,15 +636,20 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in self.current_user.pinnedSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
+
+
         except KeyError:
             raise tornado.web.HTTPError(404) 
 
         self.r_params["sets"] = self.current_user.pinnedSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -625,8 +668,10 @@ class ProblemListHandler(BaseHandler):
         accessibleSets.sort(key=lambda problemset: problemset.title.lower())
         
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in accessibleSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
         except KeyError:
@@ -634,6 +679,7 @@ class ProblemListHandler(BaseHandler):
 
         self.r_params["sets"] = accessibleSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -1367,6 +1413,20 @@ class SubmissionsHandler(BaseHandler):
                                       .filter(Submission.task == task)\
                                       .filter(Submission.user == self.current_user)\
                                       .order_by(Submission.timestamp.desc())
+
+
+        submittedFileDigests = self.sql_session.query(Submission.id, File.digest)\
+            .filter(Submission.task == task, Submission.user == self.current_user)\
+            .join(File.submission)
+        submittedFiles = {}
+        for submissionId in self.sql_session.query(Submission.id).filter(Submission.task == task, Submission.user == self.current_user):
+            submittedFiles[submissionId] = []
+        for submissionId, fileDigest in submittedFileDigests:
+            submittedFiles.setdefault(submissionId, [])\
+                .append(self.application.service.file_cacher.get_file_content(fileDigest))
+
+        self.r_params["submittedFiles"] = submittedFiles
+        self.r_params["results"] = [self.get_submission_results(sub.user, sub, sub.task) for sub in self.r_params["submissions"]]
         self.r_params["task"] = task
         self.r_params["score_type"] = score_type
         self.r_params["problemset"] = problemset
@@ -1426,7 +1486,6 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
             self.get_string(attrs, "description")
-            self.get_string(attrs, "num")
             self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
 
@@ -1437,10 +1496,6 @@ class AddProblemSetHandler(BaseHandler):
             else:
                 attrs["pinned_by_default"] = False
 
-            #attrs["contest_id"] = self.contest.id
-            #TODO: CHANGE AFTER DEMO
-            random.seed()
-            attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
             problemset = ProblemSet(**attrs)
@@ -2059,7 +2114,6 @@ class UserInfoHandler(BaseHandler):
 
     @tornado.web.authenticated
     def get(self):
-        self.r_params["active_sidebar_item"] = ""
         self.render("user_info.html", **self.r_params)
 
     @tornado.web.authenticated
@@ -2108,10 +2162,6 @@ class PasswordRecoveryHandler(BaseHandler):
         # Check if the user exists
         if user is None:
             self.redirect("/recover_password?error=Invalid username")
-            return
-
-        if user.verification_type == 2:
-            self.redirect("/confirm_email/%s?error=You must confirm your email" % user.id)
             return
 
         # Generate a new random verification code
@@ -2465,6 +2515,11 @@ class NotFoundHandler(BaseHandler):
     def post(self):
         self.write_error(404)
 
+class HelpHandler(BaseHandler):
+    def get(self):
+        self.r_params["active_sidebar_item"] = "help"  
+        self.render("help.html", **self.r_params)
+
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -2475,6 +2530,7 @@ _tws_handlers = [
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
     (r"/hof", HallOfFameHandler),
+    (r"/help", HelpHandler),
     (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),

@@ -88,8 +88,8 @@ $(document).ready(function() {
 {% block core %}
 <h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit User</h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/problems">Users</a></li>
-  <li><a href="/admin/user/{{ user.id }}">{{ user.username }}</a></li>
+  <li><a href="/admin/problems">Users and Groups</a></li>
+  <li>User: <a href="/admin/user/{{ user.id }}">{{ user.username }}</a></li>
   <li class="active">Edit</li>
 </ol>
 
@@ -157,7 +157,7 @@ $(document).ready(function() {
       <div class="form-group">
         <label class="col-md-2 control-label" for="submitbtn"></label>
         <div class="col-md-7">
-          <input id="submitbtn" type="submit" value="Submit" class="btn btn-primary">
+          <input id="submitbtn" type="submit" value="Save User" class="btn btn-primary">
         </div>
       </div>
     </form>
