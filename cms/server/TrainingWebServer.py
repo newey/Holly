@@ -39,7 +39,6 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 import traceback
-from sqlalchemy import func
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
@@ -58,7 +57,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, UserSet, SubmissionResult
+    Testcase, Submission, User, File, ProblemSet, UserSet
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -77,7 +76,6 @@ def admin_authenticated(foo):
         else:
             return foo(self, *args, **kwargs)
     return func
-
 
 def xstr(src):
     if src:
@@ -267,8 +265,8 @@ class BaseHandler(CommonRequestHandler):
         result = {
             "status": None,
             "max_score": None,
-            "score": None,
-            "percent": None,
+            "score": 0,
+            "percent": 0,
         }
         
         if submission is None:
@@ -304,6 +302,39 @@ class BaseHandler(CommonRequestHandler):
             .order_by(Submission.timestamp.desc()).first()
 
         return self.get_submission_results(user, submission, task)      
+
+    def get_problemset_results(self, user, problemset):
+        total = 0.0;
+        edited = False
+
+        for task in problemset.tasks:
+            status = self.get_task_results(user, task)
+            if (status['status'] != None):
+                edited = True
+
+            if (status['status'] == "ready"):
+                total += float(status['percent'] / 100.0)
+
+        result = {
+            "status": None,
+            "max_score": 0,
+            "score": 0,
+            "percent": 0
+        }
+        result['max_score'] = len(problemset.tasks)
+
+        if (edited == False):
+            result['status'] = None
+        elif (total == result['max_score']):
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = 100
+        else:
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = total / float(result['max_score']) * 100.0
+
+        return result
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -586,15 +617,20 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in self.current_user.pinnedSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
+
+
         except KeyError:
             raise tornado.web.HTTPError(404) 
 
         self.r_params["sets"] = self.current_user.pinnedSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -610,8 +646,10 @@ class ProblemListHandler(BaseHandler):
                 accessibleSets.add(problemset)
         
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in accessibleSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
         except KeyError:
@@ -619,6 +657,7 @@ class ProblemListHandler(BaseHandler):
 
         self.r_params["sets"] = accessibleSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -1870,10 +1909,6 @@ class PasswordRecoveryHandler(BaseHandler):
             self.redirect("/recover_password?error=Invalid username")
             return
 
-        if user.verification_type == 2:
-            self.redirect("/confirm_email/%s?error=You must confirm your email" % user.id)
-            return
-
         # Generate a new random verification code
         code = ''.join(random.choice(string.ascii_uppercase + 
                       string.digits) for _ in range(40))
@@ -2171,39 +2206,6 @@ class AddContestHandler(BaseHandler):
             
         self.redirect("/admin/contest/%s" % contest.id)
 
-class HallOfFameHandler(BaseHandler):
-    """Show the users with the most problems solved on the site.
-
-    """
-
-    def get(self):
-        self.r_params["active_sidebar_item"] = "fame"
-        self.r_params["hofusers"] = self.sql_session.query(User.username)\
-            .filter(User.contest == self.contest)
-
-        scoretuples = self.sql_session.query(func.max(SubmissionResult.score), User.username, Task)\
-            .join(Submission)\
-            .join(User)\
-            .join(Task)\
-            .filter(User.contest_id == self.contest.id)\
-            .filter(SubmissionResult.dataset_id == Task.active_dataset_id)\
-            .group_by(User.username, Task).all()
-
-        logger.warn(str(scoretuples))
-
-        scoretuples = filter(lambda x: x[0] == get_score_type(dataset=x[2].active_dataset).max_score, scoretuples)
-
-        usercountsdict = {}
-        for foo, user, baz in scoretuples:
-            usercountsdict[user] = usercountsdict.setdefault(user, 0) + 1
-
-        usercounts = sorted([x[::-1] for x in usercountsdict.items()])[:-11:-1]
-
-        self.r_params["hofusers"] = usercounts
-
-        self.render("hall_of_fame.html", **self.r_params)
-
-
 _tws_handlers = [
     (r"/", MainHandler),
     (r"/problems", ProblemListHandler),
@@ -2213,7 +2215,6 @@ _tws_handlers = [
     (r"/confirm_email/([0-9]+)", EmailConfirmationHandler),
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
-    (r"/hof", HallOfFameHandler),
     (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
