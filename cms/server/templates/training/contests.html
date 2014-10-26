@@ -3,7 +3,7 @@
 
 {% block core %}
 <h1 class="page-header">Contests</h1>
-<h3>New contests</h3>
+<h3>Upcoming contests</h3>
 {% set count = 0 %}
 {% for contest, user in future_contests %}
 {% set count = count + 1 %}
@@ -46,8 +46,15 @@
   </div>
 </div>
 {% end %}
+{% if count == 0 %}
+<div class="panel panel-default">
+    <p>
+        There are no upcoming contests.
+    </p>
+</div>
+{% end %}
 
-<h3>Old contests</h3>
+<h3>Finished contests</h3>
 {% set count = 0 %}
 <div class="panel-group" id="accordion">
   {% for contest, user in finished_contests %}
@@ -94,6 +101,13 @@
     </div>
   </div>
   {% end %}
+{% if count == 0 %}
+<div class="panel panel-default">
+    <p>
+        There are no finished contests.
+    </p>
+</div>
+{% end %}
 </div>
 
 {% end %}
