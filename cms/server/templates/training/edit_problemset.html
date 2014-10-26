@@ -139,6 +139,8 @@ $(document).ready(function() {
         $('.admin-description-field').val(contents);
       }
     });
+    {% import json %}
+    $('#summernote').code({% raw json.dumps(problemset.description) %});
 });
 </script>
 {% end %}
