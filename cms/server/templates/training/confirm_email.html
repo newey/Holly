@@ -29,25 +29,34 @@ $(confirmemailalert).html(decodeURIComponent(errMsg));
 
 {% block body %}
 <div class="container">
-  <div id="loginbox" style="margin-top:50px;" class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">                    
-    <div class="login-form">
-      <h1>Email Verification</h1>
-	  <div style="display:none" id="confirmemailalert" class="alert alert-danger col-sm-12"></div>
-	  <p>
-	  	Please enter the verification code sent to the email address you signed up with.
-	  </p>
-	
-	  <form id="verificationform" class="form" role="form" method="POST">
-		<div style="margin-bottom: 25px" class="form-group">
-		  <input id="verification" type="text" class="form-control login-field" name="verification" value="" placeholder="verification">
-		  <label class="login-field-icon" for="verification"><i class="fa fa-envelope fa-fw"></i></label>
+	<div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+		<div class="panel panel-info" >
+			<div class="panel-heading">
+				<div class="panel-title">Verify Email</div>
+				<div style="float:right; font-size: 85%; position: relative; top:-10px"><a id="signinlink" href="/login">Sign In</a></div>
+			</div>
+			<div style="padding-top:30px" class="panel-body" >
+                <p>
+                    Please enter the verification code sent to the email address you signed up with.
+                </p>
+
+				<div style="display:none" id="confirmemailalert" class="alert alert-danger col-sm-12"></div>
+
+				<form id="verificationform" class="form-horizontal" role="form" method="POST">
+
+					<div style="margin-bottom: 25px" class="input-group">
+						<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
+						<input id="verification" type="text" class="form-control" name="verification" value="" placeholder="verification">
+					</div>
+
+					<div style="margin-top:10px" class="form-group">
+						<div class="col-sm-12 controls">
+							<input class="btn btn-success" type="submit" value="Verify Email">
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
-
-		<input class="btn btn-success" type="submit" value="Verify Email">
-
-	  </form>
-	  <a class="login-link" href="/login">Back to login</a>
-    </div>   
-  </div>  
+	</div>
 </div>
 {% end %}

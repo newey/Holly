@@ -3,6 +3,7 @@ body {
 }
 
 .form-control {
+  height: 36px;
 }
 
 #problemsets {
