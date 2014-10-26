@@ -236,3 +236,22 @@ body {
 .divider {
     background-color: #000;
 }
+
+.testcase-list thead tr {
+  background-color: #34495E;
+  color: #ECF0F1;
+  border-bottom: 1px solid #34495E !important;
+}
+
+.testcase-list tr {
+  border-bottom: 1px solid #34495E !important;
+  border-top: none !important;
+  padding-bottom: 2px;
+  padding-top: 2px;
+}
+
+.testcase-list
+{
+    width: 100%;
+    margin-bottom: 10px;
+}
