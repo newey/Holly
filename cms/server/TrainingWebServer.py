@@ -1491,7 +1491,7 @@ class AddProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self):
-        tasks = self.sql_session.query(Task.id, Task.title).filter(Task.contest_id == self.contest.id)
+        tasks = self.sql_session.query(Task.id, Task.title).filter(Task.contest_id == self.contest.id).all()
         self.r_params['taskdata'] = tasks
         self.r_params["active_sidebar_item"] = "problemsets"
         self.render("add_problemset.html", **self.r_params)
@@ -1589,7 +1589,7 @@ class EditProblemSetHandler(BaseHandler):
     def get(self, set_id):
         problemSet = self.sql_session.query(ProblemSet).filter(ProblemSet.id==set_id).one()
 
-        all_tasks = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id)
+        all_tasks = self.sql_session.query(Task).filter(Task.contest_id == self.contest.id).all()
         unselected_tasks = filter(lambda x: x not in problemSet.tasks, all_tasks)
 
         self.r_params["problemset"] = problemSet
