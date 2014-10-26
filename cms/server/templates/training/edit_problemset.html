@@ -75,8 +75,8 @@ $(document).ready(function() {
       $('.add-problem').removeClass("new");
     }
 
-    $('.add-problem').click(addProblem);
-    $('.remove-problem').click(removeProblem);
+    $(document).on('click', '.add-problem', addProblem);
+    $(document).on('click', '.remove-problem', removeProblem);
 
     $('.editsetform').bootstrapValidator({
         message: 'This value is not valid',

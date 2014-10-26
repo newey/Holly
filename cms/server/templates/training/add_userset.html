@@ -131,8 +131,8 @@ $(document).ready(function() {
       $('.add-user').removeClass("new");
     }
 
-    $('.add-problem').click(addProblem);
-    $('.add-user').click(addUser);
+    $(document).on('click', '.add-problem', addProblem);
+    $(document).on('click', '.add-user', addUser);
 
     var navListItems = $('ul.setup-panel li a');
     var allWells = $('.setup-content');
