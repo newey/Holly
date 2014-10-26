@@ -118,13 +118,18 @@ class ProblemSet(Base):
                         cascade="all, delete-orphan",
                         passive_deletes=True))
 
-    # Short name and long human readable title of the problem set.
+    # Short name and longer human readable title of the problem set.
     name = Column(
         Unicode,
         nullable=False)
     title = Column(
         Unicode,
         nullable=False)
+
+    # HTML description of the problem set, displayed on the problemset page
+    description = Column(
+        Unicode,
+        default="")
 
     # The user sets who have access to this problem set
     userSets = relationship("UserSet",

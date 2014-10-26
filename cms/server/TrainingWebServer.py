@@ -1326,6 +1326,7 @@ class AddProblemSetHandler(BaseHandler):
 
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
+            self.get_string(attrs, "description")
             self.get_string(attrs, "num")
             self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
@@ -1438,6 +1439,7 @@ class EditProblemSetHandler(BaseHandler):
             attrs = dict()
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title", empty=None)
+            self.get_string(attrs, "description", empty=None)
             self.get_string(attrs, "problemids", empty=None)
             self.get_string(attrs, "pinned_by_default", empty=None)
 
@@ -1448,6 +1450,9 @@ class EditProblemSetHandler(BaseHandler):
 
             if attrs["title"] is not None:
                 problemset.title = attrs["title"]
+
+            if attrs["description"] is not None:
+                problemset.description = attrs["description"]
 
             if public and "pinned_by_default" in attrs:
                 problemset.pinned_by_default = True
