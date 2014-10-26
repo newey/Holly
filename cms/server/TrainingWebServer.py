@@ -401,6 +401,15 @@ class BaseHandler(CommonRequestHandler):
 
         return user
 
+    def write_error(self, status_code, **kwargs):
+        """Handles any error raised by the handler.
+
+        """
+
+        params = self.render_params()
+        params["status_code"] = status_code
+        self.render("error_page.html", **params)
+
     def render_params(self):
         """Return the default render params used by almost all handlers.
 
@@ -2282,6 +2291,12 @@ class HallOfFameHandler(BaseHandler):
 
         self.render("hall_of_fame.html", **self.r_params)
 
+class NotFoundHandler(BaseHandler):
+    def get(self):
+        self.write_error(404)
+
+    def post(self):
+        self.write_error(404)
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -2321,5 +2336,6 @@ _tws_handlers = [
     (r"/admin/userset/add", AddUserSetHandler),
     (r"/admin/userset/([0-9]+)", AdminUserSetHandler),
     (r"/admin/userset/([0-9]+)/edit", EditUserSetHandler),
-    (r"/admin/userset/([0-9]+)/delete", DeleteUserSetHandler)
+    (r"/admin/userset/([0-9]+)/delete", DeleteUserSetHandler),
+    (r"/.*", NotFoundHandler),
 ]
