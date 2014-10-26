@@ -898,7 +898,7 @@ class AddProblemHandler(BaseHandler):
 
         numTests = int(self.get_argument("num_tests"))
         for i in range(0, numTests):
-            
+
             attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
             
@@ -1127,7 +1127,7 @@ class EditProblemHandler(BaseHandler):
         numTests = int(self.get_argument("num_tests"))
         logger.info("Found %d tests to add" % numTests)
         for i in range(0, numTests):
-            
+
             attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
 

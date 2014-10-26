@@ -187,14 +187,12 @@ $("select[name=task_type]").change(showTaskTypeOption);
         <col width="40%">
         <col width="30%">
         <col width="30%">
-        <col width="70">
         <col width="0">
         <thead>
           <tr>
             <th>Name</th>
             <th>Input</th>
             <th>Output</th>
-            <th>Remove</th>
             <th style="display: none;">Public</th>
           </tr>
         </thead>
@@ -219,22 +217,13 @@ $(document).ready(function() {
     $('#tests').find('tbody').append('\
       <tr> \
         <td> \
-          <input type="hidden" name="new-action-'+newItems+'" value="add/ignore"> \
+          <input id="new-test-action-'+newItems+'" type="hidden" name="new-test-action-'+newItems+'" value="add"> \
           <input type="text" name="new-codename-'+newItems+'" class="form-control"> \
         </td> \
         <td><input type="file" name="new-input-'+newItems+'" class="input-file"></td> \
         <td><input type="file" name="new-output-'+newItems+'" class="input-file"></td> \
-        <td style="text-align: center;"> \
-          <button id="ignore-test-'+newItems+'" class="btn btn-danger btn-xs" type="button"><i class="fa fa-close fa-fw"></i></button> \
-        </td> \
         <td style="display: none;"><label><input type="checkbox" name="new-public-'+newItems+'"></label></td> \
       </tr>');
-
-    $('#ignore-test-'+newItems).click(function() {
-      $(this).parents('tr').find('.test-id').attr("value", "ignore");
-      $(this).parents('tr').after('<tr><td colspan="5">Test Deleted</td><tr>');
-      $(this).parents('tr').hide();
-    });
 
     newItems++;
     $('#num_tests').val(newItems);
