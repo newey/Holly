@@ -139,8 +139,7 @@
 {% end %}
 
 {% block scripts %}
-<script src="/static/js/plugins/chartjs/Chart.Core.js"></script>
-<script src="/static/js/plugins/chartjs/Chart.Line.js"></script>
+<script src="/static/js/plugins/chartjs/Chart.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
 
@@ -174,7 +173,7 @@ $(document).ready(function() {
     bezierCurve : false,
     responsive: true
   }
-  var exampleChart = new Chart(crt).Line(data, options);
+  var exampleChart = new Chart(crt).Bar(data, options);
 });
 </script>
 {% end %}
