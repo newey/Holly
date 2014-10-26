@@ -35,6 +35,7 @@ import logging
 import os
 import pkg_resources
 import re
+from sets import Set
 import string
 import smtplib
 from email.mime.text import MIMEText
@@ -212,13 +213,15 @@ class BaseHandler(CommonRequestHandler):
             }
             allUsersSet = UserSet(**attrs)
             self.sql_session.add(allUsersSet)
+        else:
+            allUsersSet = userSets[0]
 
-            # Ensure that each user has their own userset and is in the all users set
-            for user in self.contest.users:
-                self.createIndividualUserSet(user)
+        # Ensure that each user has their own userset and is in the all users set
+        for user in self.contest.users:
+            self.createIndividualUserSet(user)
 
-                if user not in allUsersSet.users:
-                    allUsersSet.users.append(user)
+            if user not in allUsersSet.users:
+                allUsersSet.users.append(user)
 
             self.sql_session.commit()
 
@@ -432,6 +435,15 @@ class BaseHandler(CommonRequestHandler):
 
         return user
 
+    def write_error(self, status_code, **kwargs):
+        """Handles any error raised by the handler.
+
+        """
+
+        params = self.render_params()
+        params["status_code"] = status_code
+        self.render("error_page.html", **params)
+
     def render_params(self):
         """Return the default render params used by almost all handlers.
 
@@ -644,6 +656,9 @@ class ProblemListHandler(BaseHandler):
         for userset in self.current_user.userSets:
             for problemset in userset.problemSets:
                 accessibleSets.add(problemset)
+
+        accessibleSets = [problemset for problemset in accessibleSets]
+        accessibleSets.sort(key=lambda problemset: problemset.title.lower())
         
         statuses = dict()
         setStatuses = dict()
@@ -1885,20 +1900,21 @@ class EditUserSetHandler(BaseHandler):
                     userset.problemSets.append(problemset)
 
 
-            userset.users = []
-            if attrs["userids"] is not None and userset.setType == 0:
-                userids = attrs["userids"].strip().split()
+            if userset.setType == 0:
+                userset.users = []
+                if attrs["userids"] is not None:
+                    userids = attrs["userids"].strip().split()
 
-                assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
+                    assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
 
-                userids = map(int, userids)
+                    userids = map(int, userids)
 
-                ## TODO: Ensure all problem ids are actually problems.
+                    ## TODO: Ensure all problem ids are actually problems.
 
-                for index, userid in enumerate(userids):
-                    user = self.sql_session.query(User).filter(User.id==userid)\
-                            .filter(User.contest == self.contest).one()
-                    userset.users.append(user)
+                    for index, userid in enumerate(userids):
+                        user = self.sql_session.query(User).filter(User.id==userid)\
+                                .filter(User.contest == self.contest).one()
+                        userset.users.append(user)
 
             self.sql_session.commit()
 
@@ -2164,7 +2180,8 @@ class AddContestHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
-        self.r_params["usersets"] = self.sql_session.query(UserSet)
+        self.r_params["usersets"] = self.sql_session.query(UserSet).\
+                                         filter(UserSet.setType != 1)                                      
         self.r_params["problemsets"] = self.sql_session.query(ProblemSet)
         self.render("add_contest.html", **self.r_params)
 
@@ -2201,11 +2218,18 @@ class AddContestHandler(BaseHandler):
 
             ## TODO: Ensure all problem ids are actually problems.
 
+            added = Set()
+
             for problemsetid in problemsetids:
                 problemset = self.sql_session.query(ProblemSet).\
                                               filter(ProblemSet.id==problemsetid).one()
                 
                 for task in problemset.tasks:
+                    if task.name in added:
+                        continue
+                    else:
+                        added.add(task.name)
+
                     attrs = dict()
                     attrs["name"] = task.name
                     attrs["title"] = task.title
@@ -2256,10 +2280,17 @@ class AddContestHandler(BaseHandler):
 
             ## TODO: Ensure all problem ids are actually problems.
 
+            added = Set()
+
             for usersetid in usersetids:
                 userset = self.sql_session.query(UserSet).\
                                            filter(UserSet.id==usersetid).one()
                 for user in userset.users:
+                    if user.username in added:
+                        continue
+                    else:
+                        added.add(user.username)
+
                     attrs = dict()
                     attrs["first_name"] = user.first_name
                     attrs["last_name"] = user.last_name
@@ -2279,11 +2310,50 @@ class AddContestHandler(BaseHandler):
             self.sql_session.commit()
             self.application.service.proxy_service.reinitialize()
         except Exception as error:
-            self.redirect("/admin/contest/add")
+            self.redirect("/admin/contest/add?error=%s", error)
             print(error)
             return
             
-        self.redirect("/admin/contest/%s" % contest.id)
+        self.redirect("/admin/contests")
+
+class HallOfFameHandler(BaseHandler):
+    """Show the users with the most problems solved on the site.
+
+    """
+
+    def get(self):
+        self.r_params["active_sidebar_item"] = "fame"
+        self.r_params["hofusers"] = self.sql_session.query(User.username)\
+            .filter(User.contest == self.contest)
+
+        scoretuples = self.sql_session.query(func.max(SubmissionResult.score), User.username, Task)\
+            .join(Submission)\
+            .join(User)\
+            .join(Task)\
+            .filter(User.contest_id == self.contest.id)\
+            .filter(SubmissionResult.dataset_id == Task.active_dataset_id)\
+            .group_by(User.username, Task).all()
+
+        logger.warn(str(scoretuples))
+
+        scoretuples = filter(lambda x: x[0] == get_score_type(dataset=x[2].active_dataset).max_score, scoretuples)
+
+        usercountsdict = {}
+        for foo, user, baz in scoretuples:
+            usercountsdict[user] = usercountsdict.setdefault(user, 0) + 1
+
+        usercounts = sorted([x[::-1] for x in usercountsdict.items()])[:-11:-1]
+
+        self.r_params["hofusers"] = usercounts
+
+        self.render("hall_of_fame.html", **self.r_params)
+
+class NotFoundHandler(BaseHandler):
+    def get(self):
+        self.write_error(404)
+
+    def post(self):
+        self.write_error(404)
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -2322,5 +2392,6 @@ _tws_handlers = [
     (r"/admin/userset/add", AddUserSetHandler),
     (r"/admin/userset/([0-9]+)", AdminUserSetHandler),
     (r"/admin/userset/([0-9]+)/edit", EditUserSetHandler),
-    (r"/admin/userset/([0-9]+)/delete", DeleteUserSetHandler)
+    (r"/admin/userset/([0-9]+)/delete", DeleteUserSetHandler),
+    (r"/.*", NotFoundHandler),
 ]
