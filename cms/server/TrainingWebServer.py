@@ -40,6 +40,7 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 import traceback
+from sqlalchemy import func
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
