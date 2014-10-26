@@ -40,7 +40,6 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 import traceback
-from sqlalchemy import func
 from datetime import datetime, timedelta
 from StringIO import StringIO
 import zipfile
@@ -59,7 +58,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, UserSet, SubmissionResult
+    Testcase, Submission, User, File, ProblemSet, UserSet
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
@@ -78,7 +77,6 @@ def admin_authenticated(foo):
         else:
             return foo(self, *args, **kwargs)
     return func
-
 
 def xstr(src):
     if src:
@@ -270,8 +268,8 @@ class BaseHandler(CommonRequestHandler):
         result = {
             "status": None,
             "max_score": None,
-            "score": None,
-            "percent": None,
+            "score": 0,
+            "percent": 0,
         }
         
         if submission is None:
@@ -307,6 +305,39 @@ class BaseHandler(CommonRequestHandler):
             .order_by(Submission.timestamp.desc()).first()
 
         return self.get_submission_results(user, submission, task)      
+
+    def get_problemset_results(self, user, problemset):
+        total = 0.0;
+        edited = False
+
+        for task in problemset.tasks:
+            status = self.get_task_results(user, task)
+            if (status['status'] != None):
+                edited = True
+
+            if (status['status'] == "ready"):
+                total += float(status['percent'] / 100.0)
+
+        result = {
+            "status": None,
+            "max_score": 0,
+            "score": 0,
+            "percent": 0
+        }
+        result['max_score'] = len(problemset.tasks)
+
+        if (edited == False):
+            result['status'] = None
+        elif (total == result['max_score']):
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = 100
+        else:
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = total / float(result['max_score']) * 100.0
+
+        return result
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -598,15 +629,20 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in self.current_user.pinnedSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
+
+
         except KeyError:
             raise tornado.web.HTTPError(404) 
 
         self.r_params["sets"] = self.current_user.pinnedSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -625,8 +661,10 @@ class ProblemListHandler(BaseHandler):
         accessibleSets.sort(key=lambda problemset: problemset.title.lower())
         
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in accessibleSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
         except KeyError:
@@ -634,6 +672,7 @@ class ProblemListHandler(BaseHandler):
 
         self.r_params["sets"] = accessibleSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -1963,10 +2002,6 @@ class PasswordRecoveryHandler(BaseHandler):
         # Check if the user exists
         if user is None:
             self.redirect("/recover_password?error=Invalid username")
-            return
-
-        if user.verification_type == 2:
-            self.redirect("/confirm_email/%s?error=You must confirm your email" % user.id)
             return
 
         # Generate a new random verification code
