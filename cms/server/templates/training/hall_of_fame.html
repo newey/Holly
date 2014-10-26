@@ -28,5 +28,8 @@
             {% end %}
           </tbody>
       </table>
+      {% if len(hofusers) == 0 %}
+        <p>No one has successfully solved a problem yet. Go be the first!</p>
+      {% end %}
   </div>
 {% end %}
