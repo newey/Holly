@@ -35,6 +35,7 @@ import logging
 import os
 import pkg_resources
 import re
+from sets import Set
 import string
 import smtplib
 from email.mime.text import MIMEText
@@ -77,7 +78,6 @@ def admin_authenticated(foo):
         else:
             return foo(self, *args, **kwargs)
     return func
-
 
 def xstr(src):
     if src:
@@ -214,13 +214,15 @@ class BaseHandler(CommonRequestHandler):
             }
             allUsersSet = UserSet(**attrs)
             self.sql_session.add(allUsersSet)
+        else:
+            allUsersSet = userSets[0]
 
-            # Ensure that each user has their own userset and is in the all users set
-            for user in self.contest.users:
-                self.createIndividualUserSet(user)
+        # Ensure that each user has their own userset and is in the all users set
+        for user in self.contest.users:
+            self.createIndividualUserSet(user)
 
-                if user not in allUsersSet.users:
-                    allUsersSet.users.append(user)
+            if user not in allUsersSet.users:
+                allUsersSet.users.append(user)
 
             self.sql_session.commit()
 
@@ -267,8 +269,8 @@ class BaseHandler(CommonRequestHandler):
         result = {
             "status": None,
             "max_score": None,
-            "score": None,
-            "percent": None,
+            "score": 0,
+            "percent": 0,
             "description": None
         }
         
@@ -310,6 +312,39 @@ class BaseHandler(CommonRequestHandler):
             .order_by(Submission.timestamp.desc()).first()
 
         return self.get_submission_results(user, submission, task)      
+
+    def get_problemset_results(self, user, problemset):
+        total = 0.0;
+        edited = False
+
+        for task in problemset.tasks:
+            status = self.get_task_results(user, task)
+            if (status['status'] != None):
+                edited = True
+
+            if (status['status'] == "ready"):
+                total += float(status['percent'] / 100.0)
+
+        result = {
+            "status": None,
+            "max_score": 0,
+            "score": 0,
+            "percent": 0
+        }
+        result['max_score'] = len(problemset.tasks)
+
+        if (edited == False):
+            result['status'] = None
+        elif (total == result['max_score']):
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = 100
+        else:
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = total / float(result['max_score']) * 100.0
+
+        return result
 
     def prepare(self):
         """This method is executed at the beginning of each request.
@@ -406,6 +441,15 @@ class BaseHandler(CommonRequestHandler):
         user.verification_type = 0
 
         return user
+
+    def write_error(self, status_code, **kwargs):
+        """Handles any error raised by the handler.
+
+        """
+
+        params = self.render_params()
+        params["status_code"] = status_code
+        self.render("error_page.html", **params)
 
     def render_params(self):
         """Return the default render params used by almost all handlers.
@@ -592,15 +636,20 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in self.current_user.pinnedSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
+
+
         except KeyError:
             raise tornado.web.HTTPError(404) 
 
         self.r_params["sets"] = self.current_user.pinnedSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "home"
         self.render("home.html", **self.r_params)
 
@@ -614,10 +663,15 @@ class ProblemListHandler(BaseHandler):
         for userset in self.current_user.userSets:
             for problemset in userset.problemSets:
                 accessibleSets.add(problemset)
+
+        accessibleSets = [problemset for problemset in accessibleSets]
+        accessibleSets.sort(key=lambda problemset: problemset.title.lower())
         
         statuses = dict()
+        setStatuses = dict()
         try:
             for problemset in accessibleSets:
+                setStatuses[problemset.id] = self.get_problemset_results(self.current_user, problemset)
                 for task in problemset.tasks:
                     statuses[task.id] = self.get_task_results(self.current_user, task)
         except KeyError:
@@ -625,6 +679,7 @@ class ProblemListHandler(BaseHandler):
 
         self.r_params["sets"] = accessibleSets
         self.r_params["statuses"] = statuses
+        self.r_params["set_statuses"] = setStatuses
         self.r_params["active_sidebar_item"] = "problems"
         self.render("contestant_problemlist.html", **self.r_params)
 
@@ -1866,20 +1921,21 @@ class EditUserSetHandler(BaseHandler):
                     userset.problemSets.append(problemset)
 
 
-            userset.users = []
-            if attrs["userids"] is not None and userset.setType == 0:
-                userids = attrs["userids"].strip().split()
+            if userset.setType == 0:
+                userset.users = []
+                if attrs["userids"] is not None:
+                    userids = attrs["userids"].strip().split()
 
-                assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
+                    assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
 
-                userids = map(int, userids)
+                    userids = map(int, userids)
 
-                ## TODO: Ensure all problem ids are actually problems.
+                    ## TODO: Ensure all problem ids are actually problems.
 
-                for index, userid in enumerate(userids):
-                    user = self.sql_session.query(User).filter(User.id==userid)\
-                            .filter(User.contest == self.contest).one()
-                    userset.users.append(user)
+                    for index, userid in enumerate(userids):
+                        user = self.sql_session.query(User).filter(User.id==userid)\
+                                .filter(User.contest == self.contest).one()
+                        userset.users.append(user)
 
             self.sql_session.commit()
 
@@ -1967,10 +2023,6 @@ class PasswordRecoveryHandler(BaseHandler):
         # Check if the user exists
         if user is None:
             self.redirect("/recover_password?error=Invalid username")
-            return
-
-        if user.verification_type == 2:
-            self.redirect("/confirm_email/%s?error=You must confirm your email" % user.id)
             return
 
         # Generate a new random verification code
@@ -2149,7 +2201,8 @@ class AddContestHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
-        self.r_params["usersets"] = self.sql_session.query(UserSet)
+        self.r_params["usersets"] = self.sql_session.query(UserSet).\
+                                         filter(UserSet.setType != 1)                                      
         self.r_params["problemsets"] = self.sql_session.query(ProblemSet)
         self.render("add_contest.html", **self.r_params)
 
@@ -2186,11 +2239,18 @@ class AddContestHandler(BaseHandler):
 
             ## TODO: Ensure all problem ids are actually problems.
 
+            added = Set()
+
             for problemsetid in problemsetids:
                 problemset = self.sql_session.query(ProblemSet).\
                                               filter(ProblemSet.id==problemsetid).one()
                 
                 for task in problemset.tasks:
+                    if task.name in added:
+                        continue
+                    else:
+                        added.add(task.name)
+
                     attrs = dict()
                     attrs["name"] = task.name
                     attrs["title"] = task.title
@@ -2241,10 +2301,17 @@ class AddContestHandler(BaseHandler):
 
             ## TODO: Ensure all problem ids are actually problems.
 
+            added = Set()
+
             for usersetid in usersetids:
                 userset = self.sql_session.query(UserSet).\
                                            filter(UserSet.id==usersetid).one()
                 for user in userset.users:
+                    if user.username in added:
+                        continue
+                    else:
+                        added.add(user.username)
+
                     attrs = dict()
                     attrs["first_name"] = user.first_name
                     attrs["last_name"] = user.last_name
@@ -2264,11 +2331,11 @@ class AddContestHandler(BaseHandler):
             self.sql_session.commit()
             self.application.service.proxy_service.reinitialize()
         except Exception as error:
-            self.redirect("/admin/contest/add")
+            self.redirect("/admin/contest/add?error=%s", error)
             print(error)
             return
             
-        self.redirect("/admin/contest/%s" % contest.id)
+        self.redirect("/admin/contests")
 
 class HallOfFameHandler(BaseHandler):
     """Show the users with the most problems solved on the site.
@@ -2302,6 +2369,17 @@ class HallOfFameHandler(BaseHandler):
 
         self.render("hall_of_fame.html", **self.r_params)
 
+class NotFoundHandler(BaseHandler):
+    def get(self):
+        self.write_error(404)
+
+    def post(self):
+        self.write_error(404)
+
+class HelpHandler(BaseHandler):
+    def get(self):
+        self.r_params["active_sidebar_item"] = "help"  
+        self.render("help.html", **self.r_params)
 
 _tws_handlers = [
     (r"/", MainHandler),
@@ -2313,6 +2391,7 @@ _tws_handlers = [
     (r"/recover_password", PasswordRecoveryHandler),
     (r"/change_password/([0-9]+)", PasswordChangeHandler),
     (r"/hof", HallOfFameHandler),
+    (r"/help", HelpHandler),
     (r"/contests", ContestsHandler),
     (r"/problem/([0-9]+)/([0-9]+)", ProblemHandler),
     (r"/problem/([0-9]+)/([0-9]+)/submit", SubmitHandler),
@@ -2341,5 +2420,6 @@ _tws_handlers = [
     (r"/admin/userset/add", AddUserSetHandler),
     (r"/admin/userset/([0-9]+)", AdminUserSetHandler),
     (r"/admin/userset/([0-9]+)/edit", EditUserSetHandler),
-    (r"/admin/userset/([0-9]+)/delete", DeleteUserSetHandler)
+    (r"/admin/userset/([0-9]+)/delete", DeleteUserSetHandler),
+    (r"/.*", NotFoundHandler),
 ]

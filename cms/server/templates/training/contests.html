@@ -1,22 +1,107 @@
 {% import datetime %}
+{% extends contestant_base.html %}
 
-<h1>Old contests</h1>
-{% for contest, user in finished_contests %}
-  <a href="{{ admin_url  }}/contest/{{ contest.id }}">{{ contest.name }}</a><br>
-  Username: {{ user.username }}<br>
-  Password: {{ user.password }}<br>
-  {% if contest.per_user_time is not None %}Duration: {{ str(contest.per_user_time) }}<br>{% end %}
-  Start time: {{ contest.start.strftime('%d/%m/%Y - %H:%M') }}<br>
-  End time: {{ contest.stop.strftime('%d/%m/%Y - %H:%M') }} <br><br><br>
-{% end %}
-
-<h1>Upcoming contests</h1>
+{% block core %}
+<h1 class="page-header">Contests</h1>
+<h3>New contests</h3>
+{% set count = 0 %}
 {% for contest, user in future_contests %}
-  <a href="{{ admin_url  }}/contest/{{ contest.id }}">{{ contest.name }}</a><br>
-  Username: {{ user.username }}<br>
-  Password: {{ user.password }}<br>
-  {% if contest.per_user_time is not None %}Duration: {{ str(contest.per_user_time) }}<br>{% end %}
-  Start time: {{ contest.start.strftime('%d/%m/%Y - %H:%M') }}<br>
-  End time: {{ contest.stop.strftime('%d/%m/%Y - %H:%M') }} <br><br><br>
+{% set count = count + 1 %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">{{ contest.name.capitalize() }}</h3>
+  </div>
+  {% if count == 1 %}
+  <div class="panel-body">
+    <a href="{{ contest_url }}"><button class="btn btn-primary">Enter Competition</button></a>
+  </div>
+  {% end %}
+  <div class="responsive-table">
+      <table class="table">
+          <tbody>
+            <tr>
+                <td>Username</td>
+                <td>{{ user.username }}</td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td>{{ user.password }}</td>
+            </tr>
+            {% if contest.per_user_time is not None %}Duration: 
+            <tr>
+                <td>Duration</td>
+                <td>{{ str(contest.per_user_time) }}</td>
+            </tr>
+            {% end %}
+            <tr>
+                <td>Start time (UTC)</td>
+                <td>{{ contest.start.strftime('%d/%m/%Y - %H:%M') }}</td>
+            </tr>
+            <tr>
+                <td>End time (UTC)</td>
+                <td>{{ contest.stop.strftime('%d/%m/%Y - %H:%M') }}</td>
+            </tr>
+          </tbody>
+      </table>
+  </div>
+</div>
 {% end %}
 
+<h3>Old contests</h3>
+{% set count = 0 %}
+<div class="panel-group" id="accordion">
+  {% for contest, user in finished_contests %}
+  {% set count = count + 1 %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ count }}">
+          {{ contest.name.capitalize() }}
+        </a>
+      </h4>
+    </div>
+    <div id="collapse{{ count }}" class="panel-collapse collapse in">
+      <div class="panel-body">
+        <div class="responsive-table">
+          <table class="table">
+              <tbody>
+                <tr>
+                    <td>Username</td>
+                    <td>{{ user.username }}</td>
+                </tr>
+                <tr>
+                    <td>Password</td>
+                    <td>{{ user.password }}</td>
+                </tr>
+                {% if contest.per_user_time is not None %}Duration: 
+                <tr>
+                    <td>Duration</td>
+                    <td>{{ str(contest.per_user_time) }}</td>
+                </tr>
+                {% end %}
+                <tr>
+                    <td>Start time (UTC)</td>
+                    <td>{{ contest.start.strftime('%d/%m/%Y - %H:%M') }}</td>
+                </tr>
+                <tr>
+                    <td>End time (UTC)</td>
+                    <td>{{ contest.stop.strftime('%d/%m/%Y - %H:%M') }}</td>
+                </tr>
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% end %}
+</div>
+
+{% end %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function(){
+    $('.collapse').collapse();
+  });
+</script>
+{% end %}

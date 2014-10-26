@@ -15,7 +15,11 @@
 
 {% block core %}
   <h1 class="page-header">Problem Sets</h1>
+  {% if len(sets) == 0 %}
+  <div class="well well-lg">You have no available Problem Sets</div>
+  {% else %}
   {% include problem_table.html %}
+  {% end %}
 {% end %}
 
 {% block tail %}

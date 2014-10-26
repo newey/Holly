@@ -1,0 +1,51 @@
+<!-- home.html
+	All users who log in will see this page by default
+	It includes pinned problems and some other stuff
+-->
+{% extends contestant_base.html %}
+
+{% block title %}Holly{% end %}
+
+{% block headextension %}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--<link href="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+	<script src="//cdn.datatables.net/plug-ins/a5734b29083/integration/bootstrap/3/dataTables.bootstrap.js"></script>-->
+{% end %}
+
+{% block core %}
+<h1 class="page-header">Help</h1>
+  <p>This site allows you to practise your programming skills using a variety of competition-style problems. These problems follow a similar style to what you would find in an AIO (Australian Informatics Olympiad) or an IOI (International Olympiad in Informatics).</p> 
+<div class="bs-callout bs-callout-info">
+  <h4>About the Problems</h4>
+  <p>Each problem asks you to write a computer program. Generally your program must read some data from one or more input files, solve some problem relating to that data and then write the solution to an output file.     You are generally given a time limit in seconds that restricts how long your program may take to do this, as well as a memory limit that restricts how much computer memory your program may use.</p>
+
+  <p>A number of problems are available for you to try, which you can view from your personal hub. The system contains several general-access problems, such as past Australian Informatics Olympiads. 
+     Furthermore, you may be given more restricted-access problems if you participate in AIO training camps.</p>
+
+  <p>The problems arranged into sets. You may click on a set to view the problems inside it. You may then click on a problem to view the entire problem description, submit a solution or view your previous submissions.</p>
+</div>
+
+<div class="bs-callout bs-callout-info">
+  <h4>Submitting Solutions</h4>
+  <p>When you have a working solution to a problem, you may submit it using the file upload box at the bottom of the problem description. Your submission should be a C, C++, Pascal, PHP or Python source file (not a compiled executable).</p>
+
+  <p>The system will compile your source file into an executable and then run it using a number of different input files. The input files that the system uses will include easy files as well as input data that is far more demanding than the sample input from the problem statement. Your program will be run against every input file for the particular question at hand - some questions have only four or five input files, others have as many as fifty.</p>
+
+  <p>For each input file your submission either be given a score of 0 or 1. If the program exceeds its time or memory limit, it will be scored zero automatically. Otherwise its output will be analysed by the system and it will be scored according to whether this output is correct. Finally you will given an overall score for the entire problem, calculated as the number of tests you have passed.
+
+  <p>You may resubmit as many times as you like. In many competitions however you don't have this luxury, so you should always aim to score full marks on the first try. Don't be afraid to test your program before you submit! Testing it yourself with a range of different inputs will help catch any bugs before you submit - the sample input in the question statement is generally far too easy to catch any more subtle bugs that your program might have.</p>
+</div>
+
+<div class="bs-callout bs-callout-info">
+  <h4>Scoring Zero</h4>
+  <p>There are several traps that will almost certainly cause a submission to score zero. The most common of these are as follows.</p>
+
+  <ul>
+    <li><b>Filenames:</b> If the problem statement states you should be reading/writing to files, you should make sure you are reading from and writing to the data files specified in the problem statement. You should also make sure that your program opens these files without any directory information. For instance, if the problem states that its input file is zeroin.txt, your program should open "zeroin.txt" for reading, not "a:\zeroin.txt", "c:\mydir\zeroin.txt" or "input.txt".</li>
+    <li><b>Keyboard and Screen:</b> Once again if the problem statement does not mention reading/writing to STDIN/STDOUT, your program should not wait for input on the keyboard or write output to the screen. It should simply read from the input file(s), write to the output file and exit. If your program waits for keyboard input, the judging software will not supply this input and your program will score zero due to timeout. In particular, you should not use a graphical user interface or ask the user to "press any key to continue".</li>
+    <li><b>Output Format:</b> Since your output is being judged by a computer, you should follow the output format precisely as described in the problem statement. For example, if the problem statement asks you to write a single integer N but your program writes a sentence such as "The answer is N", the judging software will not be able to understand your output file and will probably score it zero.</li>
+  </ul>
+</div>
+{% end %}
