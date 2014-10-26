@@ -60,10 +60,6 @@
         <div>
           <canvas id="example-chart" style="display: block;"></canvas>
         </div>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default">Problem</button>
-          <button type="button" class="btn btn-default">Tests</button>
-        </div>
       </div>
     </div>
   </div>
@@ -112,36 +108,6 @@
             </tr>
 
             {% end %}
-<!--             
-            <tr>
-              <td><span class="label label-default">Inactive</span></td>
-              <td>admin</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-danger">Error</span></td>
-              <td>daniel</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-success">Accepted</span></td>
-              <td>krauth</td>
-              <td>9/9</td>
-              <td>2</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td><span class="label label-warning">72%</span></td>
-              <td>peacock</td>
-              <td>5/9</td>
-              <td>1</td>
-              <td>-</td>
-            </tr>
- -->
            </tbody>
         </table>
       </div>
@@ -228,7 +194,7 @@ $(document).ready(function() {
   var data = {
     datasets: [
         {
-            label: "My First dataset",
+            label: "Total passes",
             fillColor: "rgba(220,220,220,0.2)",
             strokeColor: "rgba(220,220,220,1)",
             pointColor: "rgba(220,220,220,1)",
@@ -239,7 +205,7 @@ $(document).ready(function() {
 
         },
         {
-            label: "My Second dataset",
+            label: "Total submissions",
             fillColor: "rgba(151,187,205,0.2)",
             strokeColor: "rgba(151,187,205,1)",
             pointColor: "rgba(151,187,205,1)",
@@ -249,7 +215,7 @@ $(document).ready(function() {
             data: {{ graph_data2 }}
         }
     ],
-    labels: {{ labels }}
+    labels: ["Mon", "Teu"]
   }
   var options = {
     bezierCurve : false,
