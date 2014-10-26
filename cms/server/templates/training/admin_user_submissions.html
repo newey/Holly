@@ -1,0 +1,53 @@
+{% extends admin_base.html %}
+
+{% block core %}
+<h1 class="page-header"><i class="fa fa-bar-chart fa-fw"></i> {{ user.username }} <small>Submissions</small></h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Users</h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped" id ="users">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>File submited</th>
+            </tr>
+          </thead>
+          {% for user in users %}
+          <tbody>
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>
+<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal1{{ user.id }}">
+  View File
+</button>
+<div class="modal fade" id="myModal1{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">{{ user.username }} Input</h4>
+      </div>
+      <div class="modal-body">
+          <pre>{{ inputs[user.username] }}</pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+              </td>
+            </tr>
+          </tbody>
+          {% end %}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}

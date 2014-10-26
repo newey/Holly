@@ -1694,6 +1694,53 @@ class DeleteUserHandler(BaseHandler):
             self.sql_session.commit()
             self.redirect("/admin/users")
 
+
+class AdminUserSubmissionsHandler(BaseHandler):
+    """Shows the history of user submissions to a problem
+
+    """
+
+    @tornado.web.authenticated
+    @admin_authenticated
+    def get(self, user_id, task_id):
+        try:
+            user = self.sql_session.query(User).filter(User.id==user_id)\
+                       .filter(User.contest == self.contest).one()        
+            task = self.get_task_by_id(task_id)
+
+            print("user.username "+str(user.username))
+            print("task.title "+str(task.title))
+
+            # submissions = self.sql_session.query(Submission)\
+                         # .filter(Submission.user == user)\
+                         # .order_by(Submission.timestamp.desc())
+
+            submissions = self.sql_session.query(Submission)\
+                         .filter(Submission.user == user)\
+                         .order_by(Submission.timestamp.desc())
+        except KeyError:
+            raise tornado.web.HTTPError(404)
+
+        # inputs = dict()
+        # outputs = dict()
+
+        # for idx,submission in enumerate(submissions):
+        #     inputs[idx] = dict()
+        #     outputs[idx] = dict()
+        #     dataset = submission.get_result().executables[task.title].dataset
+        #     for testcase in dataset.testcases.itervalues():
+        #         inputs[idx][testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.input)
+        #         outputs[idx][testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.output)
+        #         print("inputs["+str(idx)+"][testcase.codename] "+str(inputs[idx][testcase.codename]))
+        #         print("outputs["+str(idx)+"][testcase.codename] "+str(outputs[idx][testcase.codename]))
+
+        # self.r_params["inputs"] = inputs
+        # self.r_params["outputs"] = outputs
+        
+        self.r_params["active_sidebar_item"] = "users"
+        self.render("admin_user_submissions.html", 
+                     user=user, task=task, **self.r_params)
+
 class AdminUserSetHandler(BaseHandler):
     """Shows the data of a task.
 
@@ -2252,6 +2299,7 @@ _tws_handlers = [
     (r"/admin/user/([0-9]+)", UserHandler),
     (r"/admin/user/([0-9]+)/edit", EditUserHandler),
     (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
+    (r"/admin/user/([0-9]+)/([0-9]+)/submissions", AdminUserSubmissionsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
     (r"/admin/userset/([0-9]+)", AdminUserSetHandler),
     (r"/admin/userset/([0-9]+)/edit", EditUserSetHandler),

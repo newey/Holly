@@ -108,7 +108,7 @@
               <td>{{ user.username }}</td>
               <td>{{ user_submission_stats[user.username]["tests_passed"] }}</td>
               <td>{{ user_submission_stats[user.username]["num_submissions"] }}</td>
-              <td><a href="/admin/user/{{ user.id }}/submissions">Past Submissions</a></td>
+              <td><a href="/admin/user/{{ user.id }}/{{ task.id }}/submissions">Past Submissions</a></td>
             </tr>
 
             {% end %}
