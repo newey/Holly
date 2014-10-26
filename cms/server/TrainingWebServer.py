@@ -785,8 +785,10 @@ class SignupHandler(BaseHandler):
         # Send the email
         message = ("To confirm your email please use the following verification code:\n" +
                    "%s\n" +
+                   "At the following URL:\n" + 
+                   "http://%s/confirm_email/%s\n" + 
                    "If you did not request a new password ignore this email " +
-                   "and contact an admin.\n") % user.verification
+                   "and contact an admin.\n") % (user.verification, self.request.host, user.id)
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly email confirmation"
@@ -2069,6 +2071,12 @@ class PasswordRecoveryHandler(BaseHandler):
             self.redirect("/recover_password?error=Invalid username")
             return
 
+        if user.verification_type == 2:
+            error = "You must verify your email address."
+            self.redirect("/confirm_email/%s?error=%s" % (user.id, error))
+            return
+            
+
         # Generate a new random verification code
         code = ''.join(random.choice(string.ascii_uppercase + 
                       string.digits) for _ in range(40))
@@ -2084,8 +2092,10 @@ class PasswordRecoveryHandler(BaseHandler):
         # Send the email
         message = ("To update your password please use the following verification code:\n" +
                      "%s\n" +
-                     "If you did not request a new password ignore this email "
-                     "and contact an admin.\n") % code
+                     "At the following url:\n" +
+                     "http://%s/change_password/%s\n"
+                     "If you did not request a new password ignore this email " + 
+                     "and contact an admin.\n") % (code, self.request.host, user.id)
 
         msg = MIMEText(message)
         msg['Subject'] = "Holly password recovery"
@@ -2386,6 +2396,7 @@ class HallOfFameHandler(BaseHandler):
 
     """
 
+    @tornado.web.authenticated
     def get(self):
         self.r_params["active_sidebar_item"] = "fame"
         self.r_params["hofusers"] = self.sql_session.query(User.username)\
@@ -2421,6 +2432,7 @@ class NotFoundHandler(BaseHandler):
         self.write_error(404)
 
 class HelpHandler(BaseHandler):
+    @tornado.web.authenticated
     def get(self):
         self.r_params["active_sidebar_item"] = "help"  
         self.render("help.html", **self.r_params)
