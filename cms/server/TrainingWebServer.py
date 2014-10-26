@@ -610,6 +610,9 @@ class ProblemListHandler(BaseHandler):
         for userset in self.current_user.userSets:
             for problemset in userset.problemSets:
                 accessibleSets.add(problemset)
+
+        accessibleSets = [problemset for problemset in accessibleSets]
+        accessibleSets.sort(key=lambda problemset: problemset.title.lower())
         
         statuses = dict()
         try:
