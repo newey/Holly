@@ -214,3 +214,7 @@ td.last {
   overflow-y: auto;
   resize: none;
 }
+
+.admin-select-row {
+  min-height: 700px;
+}
