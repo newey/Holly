@@ -208,3 +208,9 @@ td.last {
   left:0px;
   bottom:0;
 }
+
+.admin-description-field {
+  height: 240px !important;
+  overflow-y: auto;
+  resize: none;
+}

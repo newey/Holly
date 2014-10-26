@@ -11,6 +11,9 @@
 
 {% block core %}
   <h1 class="page-header">{{ problemset.title }}</h1>
+  <div>
+    {% raw problemset.description %}
+  </div>
   {% if len(problemset.tasks) > 0 %}
     <div class="responsive-table">
       <table id="problemsTable" class="table">
