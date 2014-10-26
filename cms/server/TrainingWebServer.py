@@ -35,6 +35,7 @@ import logging
 import os
 import pkg_resources
 import re
+from sets import Set
 import string
 import smtplib
 from email.mime.text import MIMEText
@@ -2144,7 +2145,8 @@ class AddContestHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
-        self.r_params["usersets"] = self.sql_session.query(UserSet)
+        self.r_params["usersets"] = self.sql_session.query(UserSet).\
+                                         filter(UserSet.setType != 1)                                      
         self.r_params["problemsets"] = self.sql_session.query(ProblemSet)
         self.render("add_contest.html", **self.r_params)
 
@@ -2273,11 +2275,11 @@ class AddContestHandler(BaseHandler):
             self.sql_session.commit()
             self.application.service.proxy_service.reinitialize()
         except Exception as error:
-            self.redirect("/admin/contest/add")
+            self.redirect("/admin/contest/add?error=%s", error)
             print(error)
             return
             
-        self.redirect("/admin/contests" % contest.id)
+        self.redirect("/admin/contests")
 
 class HallOfFameHandler(BaseHandler):
     """Show the users with the most problems solved on the site.
