@@ -1010,7 +1010,7 @@ class AdminProblemHandler(BaseHandler):
                 user_submission_stats[user.username]["num_submissions"] = 0
 
         data1 = [0]*total_tests
-        data2 = [num_submissions]*total_tests
+        data2 = [0]*total_tests
         labels = [""]*total_tests
 
         # get test table and graph data
@@ -1025,6 +1025,7 @@ class AdminProblemHandler(BaseHandler):
                         if str(score_detail['outcome']) == "Correct":
                             tests_passed[score_detail['idx']] += 1
                             data1[idx] = tests_passed[score_detail['idx']]
+                        data2[idx] = num_submissions - data1[idx]
                         labels[idx] = tornado.escape.utf8(str(score_detail['idx']))
 
         submission_stats["num_submissions"] = num_submissions
@@ -1796,6 +1797,15 @@ class AdminUserSetHandler(BaseHandler):
         self.r_params["userset"] = userset
         self.r_params["active_sidebar_item"] = "users"
 
+        all_sets = self.sql_session.query(ProblemSet).all()
+        unselected_sets = filter(lambda x: x not in userset.problemSets, all_sets)
+
+
+        # inputs = dict()
+        # outputs = dict()
+        # tests_passed = dict()
+        # submission_stats = dict()
+        # user_submission_stats = dict()
 
         # try:
         #     task = self.get_task_by_id(task_id)
@@ -1845,7 +1855,7 @@ class AdminUserSetHandler(BaseHandler):
         #         user_submission_stats[user.username]["num_submissions"] = 0
 
         # data1 = [0]*total_tests
-        # data2 = [num_submissions]*total_tests
+        # data2 = [0]*total_tests
         # labels = [""]*total_tests
 
         # # get test table and graph data
@@ -1860,6 +1870,7 @@ class AdminUserSetHandler(BaseHandler):
         #                 if str(score_detail['outcome']) == "Correct":
         #                     tests_passed[score_detail['idx']] += 1
         #                     data1[idx] = tests_passed[score_detail['idx']]
+        #                 data2[idx] = num_submissions - data1[idx]
         #                 labels[idx] = tornado.escape.utf8(str(score_detail['idx']))
 
         # submission_stats["num_submissions"] = num_submissions
@@ -1876,6 +1887,12 @@ class AdminUserSetHandler(BaseHandler):
         # self.r_params["inputs"] = inputs
         # self.r_params["outputs"] = outputs
         # self.r_params["submission_stats"] = submission_stats
+
+        # self.r_params["graph_data1"] = data1
+        # self.r_params["graph_data2"] = data2
+        # self.r_params["labels"] = labels
+
+        self.r_params["selected_sets"] = userset.problemSets
 
         self.r_params["graph_data1"] = []
         self.r_params["graph_data2"] = []
@@ -2506,7 +2523,6 @@ _tws_handlers = [
     (r"/admin/user/([0-9]+)", UserHandler),
     (r"/admin/user/([0-9]+)/edit", EditUserHandler),
     (r"/admin/user/([0-9]+)/delete", DeleteUserHandler),
-    (r"/admin/user/([0-9]+)/([0-9]+)/submissions", AdminUserSubmissionsHandler),
     (r"/admin/userset/add", AddUserSetHandler),
     (r"/admin/userset/([0-9]+)", AdminUserSetHandler),
     (r"/admin/userset/([0-9]+)/edit", EditUserSetHandler),

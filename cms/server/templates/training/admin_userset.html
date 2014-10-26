@@ -77,7 +77,6 @@
           <table class="table table-striped" id ="problems">
             <thead>
               <tr>
-                <th>Status</th>
                 <th>Problem</th>
                 <th>Test Passed</th>
                 <th>No. Submissions</th>
@@ -85,34 +84,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><span class="label label-default">Inactive</span></td>
-                <td>aio10choreo</td>
-                <td>0</td>
-                <td>0</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td><span class="label label-danger">Error</span></td>
-                <td>aio10snap</td>
-                <td>0</td>
-                <td>0</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td><span class="label label-success">Accepted</span></td>
-                <td>aio10heat</td>
-                <td>9/9</td>
-                <td>2</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td><span class="label label-warning">72%</span></td>
-                <td>aio10island</td>
-                <td>5/9</td>
-                <td>1</td>
-                <td>-</td>
-              </tr>
+              {% for problemset in selected_sets %}
+                {% for task in problemset.tasks %}
+                  <tr>
+                    <td>{{ task.title }}</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>-</td>
+                  </tr>
+                {% end %}
+              {% end %}
             </tbody>
           </table>
         </div>
@@ -206,27 +187,27 @@ $(document).ready(function() {
     datasets: [
         {
             label: "Total passes",
-            fillColor: "rgba(220,220,220,0.2)",
-            strokeColor: "rgba(220,220,220,1)",
-            pointColor: "rgba(220,220,220,1)",
+            fillColor: "rgba(67,227,9,0.2)",
+            strokeColor: "rgba(67,227,9,1)",
+            pointColor: "rgba(67,227,9,1)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
-            data: {{ graph_data1 }}
+            data: [1,2]
 
         },
         {
-            label: "Total submissions",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
+            label: "Total fails",
+            fillColor: "rgba(242,7,11,0.2)",
+            strokeColor: "rgba(242,7,11,1)",
+            pointColor: "rgba(242,7,11,1)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(151,187,205,1)",
-            data: {{ graph_data2 }}
+            data: [1,2]
         }
     ],
-    labels: {{ labels }}
+    labels: [1,2]
   }
   var options = {
     bezierCurve : false,

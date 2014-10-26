@@ -80,7 +80,6 @@
               <th>Username</th>
               <th>Test Passed</th>
               <th>No. Submissions</th>
-              <th>Submissions</th>
             </tr>
           </thead>
           <tbody>
@@ -104,7 +103,6 @@
               <td>{{ user.username }}</td>
               <td>{{ user_submission_stats[user.username]["tests_passed"] }}</td>
               <td>{{ user_submission_stats[user.username]["num_submissions"] }}</td>
-              <td><a href="/admin/user/{{ user.id }}/{{ task.id }}/submissions">Past Submissions</a></td>
             </tr>
 
             {% end %}
@@ -195,9 +193,9 @@ $(document).ready(function() {
     datasets: [
         {
             label: "Total passes",
-            fillColor: "rgba(220,220,220,0.2)",
-            strokeColor: "rgba(220,220,220,1)",
-            pointColor: "rgba(220,220,220,1)",
+            fillColor: "rgba(67,227,9,0.2)",
+            strokeColor: "rgba(67,227,9,1)",
+            pointColor: "rgba(67,227,9,1)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
@@ -205,17 +203,17 @@ $(document).ready(function() {
 
         },
         {
-            label: "Total submissions",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
+            label: "Total fails",
+            fillColor: "rgba(242,7,11,0.2)",
+            strokeColor: "rgba(242,7,11,1)",
+            pointColor: "rgba(242,7,11,1)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(151,187,205,1)",
             data: {{ graph_data2 }}
         }
     ],
-    labels: ["Mon", "Teu"]
+    labels: {{ labels }}
   }
   var options = {
     bezierCurve : false,
