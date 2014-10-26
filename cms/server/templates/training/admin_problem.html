@@ -93,13 +93,11 @@
             <tr>
 
               {% if user_submission_stats[user.username]["status"] == "ready" %}
-              
                 {% if user_submission_stats[user.username]["percent"] == 100 %}
                   <td><span class="label label-success">Accepted</span></td>
                 {% else %}
                   <td><span class="label label-warning">{{ user_submission_stats[user.username]["percent"] }}%</span></td>
                 {% end %}
-
               {% elif user_submission_stats[user.username]["status"] == "failed_compilation" %}
                 <td><span class="label label-danger">Compilation failed</span></td>
               {% elif user_submission_stats[user.username]["status"] == "none" %}
@@ -108,9 +106,9 @@
                 <td><span class="label label-danger">Error</span></td>
               {% end %}
               <td>{{ user.username }}</td>
-              <td>0</td>
-              <td>0</td>
-              <td>-</td>
+              <td>{{ user_submission_stats[user.username]["tests_passed"] }}</td>
+              <td>{{ user_submission_stats[user.username]["num_submissions"] }}</td>
+              <td><a href="/admin/user/{{ user.id }}/submissions">Past Submissions</a></td>
             </tr>
 
             {% end %}
