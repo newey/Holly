@@ -11,7 +11,7 @@
   <h3><i class="fa text-info fa-spinner fa-2x fa-fw fa-spin"></i>Processing Submission</h3>
   <p>{{ s["status"].capitalize() }}</p>
 </div>
-{% elif (s["score"] == s["max_score"]) %}
+{% elif (s["max_score"] != 0 and s["score"] == s["max_score"]) %}
 <div>
   <h3><i class="fa text-success fa-check fa-2x fa-fw"></i>Correct Solution</h3>
   <p>You passed all the tests, well done.</p>

@@ -1,7 +1,7 @@
 {% extends admin_base.html %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-th fa-fw"></i> Problems Sets</h1>
+<h1 class="page-header"><i class="fa fa-th fa-fw"></i> Problem Sets</h1>
 <ol class="breadcrumb page-breadcrumb">
   <li class="active">Problem Sets</li>
 </ol>
@@ -27,7 +27,7 @@
         <tr>
           <td>{{ set.id }}</td>
           <td><a href="/admin/problemset/{{ set.id }}">{{ set.name }}</a></td>
-          <td style="text-align: center;">
+          <td style="text-align: center; min-width: 120px;">
             <form action="/admin/problemset/{{ set.id }}" method="get" style="display: inline;">
               <button class="btn btn-primary btn-xs" type="submit" value="Stats"><i class="fa fa-bar-chart fa-fw"></i></button>
             </form>
@@ -80,8 +80,6 @@
        ]
     });
 
-    $('#problems_filter').find("label").append('<a href="/admin/problem/add"><button type="button" class="btn btn-success" style="margin-left: 20px;">Add <i class="fa fa-plus fa-fw"></i></button></a>')
-
     $('#problemsets').dataTable({
       "aoColumnDefs": [
           { 'bSortable': false, 'aTargets': [ 2 ] }
@@ -91,12 +89,14 @@
           "sNext": "<i class=\"fa fa-chevron-right fa-fw\"></i>",
           "sPrevious": "<i class=\"fa fa-chevron-left fa-fw\"></i>"
         },
+        "sSearch": '<div class="input-group-addon" style="display: inline; width: 40px;"><i class="fa fa-search fa-fw"></i></div>',
+        "sLengthMenu": "_MENU_ per page",
         "sInfo": "Showing <strong>_START_</strong> to <strong>_END_</strong> of <strong>_TOTAL_</strong>"
       },
     });
+    
+    $('#problemsets_filter').find("label").append('<a href="/admin/problemset/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
 
-    $('#problemsets_filter').find("label").empty().append('<div class="input-group"><input type="search" class="form-control input-sm" aria-controls="problemsets"><span class="input-group-addon"><i class="fa fa-search fa-fw"></i></span></div><a href="/admin/problemset/add"><button type="button" class="btn btn-sm btn-success" style="margin-left: 10px;"><i class="fa fa-plus fa-fw"></i></button></a>');
-    $('#problemsets_length').find("label").empty().append('<label><select name="problemsets_length" aria-controls="problemsets" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> per page</label>');
   });
 </script>
 {% end %}

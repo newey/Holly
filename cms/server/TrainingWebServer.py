@@ -299,8 +299,13 @@ class BaseHandler(CommonRequestHandler):
                     result['max_score'] = round(score_type.max_score, task.score_precision)
                 else:
                     result['max_score'] = 0
+
                 result['score'] = round(sr.score, task.score_precision)
-                result['percent'] = round(result['score'] * 100.0 / result['max_score'])
+                if result['max_score'] != 0:
+                    result['percent'] = round(result['score'] * 100.0 / result['max_score'])
+                else:
+                    result['percent'] = 0
+
                 result['description'] = "%d%% correct" % result['percent']
 
         return result
@@ -335,6 +340,10 @@ class BaseHandler(CommonRequestHandler):
 
         if (edited == False):
             result['status'] = None
+        elif (result['max_score'] == 0):
+            result['status'] = 'ready'
+            result['score'] = 0
+            result['percent'] = 0
         elif (total == result['max_score']):
             result['status'] = 'ready'
             result['score'] = 0
