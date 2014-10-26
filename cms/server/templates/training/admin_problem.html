@@ -36,9 +36,25 @@
         <a href="/admin/problem/{{ task.id }}/edit" class="pull-left" style="margin-right: 10px;">
           <button type="button" class="btn btn-success"><i class="fa fa-edit fa-fw"></i> Edit</button>
         </a>
-        <form action="/admin/problem/{{ task.id }}/delete" method="post">
-          <button type="submit" class="btn btn-danger"><i class="fa fa-trash fa-fw"></i> Delete</button>
+<button class="btn btn-danger" data-toggle="modal" data-target=".bs-example-modal-sm"><i class="fa fa-trash fa-fw"></i> Delete</button>
+
+<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title modal-delete-title" id="myModalLabel">Are you sure you want to delete {{ task.name }}?</h4>
+      </div>
+      <div class="modal-footer">
+        
+        <form action="/admin/problem/{{ task.id }}/delete" method="post" style="display: inline;">
+          <button class="btn btn-default" type="submit" value="Delete">Yes</button>
         </form>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
       <div class="col-md-6">
         <div>
@@ -61,6 +77,7 @@
       </div>
       <div class="table-responsive">
         <table class="table table-striped" id ="users">
+          
           <thead>
             <tr>
               <th>Status</th>
@@ -71,6 +88,31 @@
             </tr>
           </thead>
           <tbody>
+            {% for user in users %}
+
+            <tr>
+
+              {% if user_submission_stats[user.username]["status"] == "ready" %}
+                {% if user_submission_stats[user.username]["percent"] == 100 %}
+                  <td><span class="label label-success">Accepted</span></td>
+                {% else %}
+                  <td><span class="label label-warning">{{ user_submission_stats[user.username]["percent"] }}%</span></td>
+                {% end %}
+              {% elif user_submission_stats[user.username]["status"] == "failed_compilation" %}
+                <td><span class="label label-danger">Compilation failed</span></td>
+              {% elif user_submission_stats[user.username]["status"] == "none" %}
+                <td><span class="label label-default">Inactive</span></td>
+              {% else %}
+                <td><span class="label label-danger">Error</span></td>
+              {% end %}
+              <td>{{ user.username }}</td>
+              <td>{{ user_submission_stats[user.username]["tests_passed"] }}</td>
+              <td>{{ user_submission_stats[user.username]["num_submissions"] }}</td>
+              <td><a href="/admin/user/{{ user.id }}/submissions">Past Submissions</a></td>
+            </tr>
+
+            {% end %}
+<!--             
             <tr>
               <td><span class="label label-default">Inactive</span></td>
               <td>admin</td>
@@ -99,7 +141,8 @@
               <td>1</td>
               <td>-</td>
             </tr>
-          </tbody>
+ -->
+           </tbody>
         </table>
       </div>
     </div>
@@ -116,7 +159,6 @@
               <th>Name</th>
               <th>Input</th>
               <th>Output</th>
-              <th>Score</th>
               <th>Passed</th>
             </tr>
           </thead>
@@ -124,10 +166,49 @@
             {% for testcase in task.active_dataset.testcases.itervalues() %}
             <tr>
               <td>{{ testcase.codename }}</td>
-              <td></td>
-              <td></td>
-              <td>1</td>
-              <td>2/2</td>
+              <td>
+<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal1{{ testcase.id }}">
+  View Input
+</button>
+<div class="modal fade" id="myModal1{{ testcase.id }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">{{ testcase.codename }} Input</h4>
+      </div>
+      <div class="modal-body">
+          <pre>{{ inputs[testcase.codename] }}</pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+              </td>
+              <td>
+<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal2{{ testcase.id }}">
+  View Output
+</button>
+<div class="modal fade" id="myModal2{{ testcase.id }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">{{ testcase.codename }} Output</h4>
+      </div>
+      <div class="modal-body">
+          <pre>{{ outputs[testcase.codename] }}</pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+              </td>
+              <td>{{ submission_stats["tests_passed"][testcase.codename] }}/{{ submission_stats["num_submissions"] }}</td>
             </tr>
             {% end %}
           </tbody>

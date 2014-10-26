@@ -21,7 +21,7 @@
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ count = count - 1 }}">
-          Submission #{{ count }} <span class="pull-right">{{ submission.timestamp }}</span>
+          Submission #{{ count }} <span class="pull-right">{{ submission.timestamp.strftime('%d/%m/%Y - %H:%M') }}</span>
         </a>
       </h4>
     </div>

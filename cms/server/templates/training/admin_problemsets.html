@@ -26,7 +26,7 @@
       {% for set in sets %}
         <tr>
           <td>{{ set.id }}</td>
-          <td>{{ set.name }}</td>
+          <td><a href="/admin/problemset/{{ set.id }}">{{ set.name }}</a></td>
           <td style="text-align: center;">
             <form action="/admin/problemset/{{ set.id }}" method="get" style="display: inline;">
               <button class="btn btn-primary btn-xs" type="submit" value="Stats"><i class="fa fa-bar-chart fa-fw"></i></button>
@@ -34,9 +34,25 @@
             <form action="/admin/problemset/{{ set.id }}/edit" method="get" style="display: inline;">
               <button class="btn btn-success btn-xs" type="submit" value="Edit"><i class="fa fa-edit fa-fw"></i></button>
             </form>
-            <form action="/admin/problemset/{{ set.id }}/delete" method="post" style="display: inline;">
-              <button class="btn btn-danger btn-xs" type="submit" value="Delete"><i class="fa fa-trash fa-fw"></i></button>
-            </form>
+
+<button class="btn btn-danger btn-xs" data-toggle="modal" data-target="#basicModal{{ set.id }}"><i class="fa fa-trash fa-fw"></i></button>
+
+<div class="modal fade" id="basicModal{{ set.id }}" tabindex="-1" role="dialog" aria-labelledby="basicModal{{ set.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title modal-delete-title" id="myModalLabel">Are you sure you want to delete {{ set.name }}?</h4>
+      </div>
+      <div class="modal-footer">
+        <form action="/admin/problemset/{{ set.id }}/delete" method="post" style="display: inline;">
+          <button class="btn btn-default" type="submit" value="Delete">Yes</button>
+        </form>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+      </div>
+    </div>
+  </div>
+</div>
           </td>
         </tr>
       {% end %}
