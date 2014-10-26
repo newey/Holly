@@ -35,6 +35,7 @@ import logging
 import os
 import pkg_resources
 import re
+from sets import Set
 import string
 import smtplib
 from email.mime.text import MIMEText
@@ -2144,7 +2145,8 @@ class AddContestHandler(BaseHandler):
     @admin_authenticated
     def get(self):
         self.r_params = self.render_params()
-        self.r_params["usersets"] = self.sql_session.query(UserSet)
+        self.r_params["usersets"] = self.sql_session.query(UserSet).\
+                                         filter(UserSet.setType != 1)                                      
         self.r_params["problemsets"] = self.sql_session.query(ProblemSet)
         self.render("add_contest.html", **self.r_params)
 
@@ -2181,11 +2183,18 @@ class AddContestHandler(BaseHandler):
 
             ## TODO: Ensure all problem ids are actually problems.
 
+            added = Set()
+
             for problemsetid in problemsetids:
                 problemset = self.sql_session.query(ProblemSet).\
                                               filter(ProblemSet.id==problemsetid).one()
                 
                 for task in problemset.tasks:
+                    if task.name in added:
+                        continue
+                    else:
+                        added.add(task.name)
+
                     attrs = dict()
                     attrs["name"] = task.name
                     attrs["title"] = task.title
@@ -2236,10 +2245,17 @@ class AddContestHandler(BaseHandler):
 
             ## TODO: Ensure all problem ids are actually problems.
 
+            added = Set()
+
             for usersetid in usersetids:
                 userset = self.sql_session.query(UserSet).\
                                            filter(UserSet.id==usersetid).one()
                 for user in userset.users:
+                    if user.username in added:
+                        continue
+                    else:
+                        added.add(user.username)
+
                     attrs = dict()
                     attrs["first_name"] = user.first_name
                     attrs["last_name"] = user.last_name
@@ -2259,11 +2275,11 @@ class AddContestHandler(BaseHandler):
             self.sql_session.commit()
             self.application.service.proxy_service.reinitialize()
         except Exception as error:
-            self.redirect("/admin/contest/add")
+            self.redirect("/admin/contest/add?error=%s", error)
             print(error)
             return
             
-        self.redirect("/admin/contest/%s" % contest.id)
+        self.redirect("/admin/contests")
 
 class HallOfFameHandler(BaseHandler):
     """Show the users with the most problems solved on the site.
