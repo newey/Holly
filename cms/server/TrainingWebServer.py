@@ -1332,7 +1332,6 @@ class AddProblemSetHandler(BaseHandler):
             self.get_string(attrs, "name", empty=None)
             self.get_string(attrs, "title")
             self.get_string(attrs, "description")
-            self.get_string(attrs, "num")
             self.get_string(attrs, "pinned_by_default", empty=False)
             attrs["contest"] = self.contest
 
@@ -1343,10 +1342,6 @@ class AddProblemSetHandler(BaseHandler):
             else:
                 attrs["pinned_by_default"] = False
 
-            #attrs["contest_id"] = self.contest.id
-            #TODO: CHANGE AFTER DEMO
-            random.seed()
-            attrs["num"] = random.randint(1,1000000000)
             assert attrs.get("name") is not None, "No set name specified."
 
             problemset = ProblemSet(**attrs)
