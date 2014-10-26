@@ -214,13 +214,15 @@ class BaseHandler(CommonRequestHandler):
             }
             allUsersSet = UserSet(**attrs)
             self.sql_session.add(allUsersSet)
+        else:
+            allUsersSet = userSets[0]
 
-            # Ensure that each user has their own userset and is in the all users set
-            for user in self.contest.users:
-                self.createIndividualUserSet(user)
+        # Ensure that each user has their own userset and is in the all users set
+        for user in self.contest.users:
+            self.createIndividualUserSet(user)
 
-                if user not in allUsersSet.users:
-                    allUsersSet.users.append(user)
+            if user not in allUsersSet.users:
+                allUsersSet.users.append(user)
 
             self.sql_session.commit()
 
@@ -1772,20 +1774,21 @@ class EditUserSetHandler(BaseHandler):
                     userset.problemSets.append(problemset)
 
 
-            userset.users = []
-            if attrs["userids"] is not None and userset.setType == 0:
-                userids = attrs["userids"].strip().split()
+            if userset.setType == 0:
+                userset.users = []
+                if attrs["userids"] is not None:
+                    userids = attrs["userids"].strip().split()
 
-                assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
+                    assert reduce(lambda x, y: x and y.isdigit(), userids, True), "Not all problem ids are integers"
 
-                userids = map(int, userids)
+                    userids = map(int, userids)
 
-                ## TODO: Ensure all problem ids are actually problems.
+                    ## TODO: Ensure all problem ids are actually problems.
 
-                for index, userid in enumerate(userids):
-                    user = self.sql_session.query(User).filter(User.id==userid)\
-                            .filter(User.contest == self.contest).one()
-                    userset.users.append(user)
+                    for index, userid in enumerate(userids):
+                        user = self.sql_session.query(User).filter(User.id==userid)\
+                                .filter(User.contest == self.contest).one()
+                        userset.users.append(user)
 
             self.sql_session.commit()
 
