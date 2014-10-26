@@ -1870,6 +1870,10 @@ class PasswordRecoveryHandler(BaseHandler):
             self.redirect("/recover_password?error=Invalid username")
             return
 
+        if user.verification_type == 2:
+            self.redirect("/confirm_email/%s?error=You must confirm your email" % user.id)
+            return
+
         # Generate a new random verification code
         code = ''.join(random.choice(string.ascii_uppercase + 
                       string.digits) for _ in range(40))
