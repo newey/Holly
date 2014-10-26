@@ -898,7 +898,7 @@ class AddProblemHandler(BaseHandler):
 
         numTests = int(self.get_argument("num_tests"))
         for i in range(0, numTests):
-            
+
             attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
             
@@ -1033,7 +1033,7 @@ class AdminProblemHandler(BaseHandler):
                     score_details = json.loads(result.score_details)
     
                     for idx,score_detail in enumerate(score_details):
-                        if str(score_detail['outcome']) == "Correct":
+                        if score_detail['idx'] in tests_passed and str(score_detail['outcome']) == "Correct":
                             tests_passed[score_detail['idx']] += 1
                             data1[idx] = tests_passed[score_detail['idx']]
                         data2[idx] = num_submissions - data1[idx]
@@ -1138,7 +1138,7 @@ class EditProblemHandler(BaseHandler):
         numTests = int(self.get_argument("num_tests"))
         logger.info("Found %d tests to add" % numTests)
         for i in range(0, numTests):
-            
+
             attrs.get("new-codename-" + str(i)) is not None, logger.warning("No test name specified for %dth entry" % i)
             codename = self.get_argument("new-codename-" + str(i))
 
