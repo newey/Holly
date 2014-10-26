@@ -951,7 +951,7 @@ class ProblemHandler(BaseHandler):
         try:
             task = self.get_task_by_id(task_id)
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         self.r_params["active_sidebar_item"] = "problems"
@@ -983,7 +983,7 @@ class AdminProblemHandler(BaseHandler):
             total_submissions = self.sql_session.query(Submission)\
                          .filter(Submission.task == task)\
                          .order_by(Submission.timestamp.desc())
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         num_submissions = int(total_submissions.count())
@@ -1060,7 +1060,7 @@ class DeleteProblemHandler(BaseHandler):
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         self.sql_session.delete(task)
@@ -1078,7 +1078,7 @@ class EditProblemHandler(BaseHandler):
     def get(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         self.r_params["active_sidebar_item"] = "problems"
@@ -1090,7 +1090,7 @@ class EditProblemHandler(BaseHandler):
     def post(self, task_id):
         try:
             task = self.get_task_by_id(task_id)
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         try:
@@ -1218,7 +1218,7 @@ class SubmitHandler(BaseHandler):
     def post(self, set_id, task_id):
         try:
             task = self.get_task_by_id(task_id)
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         # Alias for easy access
@@ -1407,7 +1407,7 @@ class SubmissionsHandler(BaseHandler):
             task = self.get_task_by_id(task_id)
             problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
             score_type = get_score_type(dataset=task.active_dataset)
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         self.r_params["submissions"] = self.sql_session.query(Submission)\
@@ -1438,12 +1438,12 @@ class SubmissionsHandler(BaseHandler):
 class ProblemSetHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, set_id):
-        problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
-        statuses = dict()
         try:
+            problemset = self.sql_session.query(ProblemSet).filter(ProblemSet.id == set_id).one()
+            statuses = dict()
             for task in problemset.tasks:
                 statuses[task.id] = self.get_task_results(self.current_user, task)
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)  
 
         self.r_params = self.render_params()
@@ -1540,7 +1540,7 @@ class AdminProblemSetHandler(BaseHandler):
         try:
             problemset = self.sql_session.query(ProblemSet).\
                     filter(ProblemSet.id == problemset_id).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
         self.r_params["problemset"] = problemset
         self.r_params["active_sidebar_item"] = "problemsets"
@@ -1666,7 +1666,7 @@ class UserHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         self.r_params["active_sidebar_item"] = "users"
@@ -1684,7 +1684,7 @@ class EditUserHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         self.r_params["active_sidebar_item"] = "users"
@@ -1698,7 +1698,7 @@ class EditUserHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         try:
@@ -1768,7 +1768,7 @@ class DeleteUserHandler(BaseHandler):
             user = self.sql_session.query(User)\
             .filter(User.id==user_id)\
             .filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         if user.is_training_admin and self.sql_session.query(User)\
@@ -1793,7 +1793,7 @@ class AdminUserSetHandler(BaseHandler):
         try:
             userset = self.sql_session.query(UserSet).\
                     filter(UserSet.id == userset_id).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
         self.r_params["userset"] = userset
         self.r_params["active_sidebar_item"] = "users"
@@ -2074,7 +2074,7 @@ class PasswordChangeHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         if user.verification_type != 1:
@@ -2089,7 +2089,7 @@ class PasswordChangeHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         if user.verification_type != 1:
@@ -2127,7 +2127,7 @@ class EmailConfirmationHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         if user.verification_type != 2:
@@ -2142,7 +2142,7 @@ class EmailConfirmationHandler(BaseHandler):
             user = self.sql_session.query(User).\
                    filter(User.id == user_id).\
                    filter(User.contest == self.contest).one()
-        except KeyError:
+        except:
             raise tornado.web.HTTPError(404)
 
         if user.verification_type != 2:
