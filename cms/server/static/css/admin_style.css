@@ -116,3 +116,7 @@ h1 {
     background-color: rgba(0,0,0, .23);
     border-bottom-color: transparent;
 }
+
+.modal-delete-title {
+    text-align: left;
+}

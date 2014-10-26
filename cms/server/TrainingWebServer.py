@@ -910,16 +910,13 @@ class AdminProblemHandler(BaseHandler):
             total_submissions = self.sql_session.query(Submission)\
                          .filter(Submission.task == task)\
                          .order_by(Submission.timestamp.desc())
-#                         .filter(Submission.user == self.current_user)\
         except KeyError:
             raise tornado.web.HTTPError(404)
 
-        print("<total_submissions.count()> "+str(total_submissions.count()))
         num_submissions = int(total_submissions.count())
         total_tests = int(score_type.max_score)
 
         for testcase in task.active_dataset.testcases.itervalues():
-            print("<testcase.codename> "+str(testcase.codename))
             tests_passed[testcase.codename] = 0
 
         # get user table data
@@ -932,7 +929,6 @@ class AdminProblemHandler(BaseHandler):
             user_submission_stats[user.username]["status"] = status["status"]
 
             if submission is not None:
-                # print("int(status[\"percent\"]) "+str(int(status["percent"])))
                 user_submission_stats[user.username]["percent"] = int(status["percent"])
 
                 for result in submission.results:
@@ -962,9 +958,6 @@ class AdminProblemHandler(BaseHandler):
                     for idx,score_detail in enumerate(score_details):
                         if str(score_detail['outcome']) == "Correct":
                             tests_passed[score_detail['idx']] += 1
-
-        # for testcase in task.active_dataset.testcases.itervalues():
-            # print("<Test "+str(testcase.codename)+"> "+str(tests_passed[testcase.codename])+"/"+str(num_submissions))
 
         submission_stats["num_submissions"] = num_submissions
         submission_stats["tests_passed"] = tests_passed
@@ -1117,24 +1110,6 @@ class EditProblemHandler(BaseHandler):
                 return
 
         try:
-            input_digest = \
-                self.application.service.file_cacher.put_file_content(
-                    input_["body"],
-                    "Testcase input for task %s" % task.name)
-            output_digest = \
-                self.application.service.file_cacher.put_file_content(
-                    output["body"],
-                    "Testcase output for task %s" % task.name)
-
-            print("PRINTING DIGESTS")
-            print("input_digest: "+input_digest)
-            print("input_[\"bogy\"]: "+input_["body"])
-            print("input_digest decoded: "+self.application.service.file_cacher.get_file_content(input_digest))
-            
-            testcase = Testcase(codename, public, input_digest,
-                                    output_digest, dataset=dataset)
-            self.sql_session.add(testcase)
-
             self.sql_session.commit()
         except Exception as error:
             self.redirect("/admin/problem/%s/edit" % task_id)
