@@ -210,11 +210,11 @@ $(document).ready(function() {
 {% end %}
 
 {% block core %}
-<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit User Set</h1>
+<h1 class="page-header"><i class="fa fa-edit fa-fw"></i> Edit Group</h1>
 <ol class="breadcrumb">
-  <li><a href="/admin/users">Users</a></li>
-  <li><a href="/admin/user/{{ userset.id }}">{{ userset.title }}</a></li>
-  <li class="active">Edit User Set</li>
+  <li><a href="/admin/users">Users and Groups</a></li>
+  <li>Group: <a href="/admin/userset/{{ userset.id }}">{{ userset.title }}</a></li>
+  <li class="active">Edit Group</li>
 </ol>
 
 <form class="form-horizontal editusersetform" role="form" method="post">
