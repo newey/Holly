@@ -1454,6 +1454,7 @@ class ProblemSetHandler(BaseHandler):
 
         self.r_params = self.render_params()
         self.r_params["problemset"] = problemset
+        self.r_params["is_pinned"] = problemset in self.current_user.pinnedSets
         self.r_params["statuses"] = statuses
         self.r_params["tasks"] = [(task, self.get_task_results(self.current_user, task)) for task in problemset.tasks]
         self.r_params["active_sidebar_item"] = "problems"
