@@ -257,3 +257,32 @@ body {
     width: 100%;
     margin-bottom: 10px;
 }
+
+.expandset {
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+}
+
+.expandset:hover {
+    color: #ada;
+}
+
+.pinned {
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    color: #e7433c;
+}
+
+.unpinned {
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    color: #95a5a6;
+}
+
+.pinned:hover {
+    color: #FF5D56;
+}
+
+.unpinned:hover {
+    color: #AFBFC0;
+}
