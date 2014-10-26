@@ -59,7 +59,7 @@ from cms import config, ServiceCoord, get_service_shards, get_service_address,\
     DEFAULT_LANGUAGES, SOURCE_EXT_TO_LANGUAGE_MAP
 from cms.io import WebService
 from cms.db import Session, Contest, SubmissionFormatElement, Task, Dataset, \
-    Testcase, Submission, User, File, ProblemSet, UserSet
+    Testcase, Submission, User, File, ProblemSet, UserSet, SubmissionResult
 from cms.db.filecacher import FileCacher
 from cms.grading import compute_changes_for_dataset
 from cms.grading.tasktypes import get_task_type_class, get_task_type
