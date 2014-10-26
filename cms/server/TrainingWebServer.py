@@ -1804,9 +1804,6 @@ class AdminUserSetHandler(BaseHandler):
         data2 = []
 
         for problemSet in userset.problemSets:
-            print("problemSet.title "+str(problemSet.title))
-            
-            
             for task in problemSet.tasks:
                 total_submissions = self.sql_session.query(Submission)\
                                         .filter(Submission.task == task)\
@@ -1822,7 +1819,6 @@ class AdminUserSetHandler(BaseHandler):
                 data1.append(num_users_passed)
                 data2.append(int(total_submissions.count()) - num_users_passed)
 
-                print("task.title "+str(task.title))
                 labels.append(tornado.escape.utf8(str(task.title)))
 
         self.r_params["selected_sets"] = userset.problemSets
