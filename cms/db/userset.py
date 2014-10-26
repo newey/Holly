@@ -75,7 +75,8 @@ class UserSet(Base):
     # Short name and long human readable title of the user set.
     name = Column(
         Unicode,
-        nullable=False)
+        nullable=False,
+        unique=True)
     title = Column(
         Unicode,
         nullable=False)
