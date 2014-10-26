@@ -5,6 +5,8 @@
 <script src="/static/js/plugins/dataTables/dataTables.bootstrap.js"></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css"/>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+<link href="/static/css/summernote.css" rel="stylesheet">
+<script src="/static/js/summernote.js"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
@@ -118,6 +120,25 @@ $(document).ready(function() {
             },
         }
     });
+
+    $('#summernote').summernote({
+      height: 200,                 // set editor height
+
+      minHeight: 100,             // set minimum height of editor
+      maxHeight: 360,             // set maximum height of editor
+
+      toolbar: [
+        ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
+        ['fontsize', ['fontsize']],
+        ['para', ['paragraph']],
+        ['insert', ['table']],
+        ['misc', ['codeview']]
+      ],
+
+      onChange: function(contents, $editable) {
+        $('.admin-description-field').val(contents);
+      }
+    });
 });
 </script>
 {% end %}
@@ -151,9 +172,10 @@ $(document).ready(function() {
           <div class="form-group">
             <label for="title" class="col-sm-2 control-label" style="text-align:left;">Description</label>
             <div class="col-sm-7">
-              <textarea type="text" class="admin-description-field form-control" id="description" name="description" placeholder="Enter a detailed description in HTML...">
+              <textarea style="display:none" type="text" class="admin-description-field form-control" id="description" name="description" placeholder="Enter a detailed description in HTML...">
                 {{ problemset.description }}
               </textarea>
+              <div id="summernote"></div>
             </div>
           </div>
 
