@@ -895,12 +895,86 @@ class AdminProblemHandler(BaseHandler):
     @tornado.web.authenticated
     @admin_authenticated
     def get(self, task_id):
+        inputs = dict()
+        outputs = dict()
+        tests_passed = dict()
+        submission_stats = dict()
+        user_submission_stats = dict()
+
         try:
             task = self.get_task_by_id(task_id)
+            score_type = get_score_type(dataset=task.active_dataset)
+
+            users = self.sql_session.query(User)\
+                   .filter(User.contest == self.contest)
+                   
+            total_submissions = self.sql_session.query(Submission)\
+                         .filter(Submission.task == task)\
+                         .order_by(Submission.timestamp.desc())
         except KeyError:
             raise tornado.web.HTTPError(404)
 
+        num_submissions = int(total_submissions.count())
+        total_tests = int(score_type.max_score)
+
+        for testcase in task.active_dataset.testcases.itervalues():
+            tests_passed[testcase.codename] = 0
+
+        # get user table data
+        for user in users:
+            user_submission_stats[user.username] = dict()
+            
+            submission = total_submissions.filter(Submission.user == user).first()
+            status = self.get_submission_results(user, submission, task)
+
+            user_submission_stats[user.username]["status"] = status["status"]
+
+            if submission is not None:
+                user_submission_stats[user.username]["percent"] = int(status["percent"])
+
+                for result in submission.results:
+                    score_details = json.loads(result.score_details)
+
+                    num_user_tests_passed = 0
+    
+                    for idx,score_detail in enumerate(score_details):
+                        if str(score_detail['outcome']) == "Correct":
+                            num_user_tests_passed += 1
+
+                user_submission_stats[user.username]["tests_passed"] = str(num_user_tests_passed)+"/"+str(total_tests)
+                user_submission_stats[user.username]["num_submissions"] = int(total_submissions.filter(Submission.user == user).count())
+            else:
+                user_submission_stats[user.username]["percent"] = 0
+                user_submission_stats[user.username]["tests_passed"] = "0"
+                user_submission_stats[user.username]["num_submissions"] = 0
+
+        # get test table data
+        for user in users:
+            for submission in total_submissions.filter(Submission.user == user):
+                result = self.get_submission_results(user, submission, task)
+                    
+                for result in submission.results:
+                    score_details = json.loads(result.score_details)
+    
+                    for idx,score_detail in enumerate(score_details):
+                        if str(score_detail['outcome']) == "Correct":
+                            tests_passed[score_detail['idx']] += 1
+
+        submission_stats["num_submissions"] = num_submissions
+        submission_stats["tests_passed"] = tests_passed
+
+        for testcase in task.active_dataset.testcases.itervalues():
+            inputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.input)
+            outputs[testcase.codename] = self.application.service.file_cacher.get_file_content(testcase.output)
+
+        self.r_params["users"] = users
+        self.r_params["user_submission_stats"] = user_submission_stats
+        self.r_params["inputs"] = inputs
         self.r_params["active_sidebar_item"] = "problems"
+        self.r_params["inputs"] = inputs
+        self.r_params["outputs"] = outputs
+        self.r_params["submission_stats"] = submission_stats
+
         self.render("admin_problem.html",
                     task=task, **self.r_params)
 
