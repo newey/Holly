@@ -1024,6 +1024,9 @@ class AdminProblemHandler(BaseHandler):
         data2 = [0]*total_tests
         labels = [""]*total_tests
 
+        for i,testcase in enumerate(task.active_dataset.testcases.itervalues()):
+            labels[i] = tornado.escape.utf8(testcase.codename)
+
         # get test table and graph data
         for user in users:
             for submission in total_submissions.filter(Submission.user == user):
@@ -1033,11 +1036,11 @@ class AdminProblemHandler(BaseHandler):
                     score_details = json.loads(result.score_details)
     
                     for idx,score_detail in enumerate(score_details):
-                        if score_detail['idx'] in tests_passed and str(score_detail['outcome']) == "Correct":
+                        if str(score_detail['outcome']) == "Correct":
                             tests_passed[score_detail['idx']] += 1
                             data1[idx] = tests_passed[score_detail['idx']]
                         data2[idx] = num_submissions - data1[idx]
-                        labels[idx] = tornado.escape.utf8(str(score_detail['idx']))
+
 
         submission_stats["num_submissions"] = num_submissions
         submission_stats["tests_passed"] = tests_passed
